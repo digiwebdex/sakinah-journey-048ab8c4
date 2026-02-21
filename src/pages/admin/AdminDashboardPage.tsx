@@ -1,0 +1,29 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import AdminDashboardCharts from "@/components/AdminDashboardCharts";
+
+export default function AdminDashboardPage() {
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    const [bk, py] = await Promise.all([
+      supabase.from("bookings").select("*, packages(name, type), profiles(full_name)").order("created_at", { ascending: false }),
+      supabase.from("payments").select("*, bookings(tracking_id)").order("created_at", { ascending: false }),
+    ]);
+    setBookings(bk.data || []);
+    setPayments(py.data || []);
+  };
+
+  const markPaymentCompleted = async (paymentId: string) => {
+    const { error } = await supabase.from("payments").update({ status: "completed", paid_at: new Date().toISOString() }).eq("id", paymentId);
+    if (error) return;
+    fetchData();
+  };
+
+  return <AdminDashboardCharts bookings={bookings} payments={payments} onMarkPaid={markPaymentCompleted} />;
+}

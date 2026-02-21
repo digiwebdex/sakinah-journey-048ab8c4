@@ -1,0 +1,77 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Plus, X } from "lucide-react";
+import AdminDocumentViewer from "@/components/AdminDocumentViewer";
+
+const inputClass = "w-full bg-secondary border border-border rounded-md px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
+
+export default function AdminSettingsPage() {
+  const [installmentPlans, setInstallmentPlans] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: "", num_installments: "3", description: "" });
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from("installment_plans").select("*").order("created_at", { ascending: false }),
+      supabase.from("bookings").select("*, profiles(full_name)").order("created_at", { ascending: false }),
+    ]).then(([ip, bk]) => {
+      setInstallmentPlans(ip.data || []);
+      setBookings(bk.data || []);
+    });
+  }, []);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { error } = await supabase.from("installment_plans").insert({
+      name: form.name, num_installments: parseInt(form.num_installments), description: form.description || null,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Plan created");
+    setShowForm(false);
+    setForm({ name: "", num_installments: "3", description: "" });
+    supabase.from("installment_plans").select("*").order("created_at", { ascending: false }).then(({ data }) => setInstallmentPlans(data || []));
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Installment Plans */}
+      <section>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-heading text-xl font-bold">Installment Plans</h2>
+          <button onClick={() => setShowForm(!showForm)} className="bg-gradient-gold text-primary-foreground text-sm font-semibold px-4 py-2 rounded-md flex items-center gap-2">
+            {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            {showForm ? "Cancel" : "Add Plan"}
+          </button>
+        </div>
+        {showForm && (
+          <form onSubmit={handleCreate} className="bg-card border border-border rounded-xl p-5 mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <input className={inputClass} placeholder="Plan Name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <input className={inputClass} placeholder="Number of Installments" type="number" min="2" required value={form.num_installments} onChange={(e) => setForm({ ...form, num_installments: e.target.value })} />
+            <input className={inputClass} placeholder="Description (optional)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <button type="submit" className="bg-gradient-gold text-primary-foreground font-semibold py-2.5 rounded-md text-sm sm:col-span-3">Create Plan</button>
+          </form>
+        )}
+        <div className="space-y-3">
+          {installmentPlans.map((p: any) => (
+            <div key={p.id} className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
+              <div>
+                <p className="font-medium">{p.name}</p>
+                <p className="text-xs text-muted-foreground">{p.description || "No description"}</p>
+              </div>
+              <span className="bg-primary/10 text-primary text-sm font-bold px-3 py-1 rounded-full">{p.num_installments} installments</span>
+            </div>
+          ))}
+          {installmentPlans.length === 0 && <p className="text-center text-muted-foreground py-12">No plans created yet.</p>}
+        </div>
+      </section>
+
+      {/* Documents */}
+      <section>
+        <h2 className="font-heading text-xl font-bold mb-4">Customer Documents</h2>
+        <AdminDocumentViewer bookings={bookings} />
+      </section>
+    </div>
+  );
+}
