@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { Search, Package, CheckCircle2, Clock, Plane, FileCheck, Loader2 } from "lucide-react";
+import { Search, Package, CheckCircle2, Clock, Plane, FileCheck, Loader2, History, X, User } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -13,6 +13,27 @@ const STATUS_STEPS = [
   { key: "completed", label: "Completed", icon: CheckCircle2 },
 ];
 
+const HISTORY_KEY = "rk_tracking_history";
+
+const getHistory = (): string[] => {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+  } catch {
+    return [];
+  }
+};
+
+const addToHistory = (id: string) => {
+  const history = getHistory().filter((h) => h !== id);
+  history.unshift(id);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 10)));
+};
+
+const removeFromHistory = (id: string) => {
+  const history = getHistory().filter((h) => h !== id);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+};
+
 const TrackBooking = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -21,10 +42,36 @@ const TrackBooking = () => {
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [history, setHistory] = useState<string[]>(getHistory());
+  const [user, setUser] = useState<any>(null);
+  const [userBookings, setUserBookings] = useState<any[]>([]);
+  const [loadingUser, setLoadingUser] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user || null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setUser(s?.user || null));
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Fetch user's bookings when logged in
+  useEffect(() => {
+    if (!user) { setUserBookings([]); return; }
+    setLoadingUser(true);
+    supabase
+      .from("bookings")
+      .select("tracking_id, status, packages(name), created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        setUserBookings((data as any) || []);
+        setLoadingUser(false);
+      });
+  }, [user]);
 
   const handleSearch = async (idOverride?: string) => {
     const id = (idOverride || trackingId).trim().toUpperCase();
     if (!id) return;
+    setTrackingId(id);
     setLoading(true);
     setSearched(true);
 
@@ -37,6 +84,8 @@ const TrackBooking = () => {
     setBooking(bookingData);
 
     if (bookingData) {
+      addToHistory(id);
+      setHistory(getHistory());
       const { data: paymentData } = await supabase
         .from("payments")
         .select("*")
@@ -57,9 +106,31 @@ const TrackBooking = () => {
     }
   }, []);
 
+  const handleRemoveHistory = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeFromHistory(id);
+    setHistory(getHistory());
+  };
+
   const currentStepIndex = booking
     ? STATUS_STEPS.findIndex((s) => s.key === booking.status)
     : -1;
+
+  const statusLabel = (status: string) => {
+    const step = STATUS_STEPS.find((s) => s.key === status);
+    return step?.label || status;
+  };
+
+  const statusColor = (s: string) => {
+    switch (s) {
+      case "completed": return "bg-emerald/10 text-emerald";
+      case "pending": return "bg-primary/10 text-primary";
+      case "visa_processing": return "bg-primary/10 text-primary";
+      case "ticket_confirmed": return "bg-primary/10 text-primary";
+      case "cancelled": return "bg-destructive/10 text-destructive";
+      default: return "bg-muted text-muted-foreground";
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -75,7 +146,7 @@ const TrackBooking = () => {
           </motion.div>
 
           {/* Search Bar */}
-          <div className="flex gap-3 mb-10">
+          <div className="flex gap-3 mb-6">
             <input
               type="text"
               placeholder="Enter Tracking ID (e.g. RK-A1B2C3D4)"
@@ -93,6 +164,69 @@ const TrackBooking = () => {
               Track
             </button>
           </div>
+
+          {/* Recent History + User Bookings (shown when no result displayed) */}
+          {!booking && !loading && (
+            <div className="space-y-6 mb-10">
+              {/* Search History */}
+              {history.length > 0 && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card border border-border rounded-xl p-5">
+                  <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                    <History className="h-4 w-4 text-primary" /> Recent Searches
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {history.map((id) => (
+                      <button
+                        key={id}
+                        onClick={() => handleSearch(id)}
+                        className="bg-secondary border border-border rounded-full px-3 py-1.5 text-xs font-mono font-medium text-foreground hover:border-primary/40 transition-colors flex items-center gap-1.5 group"
+                      >
+                        {id}
+                        <X
+                          className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
+                          onClick={(e) => handleRemoveHistory(id, e)}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* User's Bookings */}
+              {user && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card border border-border rounded-xl p-5">
+                  <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                    <User className="h-4 w-4 text-primary" /> Your Bookings
+                  </h3>
+                  {loadingUser ? (
+                    <p className="text-xs text-muted-foreground">Loading...</p>
+                  ) : userBookings.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No bookings found.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {userBookings.map((b: any) => (
+                        <button
+                          key={b.tracking_id}
+                          onClick={() => handleSearch(b.tracking_id)}
+                          className="w-full flex items-center justify-between bg-secondary/50 border border-border rounded-lg px-4 py-3 hover:border-primary/40 transition-colors text-left"
+                        >
+                          <div>
+                            <p className="font-mono text-sm font-bold text-primary">{b.tracking_id}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {b.packages?.name || "Package"} • {new Date(b.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${statusColor(b.status)}`}>
+                            {statusLabel(b.status)}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </div>
+          )}
 
           {/* Results */}
           {loading && (
@@ -112,11 +246,18 @@ const TrackBooking = () => {
 
           {!loading && booking && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              {/* Back to search */}
+              <button
+                onClick={() => { setBooking(null); setSearched(false); setTrackingId(""); }}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                ← Search another booking
+              </button>
+
               {/* Status Timeline */}
               <div className="bg-card border border-border rounded-xl p-6">
                 <h2 className="font-heading text-lg font-bold mb-6">Booking Status</h2>
                 <div className="flex items-center justify-between relative">
-                  {/* Line */}
                   <div className="absolute top-5 left-0 right-0 h-0.5 bg-border" />
                   <div
                     className="absolute top-5 left-0 h-0.5 bg-primary transition-all duration-500"
