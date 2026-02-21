@@ -5,6 +5,7 @@ import {
 } from "recharts";
 import {
   TrendingUp, DollarSign, Package, AlertTriangle, Calendar, Filter, Users,
+  CheckCircle2, XCircle, Clock, RefreshCw, ShieldCheck,
 } from "lucide-react";
 import { format, parseISO, isWithinInterval, startOfMonth, endOfMonth, subMonths } from "date-fns";
 
@@ -27,6 +28,151 @@ const CHART_COLORS = {
 const PIE_COLORS = [CHART_COLORS.gold, CHART_COLORS.emerald, CHART_COLORS.goldLight, CHART_COLORS.destructive, CHART_COLORS.muted, CHART_COLORS.goldDark];
 
 const inputClass = "bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
+
+// Reconciliation widget showing per-booking health
+const ReconciliationWidget = ({ bookings, payments }: { bookings: any[]; payments: any[] }) => {
+  const reconciliationData = useMemo(() => {
+    return bookings.map((b) => {
+      const bookingPayments = payments.filter((p) => p.booking_id === b.id);
+      const completedPayments = bookingPayments.filter((p) => p.status === "completed");
+      const sumCompleted = completedPayments.reduce((s, p) => s + Number(p.amount), 0);
+      const total = Number(b.total_amount);
+      const paid = Number(b.paid_amount);
+      const due = Number(b.due_amount || 0);
+      const isClamped = sumCompleted > total; // payments exceeded total, clamped
+      const isFullyPaid = paid >= total && total > 0;
+      const isHealthy = due >= 0 && paid <= total;
+
+      return {
+        id: b.id,
+        trackingId: b.tracking_id,
+        name: b.profiles?.full_name || "N/A",
+        packageName: b.packages?.name || "N/A",
+        total,
+        paid,
+        due,
+        rawPaymentSum: sumCompleted,
+        status: b.status,
+        isClamped,
+        isFullyPaid,
+        isHealthy,
+        autoCompleted: b.status === "completed" && isFullyPaid,
+        completedPayments: completedPayments.length,
+        totalPayments: bookingPayments.length,
+        lastPaymentDate: completedPayments.length > 0
+          ? completedPayments.sort((a, b) => new Date(b.paid_at || b.created_at).getTime() - new Date(a.paid_at || a.created_at).getTime())[0]?.paid_at
+          : null,
+      };
+    }).sort((a, b) => {
+      // Show unhealthy first, then auto-completed, then rest
+      if (!a.isHealthy && b.isHealthy) return -1;
+      if (a.isHealthy && !b.isHealthy) return 1;
+      if (a.autoCompleted && !b.autoCompleted) return -1;
+      if (!a.autoCompleted && b.autoCompleted) return 1;
+      return 0;
+    });
+  }, [bookings, payments]);
+
+  const healthyCount = reconciliationData.filter((r) => r.isHealthy).length;
+  const autoCompletedCount = reconciliationData.filter((r) => r.autoCompleted).length;
+  const clampedCount = reconciliationData.filter((r) => r.isClamped).length;
+
+  if (reconciliationData.length === 0) {
+    return <p className="text-sm text-muted-foreground text-center py-8">No bookings to reconcile.</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Summary row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-secondary/50 rounded-lg p-3 text-center">
+          <p className="text-2xl font-heading font-bold">{reconciliationData.length}</p>
+          <p className="text-xs text-muted-foreground">Total Bookings</p>
+        </div>
+        <div className="bg-emerald/10 rounded-lg p-3 text-center">
+          <p className="text-2xl font-heading font-bold" style={{ color: CHART_COLORS.emerald }}>{healthyCount}</p>
+          <p className="text-xs text-muted-foreground">Healthy</p>
+        </div>
+        <div className="bg-primary/10 rounded-lg p-3 text-center">
+          <p className="text-2xl font-heading font-bold text-primary">{autoCompletedCount}</p>
+          <p className="text-xs text-muted-foreground">Auto-Completed</p>
+        </div>
+        <div className="bg-destructive/10 rounded-lg p-3 text-center">
+          <p className="text-2xl font-heading font-bold text-destructive">{clampedCount}</p>
+          <p className="text-xs text-muted-foreground">Clamped (Overpaid)</p>
+        </div>
+      </div>
+
+      {/* Detail table */}
+      <div className="overflow-x-auto max-h-96 overflow-y-auto">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 bg-card">
+            <tr className="border-b border-border text-left text-muted-foreground">
+              <th className="pb-3 pr-3">Status</th>
+              <th className="pb-3 pr-3">Tracking ID</th>
+              <th className="pb-3 pr-3">Customer</th>
+              <th className="pb-3 pr-3">Total</th>
+              <th className="pb-3 pr-3">Paid</th>
+              <th className="pb-3 pr-3">Due</th>
+              <th className="pb-3 pr-3">Payments</th>
+              <th className="pb-3">Reconciliation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reconciliationData.map((r) => (
+              <tr key={r.id} className="border-b border-border/50">
+                <td className="py-2.5 pr-3">
+                  {r.autoCompleted ? (
+                    <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: CHART_COLORS.emerald }}>
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Auto-Done
+                    </span>
+                  ) : !r.isHealthy ? (
+                    <span className="flex items-center gap-1 text-xs font-semibold text-destructive">
+                      <XCircle className="h-3.5 w-3.5" /> Issue
+                    </span>
+                  ) : r.due > 0 ? (
+                    <span className="flex items-center gap-1 text-xs font-semibold text-primary">
+                      <Clock className="h-3.5 w-3.5" /> Pending
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: CHART_COLORS.emerald }}>
+                      <CheckCircle2 className="h-3.5 w-3.5" /> OK
+                    </span>
+                  )}
+                </td>
+                <td className="py-2.5 pr-3 font-mono text-xs text-primary">{r.trackingId}</td>
+                <td className="py-2.5 pr-3">{r.name}</td>
+                <td className="py-2.5 pr-3 font-medium">৳{r.total.toLocaleString()}</td>
+                <td className="py-2.5 pr-3" style={{ color: CHART_COLORS.emerald }}>৳{r.paid.toLocaleString()}</td>
+                <td className="py-2.5 pr-3 text-destructive font-medium">৳{r.due.toLocaleString()}</td>
+                <td className="py-2.5 pr-3 text-xs text-muted-foreground">
+                  {r.completedPayments}/{r.totalPayments} paid
+                </td>
+                <td className="py-2.5">
+                  <div className="flex flex-col gap-0.5">
+                    {r.isClamped && (
+                      <span className="text-xs text-destructive flex items-center gap-1">
+                        <RefreshCw className="h-3 w-3" /> Clamped ৳{r.rawPaymentSum.toLocaleString()} → ৳{r.total.toLocaleString()}
+                      </span>
+                    )}
+                    {r.autoCompleted && r.lastPaymentDate && (
+                      <span className="text-xs text-muted-foreground">
+                        Completed: {format(new Date(r.lastPaymentDate), "dd MMM yyyy HH:mm")}
+                      </span>
+                    )}
+                    {!r.isClamped && !r.autoCompleted && r.isHealthy && (
+                      <span className="text-xs text-muted-foreground">Balanced</span>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
 
 const AdminDashboardCharts = ({ bookings, payments, onMarkPaid }: Props) => {
   const [dateFrom, setDateFrom] = useState(() => format(subMonths(new Date(), 11), "yyyy-MM-dd"));
@@ -291,6 +437,14 @@ const AdminDashboardCharts = ({ bookings, payments, onMarkPaid }: Props) => {
             <p className="text-sm text-muted-foreground text-center py-12">No overdue payments 🎉</p>
           )}
         </div>
+      </div>
+
+      {/* Reconciliation Status Widget */}
+      <div className="bg-card border border-border rounded-xl p-5">
+        <h4 className="font-heading font-semibold mb-4 flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-primary" /> Reconciliation Status & History
+        </h4>
+        <ReconciliationWidget bookings={filteredBookings} payments={filteredPayments} />
       </div>
 
       {/* Hajji Report Table */}
