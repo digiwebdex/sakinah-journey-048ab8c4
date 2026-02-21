@@ -11,28 +11,32 @@ import {
 } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import type { AppRole } from "@/hooks/useUserRole";
 
+// Role access matrix
 const menuItems = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Bookings", url: "/admin/bookings", icon: FileText },
-  { title: "Customers", url: "/admin/customers", icon: Users },
-  { title: "Packages", url: "/admin/packages", icon: Package },
-  { title: "Hotels", url: "/admin/hotels", icon: Building2 },
-  { title: "Payments", url: "/admin/payments", icon: CreditCard },
-  { title: "Due Alerts", url: "/admin/due-alerts", icon: AlertTriangle },
-  { title: "Accounting", url: "/admin/accounting", icon: Calculator },
-  { title: "Reports", url: "/admin/reports", icon: BarChart3 },
-  { title: "CMS", url: "/admin/cms", icon: Pencil },
-  { title: "Settings", url: "/admin/settings", icon: Settings },
+  { title: "Dashboard", url: "/admin", icon: LayoutDashboard, roles: ["admin", "manager", "staff"] },
+  { title: "Bookings", url: "/admin/bookings", icon: FileText, roles: ["admin", "manager", "staff"] },
+  { title: "Customers", url: "/admin/customers", icon: Users, roles: ["admin", "manager", "staff"] },
+  { title: "Packages", url: "/admin/packages", icon: Package, roles: ["admin", "manager"] },
+  { title: "Hotels", url: "/admin/hotels", icon: Building2, roles: ["admin", "manager"] },
+  { title: "Payments", url: "/admin/payments", icon: CreditCard, roles: ["admin", "manager", "staff"] },
+  { title: "Due Alerts", url: "/admin/due-alerts", icon: AlertTriangle, roles: ["admin", "manager", "staff"] },
+  { title: "Accounting", url: "/admin/accounting", icon: Calculator, roles: ["admin"] },
+  { title: "Reports", url: "/admin/reports", icon: BarChart3, roles: ["admin", "manager"] },
+  { title: "CMS", url: "/admin/cms", icon: Pencil, roles: ["admin"] },
+  { title: "Settings", url: "/admin/settings", icon: Settings, roles: ["admin"] },
 ];
 
-export function AdminSidebar() {
+export function AdminSidebar({ role }: { role: AppRole }) {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
+
+  const filteredMenu = menuItems.filter((item) => role && item.roles.includes(role));
 
   return (
     <Sidebar>
@@ -49,7 +53,7 @@ export function AdminSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {filteredMenu.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink

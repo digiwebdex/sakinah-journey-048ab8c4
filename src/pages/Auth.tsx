@@ -51,12 +51,13 @@ const Auth = () => {
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", data.user.id)
-        .eq("role", "admin")
-        .maybeSingle();
+        .eq("user_id", data.user.id);
+
+      const roles = (roleData || []).map((r: any) => r.role as string);
+      const isAdminRole = roles.includes("admin") || roles.includes("manager") || roles.includes("staff");
 
       toast.success("Welcome back!");
-      navigate(roleData ? "/admin" : "/dashboard");
+      navigate(isAdminRole ? "/admin" : "/dashboard");
     } catch (err: any) {
       toast.error(err.message);
     } finally {
