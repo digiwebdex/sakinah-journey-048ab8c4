@@ -9,10 +9,10 @@ const ServicesSection = () => {
   const { data: content } = useSiteContent("services");
   const { t } = useLanguage();
 
-  const sectionLabel = content?.section_label || t("services.label");
-  const heading = content?.heading || t("services.heading");
-  const headingHighlight = content?.heading_highlight || t("services.headingHighlight");
-  const description = content?.description || t("services.description");
+  const sectionLabel = t("services.label");
+  const heading = t("services.heading");
+  const headingHighlight = t("services.headingHighlight");
+  const description = t("services.description");
 
   const defaultServices = [
     { icon: "BookOpen", title: t("services.hajj"), desc: t("services.hajjDesc") },

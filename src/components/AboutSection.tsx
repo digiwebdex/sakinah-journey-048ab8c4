@@ -13,10 +13,10 @@ const AboutSection = () => {
   const { data: content } = useSiteContent("about");
   const { t } = useLanguage();
 
-  const sectionLabel = content?.section_label || t("about.label");
-  const heading = content?.heading || t("about.heading");
-  const headingHighlight = content?.heading_highlight || t("about.headingHighlight");
-  const description = content?.description || t("about.description");
+  const sectionLabel = t("about.label");
+  const heading = t("about.heading");
+  const headingHighlight = t("about.headingHighlight");
+  const description = t("about.description");
 
   const defaultReasons = [
     { title: t("about.reason1.title"), desc: t("about.reason1.desc") },

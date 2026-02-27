@@ -16,14 +16,14 @@ const HeroSection = () => {
   const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const overlayOpacity = useTransform(scrollYProgress, [0, 0.5], [0.55, 0.9]);
 
-  const badge = content?.badge || t("hero.badge");
-  const headingLine1 = content?.heading_line1 || t("hero.headingLine1");
-  const headingLine2 = content?.heading_line2 || t("hero.headingLine2");
-  const headingHighlight = content?.heading_highlight || t("hero.headingHighlight");
-  const subheading = content?.subheading || t("hero.subheading");
-  const ctaPrimary = content?.cta_primary || t("hero.ctaPrimary");
-  const ctaSecondary = content?.cta_secondary || t("hero.ctaSecondary");
-  const stats = content?.stats || [
+  const badge = t("hero.badge");
+  const headingLine1 = t("hero.headingLine1");
+  const headingLine2 = t("hero.headingLine2");
+  const headingHighlight = t("hero.headingHighlight");
+  const subheading = t("hero.subheading");
+  const ctaPrimary = t("hero.ctaPrimary");
+  const ctaSecondary = t("hero.ctaSecondary");
+  const stats = [
     { value: "15+", label: t("hero.stat.years") },
     { value: "10K+", label: t("hero.stat.pilgrims") },
     { value: "50+", label: t("hero.stat.packages") },
