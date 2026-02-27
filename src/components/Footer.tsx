@@ -5,15 +5,16 @@ import { useLanguage } from "@/i18n/LanguageContext";
 
 const Footer = () => {
   const { data: content } = useSiteContent("footer");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
+  const lc = content?.[language];
   const companyName = content?.company_name || "RAHE KABA";
-  const tagline = content?.company_tagline || "Tours & Travels";
-  const description = content?.description || t("about.description").slice(0, 120) + "...";
+  const tagline = lc?.company_tagline || content?.company_tagline || "Tours & Travels";
+  const description = lc?.description || content?.description || t("about.description").slice(0, 120) + "...";
   const phone = content?.phone || "+880 1601-505050";
   const email = content?.email || "rahekaba.info@gmail.com";
-  const address = content?.address || "Chittagong, Bangladesh";
-  const servicesList = content?.services_list || ["Hajj Packages", "Umrah Packages", "Visa Processing", "Air Tickets", "Hotel Booking", "Ziyara Tours"];
+  const address = lc?.address || content?.address || (language === "bn" ? "চট্টগ্রাম, বাংলাদেশ" : "Chittagong, Bangladesh");
+  const servicesList = lc?.services_list || content?.services_list || (language === "bn" ? ["হজ প্যাকেজ", "উমরাহ প্যাকেজ", "ভিসা প্রসেসিং", "এয়ার টিকেট", "হোটেল বুকিং", "জিয়ারা ট্যুর"] : ["Hajj Packages", "Umrah Packages", "Visa Processing", "Air Tickets", "Hotel Booking", "Ziyara Tours"]);
   const devName = content?.developer_name || "DigiWebDex";
   const devUrl = content?.developer_url || "https://digiwebdex.com";
 

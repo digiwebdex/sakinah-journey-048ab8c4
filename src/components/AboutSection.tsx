@@ -11,12 +11,13 @@ const AboutSection = () => {
   const navigate = useNavigate();
   const [trackingId, setTrackingId] = useState("");
   const { data: content } = useSiteContent("about");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
-  const sectionLabel = t("about.label");
-  const heading = t("about.heading");
-  const headingHighlight = t("about.headingHighlight");
-  const description = t("about.description");
+  const lc = content?.[language];
+  const sectionLabel = lc?.section_label || t("about.label");
+  const heading = lc?.heading || t("about.heading");
+  const headingHighlight = lc?.heading_highlight || t("about.headingHighlight");
+  const description = lc?.description || t("about.description");
 
   const defaultReasons = [
     { title: t("about.reason1.title"), desc: t("about.reason1.desc") },
@@ -25,7 +26,7 @@ const AboutSection = () => {
     { title: t("about.reason4.title"), desc: t("about.reason4.desc") },
   ];
 
-  const reasons = content?.reasons || defaultReasons;
+  const reasons = lc?.reasons || content?.reasons || defaultReasons;
 
   const handleTrack = () => {
     const id = trackingId.trim();

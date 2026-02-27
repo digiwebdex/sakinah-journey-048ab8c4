@@ -7,12 +7,13 @@ const iconMap: Record<string, any> = { BookOpen, Globe, CreditCard, Plane, Build
 
 const ServicesSection = () => {
   const { data: content } = useSiteContent("services");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
-  const sectionLabel = t("services.label");
-  const heading = t("services.heading");
-  const headingHighlight = t("services.headingHighlight");
-  const description = t("services.description");
+  const lc = content?.[language];
+  const sectionLabel = lc?.section_label || t("services.label");
+  const heading = lc?.heading || t("services.heading");
+  const headingHighlight = lc?.heading_highlight || t("services.headingHighlight");
+  const description = lc?.description || t("services.description");
 
   const defaultServices = [
     { icon: "BookOpen", title: t("services.hajj"), desc: t("services.hajjDesc") },
@@ -25,7 +26,7 @@ const ServicesSection = () => {
     { icon: "Users", title: t("services.guide"), desc: t("services.guideDesc") },
   ];
 
-  const items = content?.items || defaultServices;
+  const items = lc?.items || content?.items || defaultServices;
 
   return (
     <section id="services" className="py-24 islamic-pattern">

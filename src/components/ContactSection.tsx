@@ -5,12 +5,13 @@ import { useLanguage } from "@/i18n/LanguageContext";
 
 const ContactSection = () => {
   const { data: content } = useSiteContent("contact");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
+  const lc = content?.[language];
   const phone = content?.phone || "+880 1601-505050";
   const email = content?.email || "rahekaba.info@gmail.com";
-  const location = content?.location || "Chittagong, Bangladesh";
-  const hours = content?.hours || "Sat - Thu: 9AM - 9PM";
+  const location = lc?.location || content?.location || (language === "bn" ? "চট্টগ্রাম, বাংলাদেশ" : "Chittagong, Bangladesh");
+  const hours = lc?.hours || content?.hours || (language === "bn" ? "শনি - বৃহঃ: সকাল ৯টা - রাত ৯টা" : "Sat - Thu: 9AM - 9PM");
 
   const contactItems = [
     { icon: Phone, label: t("contact.phone"), value: phone, href: `tel:${phone.replace(/[\s-]/g, "")}` },
@@ -23,9 +24,9 @@ const ContactSection = () => {
     <section id="contact" className="py-24 bg-card">
       <div className="container mx-auto px-4">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-          <span className="text-primary text-sm font-medium tracking-[0.3em] uppercase">{content?.section_label || t("contact.label")}</span>
+          <span className="text-primary text-sm font-medium tracking-[0.3em] uppercase">{lc?.section_label || t("contact.label")}</span>
           <h2 className="font-heading text-3xl md:text-5xl font-bold mt-3 mb-4">
-            {content?.heading || t("contact.heading")} <span className="text-gradient-gold">{content?.heading_highlight || t("contact.headingHighlight")}</span>
+            {lc?.heading || t("contact.heading")} <span className="text-gradient-gold">{lc?.heading_highlight || t("contact.headingHighlight")}</span>
           </h2>
         </motion.div>
 

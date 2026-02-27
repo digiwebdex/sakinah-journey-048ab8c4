@@ -7,7 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 
 const HeroSection = () => {
   const { data: content } = useSiteContent("hero");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -16,14 +16,15 @@ const HeroSection = () => {
   const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const overlayOpacity = useTransform(scrollYProgress, [0, 0.5], [0.55, 0.9]);
 
-  const badge = t("hero.badge");
-  const headingLine1 = t("hero.headingLine1");
-  const headingLine2 = t("hero.headingLine2");
-  const headingHighlight = t("hero.headingHighlight");
-  const subheading = t("hero.subheading");
-  const ctaPrimary = t("hero.ctaPrimary");
-  const ctaSecondary = t("hero.ctaSecondary");
-  const stats = [
+  const lc = content?.[language]; // language-specific CMS content
+  const badge = lc?.badge || t("hero.badge");
+  const headingLine1 = lc?.heading_line1 || t("hero.headingLine1");
+  const headingLine2 = lc?.heading_line2 || t("hero.headingLine2");
+  const headingHighlight = lc?.heading_highlight || t("hero.headingHighlight");
+  const subheading = lc?.subheading || t("hero.subheading");
+  const ctaPrimary = lc?.cta_primary || t("hero.ctaPrimary");
+  const ctaSecondary = lc?.cta_secondary || t("hero.ctaSecondary");
+  const stats = lc?.stats || [
     { value: "15+", label: t("hero.stat.years") },
     { value: "10K+", label: t("hero.stat.pilgrims") },
     { value: "50+", label: t("hero.stat.packages") },
