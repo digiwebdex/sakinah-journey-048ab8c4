@@ -14,14 +14,10 @@ const HeroSection = () => {
     offset: ["start start", "end start"],
   });
   const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const overlayOpacity = useTransform(scrollYProgress, [0, 0.5], [0.55, 0.9]);
+  const overlayOpacity = useTransform(scrollYProgress, [0, 0.5], [0.5, 0.85]);
 
-  const lc = content?.[language]; // language-specific CMS content
+  const lc = content?.[language];
   const badge = lc?.badge || t("hero.badge");
-  const headingLine1 = lc?.heading_line1 || t("hero.headingLine1");
-  const headingLine2 = lc?.heading_line2 || t("hero.headingLine2");
-  const headingHighlight = lc?.heading_highlight || t("hero.headingHighlight");
-  const subheading = lc?.subheading || t("hero.subheading");
   const ctaPrimary = lc?.cta_primary || t("hero.ctaPrimary");
   const ctaSecondary = lc?.cta_secondary || t("hero.ctaSecondary");
   const stats = lc?.stats || [
@@ -35,57 +31,136 @@ const HeroSection = () => {
 
   return (
     <section ref={sectionRef} id="home" className="relative min-h-[100dvh] flex flex-col justify-center overflow-hidden">
+      {/* Parallax Background */}
       <motion.div className="absolute inset-0 will-change-transform" style={{ y: imgY }}>
         <img src={heroImage} alt="The Holy Kaaba at night, illuminated by golden lights" className="w-full h-[130%] object-cover object-center" />
       </motion.div>
-      <motion.div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" style={{ opacity: overlayOpacity }} />
-      <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-background/50" />
+
+      {/* Overlays */}
+      <motion.div className="absolute inset-0 bg-gradient-to-t from-background via-background/75 to-background/30" style={{ opacity: overlayOpacity }} />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,hsl(var(--background)/0.6)_100%)]" />
+
+      {/* Top gold accent */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-gold" />
 
-      <div className="relative z-10 container mx-auto px-4 py-8 sm:py-14 text-center">
-        <div className="max-w-3xl mx-auto">
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} className="inline-flex items-center gap-2 bg-primary/15 backdrop-blur-md border border-primary/25 rounded-full px-4 py-1.5 mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-primary text-xs font-semibold tracking-widest uppercase">{badge}</span>
-          </motion.div>
+      {/* Decorative Islamic geometric pattern overlay */}
+      <div className="absolute inset-0 opacity-[0.03]" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C6A55C' fill-opacity='1'%3E%3Cpath d='M30 0l30 30-30 30L0 30z M30 4.24L4.24 30 30 55.76 55.76 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+      }} />
 
+      <div className="relative z-10 container mx-auto px-4 py-16 sm:py-20 text-center">
+        {/* Badge */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="inline-flex items-center gap-2 bg-primary/10 backdrop-blur-xl border border-primary/20 rounded-full px-5 py-2 mb-10"
+        >
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span className="text-primary text-xs font-semibold tracking-[0.2em] uppercase">{badge}</span>
+        </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.15 }} className="max-w-2xl mx-auto mb-10">
-            <p className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-snug" dir="rtl" style={{ fontFamily: "'Amiri', 'Noto Naskh Arabic', serif" }}>
-              وَأَتِمُّوا الْحَجَّ وَالْعُمْرَةَ لِلَّهِ
-            </p>
-            <p className="text-xl sm:text-2xl md:text-3xl mt-4 leading-relaxed font-semibold italic text-gradient-gold">
-              "আর তোমরা আল্লাহর সন্তুষ্টির জন্য হজ্জ ও ওমরাহ পূর্ণ কর।"
-            </p>
-            <p className="text-base sm:text-lg text-muted-foreground mt-2">
-              — (সূরা আল-বাকারা: ১৯৬)
-            </p>
-          </motion.div>
+        {/* Quranic Verse Block */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.15 }}
+          className="max-w-3xl mx-auto mb-12"
+        >
+          {/* Decorative divider top */}
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <div className="h-px w-16 sm:w-24 bg-gradient-to-r from-transparent to-primary/50" />
+            <Star className="h-4 w-4 text-primary fill-primary/30" />
+            <div className="h-px w-16 sm:w-24 bg-gradient-to-l from-transparent to-primary/50" />
+          </div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.45 }} className="flex flex-wrap gap-3 justify-center">
-            <a href="#packages" className="group bg-gradient-gold text-primary-foreground font-semibold px-7 py-3.5 rounded-lg text-sm hover:shadow-gold transition-all duration-300 inline-flex items-center gap-2">
-              {ctaPrimary}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </a>
-            <a href="#contact" className="border border-foreground/20 text-foreground font-semibold px-7 py-3.5 rounded-lg text-sm hover:bg-foreground/5 backdrop-blur-sm transition-all duration-300 inline-flex items-center">
-              {ctaSecondary}
-            </a>
-          </motion.div>
-        </div>
+          {/* Arabic text */}
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-relaxed mb-6"
+            dir="rtl"
+            style={{ fontFamily: "'Amiri', 'Noto Naskh Arabic', serif" }}
+          >
+            وَأَتِمُّوا الْحَجَّ وَالْعُمْرَةَ لِلَّهِ
+          </motion.p>
 
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.65 }} className="mt-14 sm:mt-20">
-          <div className="bg-card/60 backdrop-blur-xl border border-border/60 rounded-2xl p-4 sm:p-5 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto">
+          {/* Bengali translation with gold gradient */}
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="text-xl sm:text-2xl md:text-3xl font-semibold italic text-gradient-gold leading-relaxed"
+          >
+            "আর তোমরা আল্লাহর সন্তুষ্টির জন্য হজ্জ ও ওমরাহ পূর্ণ কর।"
+          </motion.p>
+
+          {/* Surah reference */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.7 }}
+            className="text-sm sm:text-base text-muted-foreground mt-3 tracking-wide"
+          >
+            — (সূরা আল-বাকারা: ১৯৬)
+          </motion.p>
+
+          {/* Decorative divider bottom */}
+          <div className="flex items-center justify-center gap-4 mt-8">
+            <div className="h-px w-16 sm:w-24 bg-gradient-to-r from-transparent to-primary/50" />
+            <Star className="h-4 w-4 text-primary fill-primary/30" />
+            <div className="h-px w-16 sm:w-24 bg-gradient-to-l from-transparent to-primary/50" />
+          </div>
+        </motion.div>
+
+        {/* CTA Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.8 }}
+          className="flex flex-wrap gap-4 justify-center mb-16 sm:mb-20"
+        >
+          <a
+            href="#packages"
+            className="group bg-gradient-gold text-primary-foreground font-semibold px-8 py-4 rounded-xl text-sm hover:shadow-gold hover:scale-[1.02] transition-all duration-300 inline-flex items-center gap-2"
+          >
+            {ctaPrimary}
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </a>
+          <a
+            href="#contact"
+            className="border border-primary/30 text-foreground font-semibold px-8 py-4 rounded-xl text-sm hover:bg-primary/10 hover:border-primary/50 backdrop-blur-sm transition-all duration-300 inline-flex items-center"
+          >
+            {ctaSecondary}
+          </a>
+        </motion.div>
+
+        {/* Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 1 }}
+        >
+          <div className="bg-card/40 backdrop-blur-2xl border border-primary/10 rounded-2xl p-5 sm:p-6 grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8 max-w-4xl mx-auto">
             {stats.map((stat: any, i: number) => {
               const IconComp = defaultIcons[i % defaultIcons.length];
               return (
-                <div key={stat.label} className={`flex items-center gap-3 ${i < stats.length - 1 ? "md:border-r md:border-border/40" : ""} md:pr-4`}>
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <IconComp className="h-4 w-4 text-primary" />
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 1.1 + i * 0.1 }}
+                  className={`flex items-center gap-3 ${i < stats.length - 1 ? "md:border-r md:border-primary/10" : ""} md:pr-4`}
+                >
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center flex-shrink-0">
+                    <IconComp className="h-4.5 w-4.5 text-primary" />
                   </div>
                   <div>
                     <p className="text-xl sm:text-2xl font-heading font-bold text-foreground leading-none">{stat.value}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{stat.label}</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">{stat.label}</p>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
