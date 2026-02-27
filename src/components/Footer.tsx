@@ -13,7 +13,7 @@ const Footer = () => {
   const description = lc?.description || content?.description || t("about.description").slice(0, 120) + "...";
   const phone = content?.phone || "+880 1601-505050";
   const email = content?.email || "rahekaba.info@gmail.com";
-  const address = lc?.address || content?.address || (language === "bn" ? "চট্টগ্রাম, বাংলাদেশ" : "Chittagong, Bangladesh");
+  const address = lc?.address || content?.address || (language === "bn" ? "দৈলরবাগ পল্লী বিদ্যুৎ সংলগ্ন, সোনারগাঁও থানা রোড, নারায়ণগঞ্জ-ঢাকা" : "Doilorbag Palli Bidyut, Sonargaon Thana Road, Narayanganj-Dhaka");
   const servicesList = lc?.services_list || content?.services_list || (language === "bn" ? ["হজ প্যাকেজ", "উমরাহ প্যাকেজ", "ভিসা প্রসেসিং", "এয়ার টিকেট", "হোটেল বুকিং", "জিয়ারা ট্যুর"] : ["Hajj Packages", "Umrah Packages", "Visa Processing", "Air Tickets", "Hotel Booking", "Ziyara Tours"]);
   const devName = content?.developer_name || "DigiWebDex";
   const devUrl = content?.developer_url || "https://digiwebdex.com";
