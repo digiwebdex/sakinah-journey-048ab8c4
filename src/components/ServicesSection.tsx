@@ -26,7 +26,7 @@ const ServicesSection = () => {
     { icon: "Users", title: t("services.guide"), desc: t("services.guideDesc") },
   ];
 
-  const items = lc?.items || content?.items || defaultServices;
+  const items = lc?.items || defaultServices;
 
   return (
     <section id="services" className="py-24 islamic-pattern">
