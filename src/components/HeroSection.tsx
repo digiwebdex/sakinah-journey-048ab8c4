@@ -53,7 +53,7 @@ const HeroSection = () => {
             {headingLine1}<br />{headingLine2}{" "}<span className="text-gradient-gold">{headingHighlight}</span>
           </motion.h1>
 
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }} className="text-base sm:text-lg text-foreground/65 max-w-xl mb-8 leading-relaxed">
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }} className="text-base sm:text-lg text-foreground/65 max-w-xl mb-8 leading-relaxed whitespace-pre-line">
             {subheading}
           </motion.p>
 
