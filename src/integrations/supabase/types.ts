@@ -592,6 +592,74 @@ export type Database = {
         }
         Relationships: []
       }
+      moallem_commission_payments: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          created_at: string
+          date: string
+          id: string
+          moallem_id: string
+          notes: string | null
+          payment_method: string | null
+          recorded_by: string | null
+          wallet_account_id: string | null
+        }
+        Insert: {
+          amount: number
+          booking_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          moallem_id: string
+          notes?: string | null
+          payment_method?: string | null
+          recorded_by?: string | null
+          wallet_account_id?: string | null
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          moallem_id?: string
+          notes?: string | null
+          payment_method?: string | null
+          recorded_by?: string | null
+          wallet_account_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moallem_commission_payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moallem_commission_payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "v_booking_profit"
+            referencedColumns: ["booking_id"]
+          },
+          {
+            foreignKeyName: "moallem_commission_payments_moallem_id_fkey"
+            columns: ["moallem_id"]
+            isOneToOne: false
+            referencedRelation: "moallems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moallem_commission_payments_wallet_account_id_fkey"
+            columns: ["wallet_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       moallem_payments: {
         Row: {
           amount: number

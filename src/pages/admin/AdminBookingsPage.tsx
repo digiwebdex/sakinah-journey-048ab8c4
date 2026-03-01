@@ -365,6 +365,19 @@ export default function AdminBookingsPage() {
                   <input className={inputClass} type="number" min={1} value={editForm.num_travelers} onChange={(e) => setEditForm({ ...editForm, num_travelers: e.target.value })} />
                 </div>
               </div>
+              {editForm.moallem_id && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">কমিশন/ব্যক্তি (৳)</label>
+                    <input className={inputClass} type="number" min={0} value={editForm.commission_per_person}
+                      onChange={(e) => setEditForm((f: any) => ({ ...f, commission_per_person: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">মোট কমিশন (৳)</label>
+                    <div className={`${inputClass} bg-muted/50 font-bold`}>৳{editTotalCommission.toLocaleString()}</div>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div>
@@ -424,9 +437,10 @@ export default function AdminBookingsPage() {
                   </span>
                 </div>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-7 gap-3 text-sm">
+              <div className="grid grid-cols-3 sm:grid-cols-8 gap-3 text-sm">
                 <div><p className="text-muted-foreground text-xs">Selling</p><p className="font-medium">{fmt(Number(b.total_amount))}</p></div>
                 <div><p className="text-muted-foreground text-xs">Cost</p><p className="font-medium text-muted-foreground">{fmt(Number(b.total_cost || 0))}</p></div>
+                {b.moallem_id && <div><p className="text-muted-foreground text-xs">Commission</p><p className="font-medium text-yellow-600">{fmt(Number(b.total_commission || 0))}</p></div>}
                 <div><p className="text-muted-foreground text-xs">Paid</p><p className="font-medium text-emerald-500">{fmt(Number(b.paid_amount))}</p></div>
                 <div><p className="text-muted-foreground text-xs">Due</p><p className="font-medium text-destructive">{fmt(Number(b.due_amount || 0))}</p></div>
                 <div><p className="text-muted-foreground text-xs">Supplier Paid</p><p className="font-medium text-emerald-500">{fmt(Number(b.paid_to_supplier || 0))}</p></div>

@@ -200,6 +200,7 @@ export default function AdminReportsPage() {
       bookingCount: number; travelers: number;
       totalAmount: number; paidAmount: number; dueAmount: number;
       deposit: number; expenses: number;
+      totalCommission: number; commissionPaid: number; commissionDue: number;
       bookingDetails: any[];
       paymentDetails: any[];
     }> = {};
@@ -216,6 +217,7 @@ export default function AdminReportsPage() {
           bookingCount: 0, travelers: 0,
           totalAmount: 0, paidAmount: 0, dueAmount: 0,
           deposit: 0, expenses: 0,
+          totalCommission: 0, commissionPaid: 0, commissionDue: 0,
           bookingDetails: [], paymentDetails: [],
         };
       }
@@ -225,6 +227,9 @@ export default function AdminReportsPage() {
       m.totalAmount += Number(b.total_amount || 0);
       m.paidAmount += Number(b.paid_amount || 0);
       m.dueAmount += Number(b.due_amount ?? (b.total_amount - b.paid_amount));
+      m.totalCommission += Number(b.total_commission || 0);
+      m.commissionPaid += Number(b.commission_paid || 0);
+      m.commissionDue += Number(b.commission_due || 0);
       m.bookingDetails.push({
         trackingId: b.tracking_id,
         guestName: b.guest_name || profileMap[b.user_id]?.full_name || "-",
@@ -265,6 +270,7 @@ export default function AdminReportsPage() {
             name: ml.name, phone: ml.phone || "-", status: ml.status || "active",
             bookingCount: 0, travelers: 0, totalAmount: 0, paidAmount: 0, dueAmount: 0,
             deposit: Number(mp.amount), expenses: 0,
+            totalCommission: 0, commissionPaid: 0, commissionDue: 0,
             bookingDetails: [],
             paymentDetails: [{
               amount: Number(mp.amount),
@@ -279,7 +285,7 @@ export default function AdminReportsPage() {
 
     return Object.values(map).map((d) => ({
       ...d,
-      profit: d.paidAmount - d.expenses,
+      profit: d.totalAmount - d.expenses - d.totalCommission,
     }));
   }, [bookings, expenses, moallemPayments, moallemMap, profileMap, moallemDateFrom, moallemDateTo]);
 
@@ -454,6 +460,7 @@ export default function AdminReportsPage() {
           <TabsTrigger value="moallem-payments">মোয়াল্লেম পেমেন্ট</TabsTrigger>
           <TabsTrigger value="moallem-due">মোয়াল্লেম বকেয়া</TabsTrigger>
           <TabsTrigger value="moallem-profit">মোয়াল্লেম লাভ</TabsTrigger>
+          <TabsTrigger value="moallem-commission">কমিশন রিপোর্ট</TabsTrigger>
         </TabsList>
 
         {/* Filters */}
@@ -763,6 +770,42 @@ export default function AdminReportsPage() {
         <TabsContent value="moallem-profit">
           <MoallemExpandableTable rows={moallemRows} fmt={fmt} view="profit" />
         </TabsContent>
+
+        {/* Moallem Commission */}
+        <TabsContent value="moallem-commission">
+          <Table>
+            <TableHeader><TableRow>
+              <TableHead>মোয়াল্লেম</TableHead><TableHead>ফোন</TableHead>
+              <TableHead className="text-right">হাজী</TableHead>
+              <TableHead className="text-right">মোট কমিশন</TableHead>
+              <TableHead className="text-right">কমিশন পরিশোধিত</TableHead>
+              <TableHead className="text-right">কমিশন বকেয়া</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>
+              {moallemRows.filter(r => (r.totalCommission || 0) > 0).length === 0 && (
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">কোনো কমিশন ডেটা নেই</TableCell></TableRow>
+              )}
+              {moallemRows.filter(r => (r.totalCommission || 0) > 0).map((r, i) => (
+                <TableRow key={i}>
+                  <TableCell className="font-medium">{r.name}</TableCell>
+                  <TableCell>{r.phone}</TableCell>
+                  <TableCell className="text-right">{r.travelers}</TableCell>
+                  <TableCell className="text-right font-bold">{fmt(r.totalCommission)}</TableCell>
+                  <TableCell className="text-right text-emerald-500">{fmt(r.commissionPaid)}</TableCell>
+                  <TableCell className="text-right text-destructive font-bold">{fmt(r.commissionDue)}</TableCell>
+                </TableRow>
+              ))}
+              {moallemRows.filter(r => (r.totalCommission || 0) > 0).length > 0 && (
+                <TableRow className="font-bold border-t-2">
+                  <TableCell colSpan={3}>মোট</TableCell>
+                  <TableCell className="text-right">{fmt(moallemRows.reduce((s, r) => s + (r.totalCommission || 0), 0))}</TableCell>
+                  <TableCell className="text-right text-emerald-500">{fmt(moallemRows.reduce((s, r) => s + (r.commissionPaid || 0), 0))}</TableCell>
+                  <TableCell className="text-right text-destructive">{fmt(moallemRows.reduce((s, r) => s + (r.commissionDue || 0), 0))}</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -775,13 +818,14 @@ function MoallemExpandableTable({ rows, fmt, view }: { rows: any[]; fmt: (n: num
     bookings: a.bookings + r.bookingCount, travelers: a.travelers + r.travelers,
     total: a.total + r.totalAmount, paid: a.paid + r.paidAmount, due: a.due + r.dueAmount,
     deposit: a.deposit + r.deposit, expenses: a.expenses + r.expenses, profit: a.profit + r.profit,
-  }), { bookings: 0, travelers: 0, total: 0, paid: 0, due: 0, deposit: 0, expenses: 0, profit: 0 });
+    commission: a.commission + (r.totalCommission || 0), commissionPaid: a.commissionPaid + (r.commissionPaid || 0), commissionDue: a.commissionDue + (r.commissionDue || 0),
+  }), { bookings: 0, travelers: 0, total: 0, paid: 0, due: 0, deposit: 0, expenses: 0, profit: 0, commission: 0, commissionPaid: 0, commissionDue: 0 });
 
   const headers: Record<string, string[]> = {
     bookings: ["", "মোয়াল্লেম", "ফোন", "স্ট্যাটাস", "বুকিং", "হাজী", "মোট পরিমাণ", "পেইড", "বকেয়া"],
     payments: ["", "মোয়াল্লেম", "ফোন", "মোট ডিপোজিট", "মোট প্যাকেজ", "পেইড", "বকেয়া"],
     due: ["", "মোয়াল্লেম", "ফোন", "মোট পরিমাণ", "পেইড", "বকেয়া", "ডিপোজিট", "আদায় %"],
-    profit: ["", "মোয়াল্লেম", "ফোন", "রেভিনিউ", "খরচ", "লাভ", "মার্জিন %"],
+    profit: ["", "মোয়াল্লেম", "ফোন", "বিক্রয়", "খরচ", "কমিশন", "লাভ", "মার্জিন %"],
   };
 
   return (
@@ -838,10 +882,11 @@ function MoallemExpandableTable({ rows, fmt, view }: { rows: any[]; fmt: (n: num
               )}
               {view === "profit" && (
                 <>
-                  <TableCell className="text-right text-primary">{fmt(r.paidAmount)}</TableCell>
+                  <TableCell className="text-right text-primary">{fmt(r.totalAmount)}</TableCell>
                   <TableCell className="text-right text-destructive">{fmt(r.expenses)}</TableCell>
+                  <TableCell className="text-right text-yellow-600">{fmt(r.totalCommission || 0)}</TableCell>
                   <TableCell className={cn("text-right font-bold", r.profit >= 0 ? "text-primary" : "text-destructive")}>{fmt(r.profit)}</TableCell>
-                  <TableCell className="text-right">{r.paidAmount > 0 ? `${Math.round((r.profit / r.paidAmount) * 100)}%` : "0%"}</TableCell>
+                  <TableCell className="text-right">{r.totalAmount > 0 ? `${Math.round((r.profit / r.totalAmount) * 100)}%` : "0%"}</TableCell>
                 </>
               )}
             </TableRow>
