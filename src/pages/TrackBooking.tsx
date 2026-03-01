@@ -80,25 +80,23 @@ const TrackBooking = () => {
     let bookingData: any = null;
 
     if (isPhoneNumber(rawInput)) {
-      const { data: guestBookings } = await supabase
-        .from("bookings")
-        .select("*, packages(name, type)")
-        .eq("guest_phone", rawInput)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (guestBookings && guestBookings.length > 0) {
-        bookingData = guestBookings[0];
+      // Use secure edge function for public tracking
+      const { data, error } = await supabase.functions.invoke("track-booking", {
+        body: { phone: rawInput },
+      });
+      if (!error && data?.booking) {
+        bookingData = data.booking;
       }
     } else {
       const id = rawInput.toUpperCase();
       setTrackingId(id);
-      const { data } = await supabase
-        .from("bookings")
-        .select("*, packages(name, type)")
-        .eq("tracking_id", id)
-        .maybeSingle();
-      bookingData = data;
+      // Use secure edge function for public tracking
+      const { data, error } = await supabase.functions.invoke("track-booking", {
+        body: { tracking_id: id },
+      });
+      if (!error && data?.booking) {
+        bookingData = data.booking;
+      }
     }
 
     setBooking(bookingData);
