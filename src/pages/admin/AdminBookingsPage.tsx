@@ -155,19 +155,29 @@ export default function AdminBookingsPage() {
 
   const startEdit = (b: any) => {
     setEditingId(b.id);
-    setEditForm({ status: b.status, total_amount: b.total_amount, notes: b.notes || "", num_travelers: b.num_travelers });
+    setEditForm({
+      status: b.status, total_amount: b.total_amount, notes: b.notes || "",
+      num_travelers: b.num_travelers, paid_amount: Number(b.paid_amount || 0),
+    });
   };
+
+  const editDue = editingId ? Math.max(0, Number(editForm.total_amount || 0) - Number(editForm.paid_amount || 0)) : 0;
 
   const saveEdit = async () => {
     if (!editingId) return;
+    const total = Math.max(0, parseFloat(editForm.total_amount) || 0);
+    const paid = Math.min(Math.max(0, parseFloat(editForm.paid_amount) || 0), total);
+    const due = Math.max(0, total - paid);
     const { error } = await supabase.from("bookings").update({
       status: editForm.status,
-      total_amount: parseFloat(editForm.total_amount),
+      total_amount: total,
+      paid_amount: paid,
+      due_amount: due,
       notes: editForm.notes || null,
       num_travelers: parseInt(editForm.num_travelers),
     }).eq("id", editingId);
     if (error) { toast.error(error.message); return; }
-    toast.success("Booking updated");
+    toast.success("বুকিং আপডেট হয়েছে");
     setEditingId(null);
     fetchBookings();
   };
@@ -225,29 +235,44 @@ export default function AdminBookingsPage() {
               <div className="flex justify-between items-center">
                 <p className="font-mono font-bold text-primary text-sm">{b.tracking_id}</p>
                 <div className="flex gap-2">
-                  <button onClick={saveEdit} className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><Save className="h-3 w-3" /> Save</button>
-                  <button onClick={() => setEditingId(null)} className="text-xs bg-secondary text-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><X className="h-3 w-3" /> Cancel</button>
+                  <button onClick={saveEdit} className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><Save className="h-3 w-3" /> সেভ</button>
+                  <button onClick={() => setEditingId(null)} className="text-xs bg-secondary text-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><X className="h-3 w-3" /> বাতিল</button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Status</label>
+                  <label className="text-xs text-muted-foreground block mb-1">স্ট্যাটাস</label>
                   <select className={inputClass} value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
                     {STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1).replace("_", " ")}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Total Amount</label>
-                  <input className={inputClass} type="number" value={editForm.total_amount} onChange={(e) => setEditForm({ ...editForm, total_amount: e.target.value })} />
+                  <label className="text-xs text-muted-foreground block mb-1">মোট মূল্য (৳)</label>
+                  <input className={inputClass} type="number" min={0} value={editForm.total_amount}
+                    onChange={(e) => {
+                      const total = Math.max(0, parseFloat(e.target.value) || 0);
+                      setEditForm((f: any) => ({ ...f, total_amount: total, paid_amount: Math.min(f.paid_amount, total) }));
+                    }} />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Travelers</label>
-                  <input className={inputClass} type="number" value={editForm.num_travelers} onChange={(e) => setEditForm({ ...editForm, num_travelers: e.target.value })} />
+                  <label className="text-xs text-muted-foreground block mb-1">পরিশোধিত (৳)</label>
+                  <input className={inputClass} type="number" min={0} max={editForm.total_amount} value={editForm.paid_amount}
+                    onChange={(e) => setEditForm((f: any) => ({ ...f, paid_amount: Math.min(Math.max(0, parseFloat(e.target.value) || 0), f.total_amount) }))} />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Notes</label>
-                  <input className={inputClass} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
+                  <label className="text-xs text-muted-foreground block mb-1">বকেয়া (৳)</label>
+                  <div className={`${inputClass} bg-muted/50 font-bold ${editDue > 0 ? "text-destructive" : "text-emerald"}`}>
+                    ৳{editDue.toLocaleString()}
+                  </div>
                 </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">যাত্রী</label>
+                  <input className={inputClass} type="number" min={1} value={editForm.num_travelers} onChange={(e) => setEditForm({ ...editForm, num_travelers: e.target.value })} />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">নোট</label>
+                <input className={inputClass} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} placeholder="অতিরিক্ত তথ্য..." />
               </div>
             </div>
           ) : (

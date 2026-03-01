@@ -227,16 +227,19 @@ export default function AdminCreateBookingPage() {
           <div>
             <label className="text-xs text-muted-foreground block mb-1">মোট মূল্য (৳) *</label>
             <input className={inputClass} type="number" min={0} value={form.total_amount}
-              onChange={(e) => setForm({ ...form, total_amount: Math.max(0, parseFloat(e.target.value) || 0) })} />
+              onChange={(e) => {
+                const total = Math.max(0, parseFloat(e.target.value) || 0);
+                setForm(f => ({ ...f, total_amount: total, paid_amount: Math.min(f.paid_amount, total) }));
+              }} />
           </div>
           <div>
             <label className="text-xs text-muted-foreground block mb-1">পরিশোধিত (৳)</label>
-            <input className={inputClass} type="number" min={0} value={form.paid_amount}
-              onChange={(e) => setForm({ ...form, paid_amount: Math.max(0, parseFloat(e.target.value) || 0) })} />
+            <input className={inputClass} type="number" min={0} max={form.total_amount} value={form.paid_amount}
+              onChange={(e) => setForm(f => ({ ...f, paid_amount: Math.min(Math.max(0, parseFloat(e.target.value) || 0), f.total_amount) }))} />
           </div>
           <div>
             <label className="text-xs text-muted-foreground block mb-1">বকেয়া (৳)</label>
-            <div className={`${inputClass} bg-muted/50 font-bold text-destructive`}>
+            <div className={`${inputClass} bg-muted/50 font-bold ${dueAmount > 0 ? "text-destructive" : "text-emerald"}`}>
               ৳{dueAmount.toLocaleString()}
             </div>
           </div>
@@ -258,10 +261,10 @@ export default function AdminCreateBookingPage() {
         </div>
       </div>
 
-      {/* Summary */}
+      {/* Live Summary */}
       <div className="bg-primary/5 border border-primary/20 rounded-xl p-5">
         <h3 className="font-heading font-semibold text-sm mb-3">সারসংক্ষেপ</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
           <div>
             <p className="text-xs text-muted-foreground">কাস্টমার</p>
             <p className="font-medium">{form.guest_name || "—"}</p>
@@ -272,11 +275,15 @@ export default function AdminCreateBookingPage() {
           </div>
           <div>
             <p className="text-xs text-muted-foreground">মোট</p>
-            <p className="font-medium">৳{form.total_amount.toLocaleString()}</p>
+            <p className="font-heading font-bold text-foreground">৳{form.total_amount.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">পরিশোধিত</p>
+            <p className="font-heading font-bold text-emerald">৳{form.paid_amount.toLocaleString()}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">বকেয়া</p>
-            <p className="font-medium text-destructive">৳{dueAmount.toLocaleString()}</p>
+            <p className={`font-heading font-bold ${dueAmount > 0 ? "text-destructive" : "text-emerald"}`}>৳{dueAmount.toLocaleString()}</p>
           </div>
         </div>
       </div>
