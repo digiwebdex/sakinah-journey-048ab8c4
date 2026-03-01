@@ -201,7 +201,7 @@ export default function AdminPackagesPage() {
 
       <div className="space-y-3">
         {packages.map((p: any) => (
-          <div key={p.id} className="bg-card border border-border rounded-lg p-4">
+          <div key={p.id} className="bg-card border border-border rounded-lg p-4 cursor-pointer hover:border-primary/30 transition-colors" onClick={() => setViewPkg(p)}>
             <div className="flex items-start gap-4">
               {p.image_url && (
                 <img src={p.image_url} alt={p.name} className="w-16 h-16 rounded-lg object-cover border border-border flex-shrink-0" />
@@ -225,7 +225,7 @@ export default function AdminPackagesPage() {
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="flex items-center gap-3 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                 <p className="font-heading font-bold text-primary">৳{Number(p.price).toLocaleString()}</p>
                 <AdminActionMenu
                   inlineCount={2}

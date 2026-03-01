@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, X, Building2, Bed, Trash2, Edit2, Save, ChevronDown, ChevronUp, Image as ImageIcon } from "lucide-react";
+import { Plus, X, Building2, Bed, Trash2, Edit2, Save, ChevronDown, ChevronUp, Image as ImageIcon, Star, MapPin, Eye } from "lucide-react";
 import HotelImageUpload from "@/components/admin/HotelImageUpload";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import HotelGalleryManager from "@/components/admin/HotelGalleryManager";
 
 interface Props {
@@ -20,6 +21,8 @@ const AdminHotelManager = ({ hotels, onRefresh }: Props) => {
   const [editingHotel, setEditingHotel] = useState<string | null>(null);
   const [editingRoom, setEditingRoom] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: "hotel" | "room"; id: string; hotelId?: string } | null>(null);
+  const [viewHotel, setViewHotel] = useState<any>(null);
+  const [viewHotelRooms, setViewHotelRooms] = useState<any[]>([]);
 
   const emptyHotelForm = { name: "", location: "", city: "Makkah", description: "", star_rating: "5", distance_to_haram: "", image_url: "", amenities: "" };
   const emptyRoomForm = { name: "", description: "", capacity: "2", price_per_night: "", image_url: "", amenities: "" };
@@ -226,7 +229,7 @@ const AdminHotelManager = ({ hotels, onRefresh }: Props) => {
                     <img src={hotel.image_url} alt={hotel.name} className="w-full h-full object-cover" />
                   </div>
                 )}
-                <div className="flex-1 p-4 flex items-center justify-between cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => !isEditing && toggleExpand(hotel.id)}>
+                <div className="flex-1 p-4 flex items-center justify-between cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => { if (!isEditing) { setViewHotel(hotel); supabase.from("hotel_rooms").select("*").eq("hotel_id", hotel.id).order("price_per_night").then(({ data }) => setViewHotelRooms(data || [])); } }}>
                   <div className="flex items-center gap-3">
                     {!hotel.image_url && <Building2 className="h-5 w-5 text-primary flex-shrink-0" />}
                     <div>
@@ -245,6 +248,9 @@ const AdminHotelManager = ({ hotels, onRefresh }: Props) => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <button onClick={(e) => { e.stopPropagation(); const openView = async () => { setViewHotel(hotel); const { data } = await supabase.from("hotel_rooms").select("*").eq("hotel_id", hotel.id).order("price_per_night"); setViewHotelRooms(data || []); }; openView(); }} className="text-xs text-muted-foreground hover:text-primary p-1">
+                      <Eye className="h-3.5 w-3.5" />
+                    </button>
                     <button onClick={(e) => { e.stopPropagation(); startEditHotel(hotel); }} className="text-xs text-muted-foreground hover:text-primary p-1">
                       <Edit2 className="h-3.5 w-3.5" />
                     </button>
@@ -376,6 +382,95 @@ const AdminHotelManager = ({ hotels, onRefresh }: Props) => {
           </div>
         </div>
       )}
+
+      {/* Hotel Detail View Dialog */}
+      <Dialog open={!!viewHotel} onOpenChange={(o) => { if (!o) { setViewHotel(null); setViewHotelRooms([]); } }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" /> {viewHotel?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {viewHotel && (
+            <div className="space-y-4 text-sm">
+              {viewHotel.image_url && (
+                <img src={viewHotel.image_url} alt={viewHotel.name} className="w-full h-48 rounded-lg object-cover" />
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <span className="text-muted-foreground text-xs block">শহর</span>
+                  <span className="font-medium flex items-center gap-1"><MapPin className="h-3 w-3" /> {viewHotel.city}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs block">রেটিং</span>
+                  <span className="font-medium flex items-center gap-1"><Star className="h-3 w-3 text-primary" /> {"★".repeat(viewHotel.star_rating || 0)}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs block">অবস্থান</span>
+                  <span className="font-medium">{viewHotel.location}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs block">হারাম থেকে দূরত্ব</span>
+                  <span className="font-medium">{viewHotel.distance_to_haram || "—"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs block">স্ট্যাটাস</span>
+                  <span className={`font-medium ${viewHotel.is_active ? "text-emerald" : "text-destructive"}`}>
+                    {viewHotel.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}
+                  </span>
+                </div>
+              </div>
+              {viewHotel.description && (
+                <div><span className="text-muted-foreground text-xs block">বিবরণ</span><p>{viewHotel.description}</p></div>
+              )}
+              {Array.isArray(viewHotel.amenities) && viewHotel.amenities.length > 0 && (
+                <div>
+                  <span className="text-muted-foreground text-xs block mb-1">সুবিধাসমূহ</span>
+                  <div className="flex flex-wrap gap-1">
+                    {viewHotel.amenities.map((a: string, i: number) => (
+                      <span key={i} className="text-xs bg-secondary px-2 py-0.5 rounded capitalize">{a}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {Array.isArray(viewHotel.gallery) && viewHotel.gallery.length > 0 && (
+                <div>
+                  <span className="text-muted-foreground text-xs block mb-1">গ্যালারি ({viewHotel.gallery.length})</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {viewHotel.gallery.slice(0, 6).map((url: string, i: number) => (
+                      <img key={i} src={url} alt="" className="w-full h-20 rounded object-cover border border-border" />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {viewHotelRooms.length > 0 && (
+                <div>
+                  <span className="text-muted-foreground text-xs block mb-2">কক্ষসমূহ ({viewHotelRooms.length})</span>
+                  <div className="space-y-2">
+                    {viewHotelRooms.map((room: any) => (
+                      <div key={room.id} className="bg-secondary/30 rounded-lg p-3 flex items-center gap-3">
+                        {room.image_url && <img src={room.image_url} alt={room.name} className="w-14 h-14 rounded object-cover flex-shrink-0" />}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm">{room.name}</p>
+                          <p className="text-xs text-muted-foreground">ধারণক্ষমতা: {room.capacity} জন • ৳{Number(room.price_per_night).toLocaleString()}/রাত</p>
+                          {Array.isArray(room.amenities) && room.amenities.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {room.amenities.map((a: string, i: number) => <span key={i} className="text-[10px] bg-secondary px-1.5 py-0.5 rounded">{a}</span>)}
+                            </div>
+                          )}
+                        </div>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${room.is_available ? "bg-emerald/10 text-emerald" : "bg-destructive/10 text-destructive"}`}>
+                          {room.is_available ? "Available" : "Unavailable"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
