@@ -136,6 +136,9 @@ export type Database = {
       }
       bookings: {
         Row: {
+          commission_due: number
+          commission_paid: number
+          commission_per_person: number
           cost_price_per_person: number | null
           created_at: string
           due_amount: number | null
@@ -161,12 +164,16 @@ export type Database = {
           supplier_agent_id: string | null
           supplier_due: number
           total_amount: number
+          total_commission: number
           total_cost: number | null
           tracking_id: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          commission_due?: number
+          commission_paid?: number
+          commission_per_person?: number
           cost_price_per_person?: number | null
           created_at?: string
           due_amount?: number | null
@@ -192,12 +199,16 @@ export type Database = {
           supplier_agent_id?: string | null
           supplier_due?: number
           total_amount: number
+          total_commission?: number
           total_cost?: number | null
           tracking_id?: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          commission_due?: number
+          commission_paid?: number
+          commission_per_person?: number
           cost_price_per_person?: number | null
           created_at?: string
           due_amount?: number | null
@@ -223,6 +234,7 @@ export type Database = {
           supplier_agent_id?: string | null
           supplier_due?: number
           total_amount?: number
+          total_commission?: number
           total_cost?: number | null
           tracking_id?: string
           updated_at?: string
@@ -1173,6 +1185,9 @@ export type Database = {
       v_booking_profit: {
         Row: {
           booking_id: string | null
+          commission_due: number | null
+          commission_paid: number | null
+          commission_per_person: number | null
           cost_price_per_person: number | null
           due_amount: number | null
           extra_expense: number | null
@@ -1191,6 +1206,7 @@ export type Database = {
           status: string | null
           supplier_due: number | null
           total_amount: number | null
+          total_commission: number | null
           total_cost: number | null
           total_expenses: number | null
           total_payments: number | null
