@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Play, X } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -35,6 +35,32 @@ const videos = [
     src: "/videos/makkah-hotel.mp4",
   },
 ];
+
+function LazyVideo({ src, className }: { src: string; className: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); } },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className={className}>
+      {isVisible ? (
+        <video src={src} muted playsInline preload="none" className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full bg-muted" />
+      )}
+    </div>
+  );
+}
 
 export default function VideoGuideSection() {
   const { language } = useLanguage();
@@ -76,13 +102,7 @@ export default function VideoGuideSection() {
               onClick={() => setPlayingIndex(i)}
             >
               <div className="relative h-44 overflow-hidden bg-muted">
-                <video
-                  src={video.src}
-                  muted
-                  playsInline
-                  preload="metadata"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+                <LazyVideo src={video.src} className="w-full h-full group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center shadow-gold group-hover:scale-110 transition-transform">

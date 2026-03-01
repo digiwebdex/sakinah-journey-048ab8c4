@@ -33,7 +33,7 @@ const HeroSection = () => {
     <section ref={sectionRef} id="home" className="relative min-h-[100dvh] flex flex-col justify-center overflow-hidden">
       {/* Parallax Background */}
       <motion.div className="absolute inset-0 will-change-transform" style={{ y: imgY }}>
-        <img src={heroImage} alt="The Holy Kaaba at night, illuminated by golden lights" className="w-full h-[130%] object-cover object-center brightness-[0.7] saturate-[1.1]" />
+        <img src={heroImage} alt="The Holy Kaaba at night, illuminated by golden lights" className="w-full h-[130%] object-cover object-center brightness-[0.7] saturate-[1.1]" loading="eager" fetchPriority="high" decoding="async" />
       </motion.div>
 
       {/* Overlays */}

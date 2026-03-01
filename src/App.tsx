@@ -1,40 +1,50 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import Packages from "./pages/Packages";
-import PackageDetail from "./pages/PackageDetail";
-import Hotels from "./pages/Hotels";
-import HotelDetail from "./pages/HotelDetail";
-import Booking from "./pages/Booking";
-import TrackBooking from "./pages/TrackBooking";
-import ResetPassword from "./pages/ResetPassword";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import NotFound from "./pages/NotFound";
 
-import AdminLayout from "./components/admin/AdminLayout";
-import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
-import AdminBookingsPage from "./pages/admin/AdminBookingsPage";
-import AdminCustomersPage from "./pages/admin/AdminCustomersPage";
-import AdminPackagesPage from "./pages/admin/AdminPackagesPage";
-import AdminHotelsPage from "./pages/admin/AdminHotelsPage";
-import AdminPaymentsPage from "./pages/admin/AdminPaymentsPage";
-import AdminDueAlertsPage from "./pages/admin/AdminDueAlertsPage";
-import AdminAccountingPage from "./pages/admin/AdminAccountingPage";
-import AdminReportsPage from "./pages/admin/AdminReportsPage";
-import AdminCmsPage from "./pages/admin/AdminCmsPage";
-import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
-import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage";
-import AdminChartOfAccountsPage from "./pages/admin/AdminChartOfAccountsPage";
-import AdminReceivablesPage from "./pages/admin/AdminReceivablesPage";
-import AdminCreateBookingPage from "./pages/admin/AdminCreateBookingPage";
+// Lazy load all non-homepage routes
+const Auth = lazy(() => import("./pages/Auth"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Packages = lazy(() => import("./pages/Packages"));
+const PackageDetail = lazy(() => import("./pages/PackageDetail"));
+const Hotels = lazy(() => import("./pages/Hotels"));
+const HotelDetail = lazy(() => import("./pages/HotelDetail"));
+const Booking = lazy(() => import("./pages/Booking"));
+const TrackBooking = lazy(() => import("./pages/TrackBooking"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Lazy load admin pages (heavy: recharts, xlsx, jspdf)
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
+const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage"));
+const AdminBookingsPage = lazy(() => import("./pages/admin/AdminBookingsPage"));
+const AdminCustomersPage = lazy(() => import("./pages/admin/AdminCustomersPage"));
+const AdminPackagesPage = lazy(() => import("./pages/admin/AdminPackagesPage"));
+const AdminHotelsPage = lazy(() => import("./pages/admin/AdminHotelsPage"));
+const AdminPaymentsPage = lazy(() => import("./pages/admin/AdminPaymentsPage"));
+const AdminDueAlertsPage = lazy(() => import("./pages/admin/AdminDueAlertsPage"));
+const AdminAccountingPage = lazy(() => import("./pages/admin/AdminAccountingPage"));
+const AdminReportsPage = lazy(() => import("./pages/admin/AdminReportsPage"));
+const AdminCmsPage = lazy(() => import("./pages/admin/AdminCmsPage"));
+const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
+const AdminNotificationsPage = lazy(() => import("./pages/admin/AdminNotificationsPage"));
+const AdminChartOfAccountsPage = lazy(() => import("./pages/admin/AdminChartOfAccountsPage"));
+const AdminReceivablesPage = lazy(() => import("./pages/admin/AdminReceivablesPage"));
+const AdminCreateBookingPage = lazy(() => import("./pages/admin/AdminCreateBookingPage"));
 
 const queryClient = new QueryClient();
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -42,40 +52,42 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/packages" element={<Packages />} />
-          <Route path="/packages/:id" element={<PackageDetail />} />
-          <Route path="/hotels" element={<Hotels />} />
-          <Route path="/hotels/:id" element={<HotelDetail />} />
-          <Route path="/booking" element={<Booking />} />
-          <Route path="/track" element={<TrackBooking />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/packages" element={<Packages />} />
+            <Route path="/packages/:id" element={<PackageDetail />} />
+            <Route path="/hotels" element={<Hotels />} />
+            <Route path="/hotels/:id" element={<HotelDetail />} />
+            <Route path="/booking" element={<Booking />} />
+            <Route path="/track" element={<TrackBooking />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboardPage />} />
-            <Route path="bookings" element={<AdminBookingsPage />} />
-            <Route path="bookings/create" element={<AdminCreateBookingPage />} />
-            <Route path="customers" element={<AdminCustomersPage />} />
-            <Route path="packages" element={<AdminPackagesPage />} />
-            <Route path="hotels" element={<AdminHotelsPage />} />
-            <Route path="payments" element={<AdminPaymentsPage />} />
-            <Route path="due-alerts" element={<AdminDueAlertsPage />} />
-            <Route path="notifications" element={<AdminNotificationsPage />} />
-            <Route path="accounting" element={<AdminAccountingPage />} />
-            <Route path="chart-of-accounts" element={<AdminChartOfAccountsPage />} />
-            <Route path="receivables" element={<AdminReceivablesPage />} />
-            <Route path="reports" element={<AdminReportsPage />} />
-            <Route path="cms" element={<AdminCmsPage />} />
-            <Route path="settings" element={<AdminSettingsPage />} />
-          </Route>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboardPage />} />
+              <Route path="bookings" element={<AdminBookingsPage />} />
+              <Route path="bookings/create" element={<AdminCreateBookingPage />} />
+              <Route path="customers" element={<AdminCustomersPage />} />
+              <Route path="packages" element={<AdminPackagesPage />} />
+              <Route path="hotels" element={<AdminHotelsPage />} />
+              <Route path="payments" element={<AdminPaymentsPage />} />
+              <Route path="due-alerts" element={<AdminDueAlertsPage />} />
+              <Route path="notifications" element={<AdminNotificationsPage />} />
+              <Route path="accounting" element={<AdminAccountingPage />} />
+              <Route path="chart-of-accounts" element={<AdminChartOfAccountsPage />} />
+              <Route path="receivables" element={<AdminReceivablesPage />} />
+              <Route path="reports" element={<AdminReportsPage />} />
+              <Route path="cms" element={<AdminCmsPage />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
+            </Route>
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
