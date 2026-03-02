@@ -32,11 +32,11 @@ export function addQrToDoc(
 
   try {
     doc.addImage(qrDataUrl, "PNG", x, y, size, size);
-    // Small label under QR
+    // Label under QR
     doc.setFontSize(5.5);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(120);
-    doc.text("Scan to Track", x + size / 2, y + size + 3, { align: "center" });
+    doc.text("Scan to verify booking authenticity", x + size / 2, y + size + 3, { align: "center" });
     doc.setTextColor(0);
   } catch {
     /* QR generation failed silently */

@@ -134,7 +134,7 @@ export default function InvoicePage() {
                   className="w-20 h-20"
                   style={{ imageRendering: "pixelated" }}
                 />
-                <p className="text-[8px] text-gray-400">Scan to Track</p>
+                <p className="text-[8px] text-gray-400">Scan to verify booking authenticity</p>
               </div>
             </div>
 
