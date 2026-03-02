@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, X, Shield, Trash2, Users, Bell } from "lucide-react";
+import { Plus, X, Shield, Trash2, Users, Bell, PenTool } from "lucide-react";
 import AdminDocumentViewer from "@/components/AdminDocumentViewer";
 import { useAdminRole } from "@/components/admin/AdminLayout";
 import NotificationSettingsManager from "@/components/admin/NotificationSettingsManager";
+import SignatureSettingsManager from "@/components/admin/SignatureSettingsManager";
 
 const inputClass = "w-full bg-secondary border border-border rounded-md px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
 const ROLES = ["admin", "manager", "accountant", "staff"];
@@ -234,6 +235,18 @@ export default function AdminSettingsPage() {
           </h2>
           <div className="bg-card border border-border rounded-lg p-5">
             <NotificationSettingsManager />
+          </div>
+        </section>
+      )}
+
+      {/* Signature & Stamp Settings (Admin only) */}
+      {currentRole === "admin" && (
+        <section>
+          <h2 className="font-heading text-xl font-bold flex items-center gap-2 mb-4">
+            <PenTool className="h-5 w-5 text-primary" /> PDF Signature & Stamp
+          </h2>
+          <div className="bg-card border border-border rounded-lg p-5">
+            <SignatureSettingsManager />
           </div>
         </section>
       )}

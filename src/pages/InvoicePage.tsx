@@ -15,6 +15,7 @@ export default function InvoicePage() {
   const [customer, setCustomer] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [signatureData, setSignatureData] = useState<any>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
   const company: CompanyInfo = {
@@ -43,14 +44,16 @@ export default function InvoicePage() {
       return;
     }
 
-    const [payRes, profRes] = await Promise.all([
+    const [payRes, profRes, sigRes] = await Promise.all([
       supabase.from("payments").select("*").eq("booking_id", bk.id).order("installment_number"),
       bk.user_id ? supabase.from("profiles").select("full_name, phone, passport_number, address").eq("user_id", bk.user_id).single() : Promise.resolve({ data: null }),
+      supabase.from("company_settings").select("setting_value").eq("setting_key", "signature").maybeSingle(),
     ]);
 
     setBooking(bk);
     setPayments(payRes.data || []);
     setCustomer(profRes.data || { full_name: bk.guest_name, phone: bk.guest_phone, passport_number: bk.guest_passport, address: bk.guest_address });
+    if (sigRes.data?.setting_value) setSignatureData(sigRes.data.setting_value);
     setLoading(false);
   };
 
@@ -197,15 +200,26 @@ export default function InvoicePage() {
             </div>
 
             {/* Signature Section */}
-            <div className="flex justify-between mt-16 pt-4">
+            <div className="flex justify-between items-end mt-16 pt-4">
               <div className="text-center">
                 <div className="border-t border-gray-400 w-48 mb-1"></div>
                 <p className="text-xs text-gray-500">Customer Signature</p>
               </div>
               <div className="text-center">
+                {signatureData?.stamp_url && (
+                  <img src={signatureData.stamp_url} alt="Stamp" className="max-h-16 object-contain mx-auto mb-1 opacity-70" />
+                )}
+                {signatureData?.signature_url && (
+                  <img src={signatureData.signature_url} alt="Signature" className="max-h-12 object-contain mx-auto mb-1" />
+                )}
                 <div className="border-t border-gray-400 w-48 mb-1"></div>
-                <p className="text-xs text-gray-500">Authorized Signature</p>
-                <p className="text-[10px] text-gray-400 mt-1">Company Seal</p>
+                <p className="text-xs text-gray-800 font-semibold">{signatureData?.authorized_name || "Authorized Signature"}</p>
+                {signatureData?.designation && (
+                  <p className="text-[10px] text-gray-400 mt-0.5">{signatureData.designation}</p>
+                )}
+                {!signatureData?.designation && (
+                  <p className="text-[10px] text-gray-400 mt-1">Company Seal</p>
+                )}
               </div>
             </div>
 

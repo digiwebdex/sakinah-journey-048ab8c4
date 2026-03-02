@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import logoImg from "@/assets/logo.jpg";
 import { CompanyInfo } from "./invoiceGenerator";
+import { getSignatureData, SignatureData } from "./pdfSignature";
 
 const fmt = (n: number) => `BDT ${n.toLocaleString()}`;
 const fmtDate = (d: string | null) =>
@@ -41,25 +42,54 @@ function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string) {
   if (company.email) contactParts.push(`Email: ${company.email}`);
   if (contactParts.length) doc.text(contactParts.join("  |  "), textX, 31);
   if (company.address) doc.text(company.address, textX, 36);
-  doc.setDrawColor(200);
+  
+  // Gold accent line
+  doc.setDrawColor(198, 165, 92);
+  doc.setLineWidth(0.8);
   doc.line(14, 40, pageWidth - 14, 40);
+  doc.setLineWidth(0.2);
   return 46;
 }
 
-function addSignatureAndFooter(doc: jsPDF) {
+function addSignatureAndFooter(doc: jsPDF, sig: SignatureData) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   let y = pageHeight - 40;
+  const rightCenter = pageWidth - 47;
+
+  // Stamp & signature images
+  if (sig.stamp_base64) {
+    try { doc.addImage(sig.stamp_base64, "PNG", rightCenter - 15, y - 30, 30, 30); } catch { /* skip */ }
+  }
+  if (sig.signature_base64) {
+    try { doc.addImage(sig.signature_base64, "PNG", rightCenter - 20, y - 18, 40, 16); } catch { /* skip */ }
+  }
+
   doc.setDrawColor(180);
   doc.line(14, y, 80, y);
   doc.line(pageWidth - 80, y, pageWidth - 14, y);
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.text("Customer Signature", 14, y + 5);
-  doc.text("Authorized Signature", pageWidth - 80, y + 5);
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "italic");
-  doc.text("Company Seal", pageWidth - 55, y + 10);
+
+  if (sig.authorized_name) {
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text(sig.authorized_name, rightCenter, y + 5, { align: "center" });
+  } else {
+    doc.text("Authorized Signature", pageWidth - 80, y + 5);
+  }
+
+  if (sig.designation) {
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    doc.text(sig.designation, rightCenter, y + 10, { align: "center" });
+  } else {
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "italic");
+    doc.text("Company Seal", rightCenter, y + 10, { align: "center" });
+  }
+
   doc.setTextColor(150);
   doc.text("This is a computer-generated document. For queries: +880 1601-505050 | rahekaba.info@gmail.com", pageWidth / 2, pageHeight - 10, { align: "center" });
   doc.setTextColor(0);
@@ -82,7 +112,7 @@ export interface MoallemPdfData {
 
 export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyInfo) {
   const doc = new jsPDF();
-  const logoBase64 = await loadLogoBase64();
+  const [logoBase64, sig] = await Promise.all([loadLogoBase64(), getSignatureData()]);
   let y = addHeader(doc, company, logoBase64);
   const pw = doc.internal.pageSize.getWidth();
 
@@ -94,7 +124,6 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
   doc.text(`Date: ${fmtDate(new Date().toISOString())}`, pw - 14 - 60, y + 6);
   y += 14;
 
-  // Profile info
   doc.setFillColor(248, 248, 248);
   doc.rect(14, y, pw - 28, 24, "F");
   doc.setFontSize(10);
@@ -106,7 +135,6 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
   doc.text(`Address: ${data.address || "N/A"} | Status: ${data.status}`, 18, y + 18);
   y += 30;
 
-  // Summary
   doc.setFillColor(40, 46, 56);
   doc.rect(14, y, pw - 28, 18, "F");
   doc.setTextColor(255);
@@ -122,7 +150,6 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
   doc.setTextColor(0);
   y += 24;
 
-  // Bookings table
   if (data.bookings.length > 0) {
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
@@ -139,7 +166,6 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
     y = (doc as any).lastAutoTable?.finalY + 8 || y + 20;
   }
 
-  // Moallem payments
   if (data.moallemPayments.length > 0) {
     if (y > 240) { doc.addPage(); y = 20; }
     doc.setFontSize(10);
@@ -157,7 +183,6 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
     y = (doc as any).lastAutoTable?.finalY + 8 || y + 20;
   }
 
-  // Commission payments
   if (data.commissionPayments.length > 0) {
     if (y > 240) { doc.addPage(); y = 20; }
     doc.setFontSize(10);
@@ -174,8 +199,8 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
     });
   }
 
-  addSignatureAndFooter(doc);
-  doc.save(`Moallem_${data.name.replace(/\s+/g, "_")}.pdf`);
+  addSignatureAndFooter(doc, sig);
+  doc.save(`Moallem-${data.name.replace(/\s+/g, "_")}.pdf`);
 }
 
 // ── Supplier Agent Profile PDF ──
@@ -193,7 +218,7 @@ export interface SupplierPdfData {
 
 export async function generateSupplierPdf(data: SupplierPdfData, company: CompanyInfo) {
   const doc = new jsPDF();
-  const logoBase64 = await loadLogoBase64();
+  const [logoBase64, sig] = await Promise.all([loadLogoBase64(), getSignatureData()]);
   let y = addHeader(doc, company, logoBase64);
   const pw = doc.internal.pageSize.getWidth();
 
@@ -256,8 +281,8 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
     });
   }
 
-  addSignatureAndFooter(doc);
-  doc.save(`Supplier_${data.agent_name.replace(/\s+/g, "_")}.pdf`);
+  addSignatureAndFooter(doc, sig);
+  doc.save(`Supplier-${data.agent_name.replace(/\s+/g, "_")}.pdf`);
 }
 
 // ── Customer Profile PDF ──
@@ -277,7 +302,7 @@ export interface CustomerPdfData {
 
 export async function generateCustomerPdf(data: CustomerPdfData, company: CompanyInfo) {
   const doc = new jsPDF();
-  const logoBase64 = await loadLogoBase64();
+  const [logoBase64, sig] = await Promise.all([loadLogoBase64(), getSignatureData()]);
   let y = addHeader(doc, company, logoBase64);
   const pw = doc.internal.pageSize.getWidth();
 
@@ -341,8 +366,8 @@ export async function generateCustomerPdf(data: CustomerPdfData, company: Compan
     });
   }
 
-  addSignatureAndFooter(doc);
-  doc.save(`Customer_${(data.full_name || "Unknown").replace(/\s+/g, "_")}.pdf`);
+  addSignatureAndFooter(doc, sig);
+  doc.save(`Customer-${(data.full_name || "Unknown").replace(/\s+/g, "_")}.pdf`);
 }
 
 // ── Get company info from CMS ──

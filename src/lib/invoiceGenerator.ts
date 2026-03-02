@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import logoImg from "@/assets/logo.jpg";
+import { getSignatureData, SignatureData } from "./pdfSignature";
 
 export interface CompanyInfo {
   name?: string;
@@ -79,16 +80,19 @@ function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string) {
   if (contactParts.length) doc.text(contactParts.join("  |  "), textX, 31);
   if (company.address) doc.text(company.address, textX, 36);
 
-  doc.setDrawColor(200);
+  // Gold accent line
+  doc.setDrawColor(198, 165, 92);
+  doc.setLineWidth(0.8);
   doc.line(14, 40, pageWidth - 14, 40);
+  doc.setLineWidth(0.2);
 
   return 46;
 }
 
-function addSignatureSection(doc: jsPDF, y: number) {
+function addSignatureSection(doc: jsPDF, y: number, sig: SignatureData) {
   const pageWidth = doc.internal.pageSize.getWidth();
   y += 20;
-  
+
   // Left signature
   doc.setDrawColor(180);
   doc.line(14, y, 80, y);
@@ -96,14 +100,35 @@ function addSignatureSection(doc: jsPDF, y: number) {
   doc.setFont("helvetica", "normal");
   doc.text("Customer Signature", 14, y + 5);
 
-  // Right signature
-  doc.line(pageWidth - 80, y, pageWidth - 14, y);
-  doc.text("Authorized Signature", pageWidth - 80, y + 5);
+  // Right side: stamp + signature image + line + name + designation
+  const rightCenter = pageWidth - 47;
 
-  // Company seal
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "italic");
-  doc.text("Company Seal", pageWidth - 55, y + 10);
+  if (sig.stamp_base64) {
+    try { doc.addImage(sig.stamp_base64, "PNG", rightCenter - 15, y - 30, 30, 30); } catch { /* skip */ }
+  }
+  if (sig.signature_base64) {
+    try { doc.addImage(sig.signature_base64, "PNG", rightCenter - 20, y - 18, 40, 16); } catch { /* skip */ }
+  }
+
+  doc.line(pageWidth - 80, y, pageWidth - 14, y);
+  
+  if (sig.authorized_name) {
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text(sig.authorized_name, rightCenter, y + 5, { align: "center" });
+  } else {
+    doc.text("Authorized Signature", pageWidth - 80, y + 5);
+  }
+
+  if (sig.designation) {
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    doc.text(sig.designation, rightCenter, y + 10, { align: "center" });
+  } else {
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "italic");
+    doc.text("Company Seal", rightCenter, y + 10, { align: "center" });
+  }
 
   return y + 16;
 }
@@ -125,7 +150,7 @@ export async function generateInvoice(
   company: CompanyInfo
 ) {
   const doc = new jsPDF();
-  const logoBase64 = await loadLogoBase64();
+  const [logoBase64, sig] = await Promise.all([loadLogoBase64(), getSignatureData()]);
   let y = addHeader(doc, company, logoBase64);
   const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -211,10 +236,10 @@ export async function generateInvoice(
   y += 24;
 
   // Signature
-  y = addSignatureSection(doc, y);
+  y = addSignatureSection(doc, y, sig);
   addFooter(doc);
 
-  doc.save(`Invoice_${booking.tracking_id}.pdf`);
+  doc.save(`Booking-${booking.tracking_id}.pdf`);
 }
 
 export async function generateReceipt(
@@ -225,7 +250,7 @@ export async function generateReceipt(
   allPayments?: InvoicePayment[]
 ) {
   const doc = new jsPDF();
-  const logoBase64 = await loadLogoBase64();
+  const [logoBase64, sig] = await Promise.all([loadLogoBase64(), getSignatureData()]);
   let y = addHeader(doc, company, logoBase64);
   const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -287,10 +312,10 @@ export async function generateReceipt(
   y += 24;
 
   // Signature
-  y = addSignatureSection(doc, y);
+  y = addSignatureSection(doc, y, sig);
   addFooter(doc);
 
-  doc.save(`Receipt_${receiptNum}.pdf`);
+  doc.save(`Receipt-${receiptNum}.pdf`);
 }
 
 // ── Commission Receipt ──
@@ -315,7 +340,7 @@ export async function generateCommissionReceipt(
   company: CompanyInfo
 ) {
   const doc = new jsPDF();
-  const logoBase64 = await loadLogoBase64();
+  const [logoBase64, sig] = await Promise.all([loadLogoBase64(), getSignatureData()]);
   let y = addHeader(doc, company, logoBase64);
   const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -371,7 +396,7 @@ export async function generateCommissionReceipt(
   doc.setTextColor(0, 0, 0);
   y += 20;
 
-  y = addSignatureSection(doc, y);
+  y = addSignatureSection(doc, y, sig);
   addFooter(doc);
 
   doc.save(`Commission_Receipt_${data.bookingTrackingId}.pdf`);
