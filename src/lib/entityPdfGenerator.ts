@@ -123,7 +123,7 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
   let y = addHeader(doc, company, logoBase64);
   const pw = doc.internal.pageSize.getWidth();
 
-  if (qrDataUrl) addQrToDoc(doc, qrDataUrl, { x: pw - 44, y: 8, size: 26, trackingId: firstTrackingId });
+  if (qrDataUrl) addQrToDoc(doc, qrDataUrl, { size: 38, trackingId: firstTrackingId, position: "bottom" });
 
   // Watermark based on moallem summary
   addPaymentWatermark(doc, getWatermarkStatus(data.summary.totalPaid, data.summary.totalDue));
@@ -239,7 +239,7 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
   let y = addHeader(doc, company, logoBase64);
   const pw = doc.internal.pageSize.getWidth();
 
-  if (qrDataUrl) addQrToDoc(doc, qrDataUrl, { x: pw - 44, y: 8, size: 26, trackingId: firstTrackingId });
+  if (qrDataUrl) addQrToDoc(doc, qrDataUrl, { size: 38, trackingId: firstTrackingId, position: "bottom" });
 
   // Watermark based on supplier summary
   addPaymentWatermark(doc, getWatermarkStatus(data.summary.totalPaid, data.summary.totalDue));
@@ -333,7 +333,7 @@ export async function generateCustomerPdf(data: CustomerPdfData, company: Compan
   let y = addHeader(doc, company, logoBase64);
   const pw = doc.internal.pageSize.getWidth();
 
-  if (qrDataUrl) addQrToDoc(doc, qrDataUrl, { x: pw - 44, y: 8, size: 26, trackingId: firstTrackingId });
+  if (qrDataUrl) addQrToDoc(doc, qrDataUrl, { size: 38, trackingId: firstTrackingId, position: "bottom" });
 
   // Watermark based on customer summary
   addPaymentWatermark(doc, getWatermarkStatus(data.summary.totalPaid, data.summary.totalDue));

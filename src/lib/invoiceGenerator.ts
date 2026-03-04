@@ -479,7 +479,7 @@ async function generateIndividualInvoice(
   let y = addHeader(doc, { name: "RAHE KABA", phone: "+880 1601-505050", email: "rahekaba.info@gmail.com", address: "Dailorbagh Palli Bidyut Adjacent, Sonargaon Thana Road, Narayanganj-Dhaka" } as CompanyInfo, logoBase64);
 
   // QR verification stamp
-  addQrToDoc(doc, qrDataUrl, { x: pageWidth - 48, y: 6, size: 28, trackingId: booking.tracking_id });
+  addQrToDoc(doc, qrDataUrl, { size: 38, trackingId: booking.tracking_id, position: "bottom" });
 
   // Payment watermark
   addPaymentWatermark(doc, getWatermarkStatus(Number(booking.paid_amount), Number(booking.due_amount || 0)));
@@ -556,7 +556,7 @@ async function generateFamilyInvoice(
   const pageWidth = doc.internal.pageSize.getWidth();
   let y = addHeader(doc, { name: "RAHE KABA", phone: "+880 1601-505050", email: "rahekaba.info@gmail.com", address: "Dailorbagh Palli Bidyut Adjacent, Sonargaon Thana Road, Narayanganj-Dhaka" } as CompanyInfo, logoBase64);
 
-  addQrToDoc(doc, qrDataUrl, { x: pageWidth - 48, y: 6, size: 28, trackingId: booking.tracking_id });
+  addQrToDoc(doc, qrDataUrl, { size: 38, trackingId: booking.tracking_id, position: "bottom" });
   addPaymentWatermark(doc, getWatermarkStatus(Number(booking.paid_amount), Number(booking.due_amount || 0)));
 
   y = addInvoiceTitleBlock(doc, y, booking.tracking_id, new Date().toISOString(), booking.packages?.start_date || null, booking.status, true);
@@ -688,7 +688,7 @@ export async function generateReceipt(
   const pageWidth = doc.internal.pageSize.getWidth();
   let y = addHeader(doc, company, logoBase64);
 
-  addQrToDoc(doc, qrDataUrl, { x: pageWidth - 48, y: 6, size: 28, trackingId: booking.tracking_id });
+  addQrToDoc(doc, qrDataUrl, { size: 38, trackingId: booking.tracking_id, position: "bottom" });
   addPaymentWatermark(doc, "paid");
 
   // Receipt title
@@ -785,7 +785,7 @@ export async function generateCommissionReceipt(
   const pageWidth = doc.internal.pageSize.getWidth();
   let y = addHeader(doc, company, logoBase64);
 
-  addQrToDoc(doc, qrDataUrl, { x: pageWidth - 48, y: 6, size: 28, trackingId: data.bookingTrackingId });
+  addQrToDoc(doc, qrDataUrl, { size: 38, trackingId: data.bookingTrackingId, position: "bottom" });
   addPaymentWatermark(doc, getWatermarkStatus(data.commissionPaid, data.commissionDue));
 
   doc.setFillColor(DARK.r, DARK.g, DARK.b);
