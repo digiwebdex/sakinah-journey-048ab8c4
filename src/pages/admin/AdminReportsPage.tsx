@@ -37,6 +37,8 @@ export default function AdminReportsPage() {
   const [supplierAgents, setSupplierAgents] = useState<any[]>([]);
   const [supplierPayments, setSupplierPayments] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
+  const [supplierContracts, setSupplierContracts] = useState<any[]>([]);
+  const [supplierContractPayments, setSupplierContractPayments] = useState<any[]>([]);
 
   const [activeTab, setActiveTab] = useState("financial");
   const [searchQuery, setSearchQuery] = useState("");
@@ -62,7 +64,9 @@ export default function AdminReportsPage() {
       supabase.from("supplier_agents").select("*"),
       supabase.from("supplier_agent_payments").select("*").order("date", { ascending: false }),
       supabase.from("packages").select("*"),
-    ]).then(([bk, py, ex, pr, tx, ml, mp, sa, sp, pk]) => {
+      supabase.from("supplier_contracts").select("*").order("created_at", { ascending: false }),
+      supabase.from("supplier_contract_payments").select("*").order("payment_date", { ascending: false }),
+    ]).then(([bk, py, ex, pr, tx, ml, mp, sa, sp, pk, sc, scp]) => {
       setBookings(bk.data || []);
       setPayments(py.data || []);
       setExpenses(ex.data || []);
@@ -73,6 +77,8 @@ export default function AdminReportsPage() {
       setSupplierAgents(sa.data || []);
       setSupplierPayments(sp.data || []);
       setPackages(pk.data || []);
+      setSupplierContracts(sc.data || []);
+      setSupplierContractPayments(scp.data || []);
     });
   }, []);
 
@@ -319,6 +325,41 @@ export default function AdminReportsPage() {
   }, [filteredBookings, supplierPayments, supplierMap, profileMap, dateInterval, searchQuery]);
 
   // ══════════════════════════════════════════════
+  //  SUPPLIER CONTRACT REPORT
+  // ══════════════════════════════════════════════
+  const supplierContractRows = useMemo(() => {
+    const map: Record<string, any> = {};
+    supplierContracts.forEach(c => {
+      const sa = supplierMap[c.supplier_id];
+      if (!map[c.supplier_id]) {
+        map[c.supplier_id] = {
+          name: sa?.agent_name || "Unknown", company: sa?.company_name || "-",
+          pilgrimCount: 0, contractAmount: 0, totalPaid: 0, totalDue: 0,
+          contracts: [], paymentDetails: [],
+        };
+      }
+      map[c.supplier_id].pilgrimCount += Number(c.pilgrim_count || 0);
+      map[c.supplier_id].contractAmount += Number(c.contract_amount || 0);
+      map[c.supplier_id].totalPaid += Number(c.total_paid || 0);
+      map[c.supplier_id].totalDue += Number(c.total_due || 0);
+      map[c.supplier_id].contracts.push(c);
+    });
+    supplierContractPayments.forEach(p => {
+      const contract = supplierContracts.find(c => c.id === p.contract_id);
+      if (contract && map[contract.supplier_id]) {
+        map[contract.supplier_id].paymentDetails.push({
+          amount: Number(p.amount), date: format(parseISO(p.payment_date), "dd MMM yyyy"),
+          method: p.payment_method || "cash", notes: p.note || "-",
+        });
+      }
+    });
+    const q = searchQuery.toLowerCase();
+    return Object.values(map)
+      .filter((r: any) => !q || r.name.toLowerCase().includes(q))
+      .sort((a: any, b: any) => b.contractAmount - a.contractAmount);
+  }, [supplierContracts, supplierContractPayments, supplierMap, searchQuery]);
+
+  // ══════════════════════════════════════════════
   //  EXPORT HANDLERS
   // ══════════════════════════════════════════════
   const handleExport = (type: "pdf" | "excel") => {
@@ -345,6 +386,9 @@ export default function AdminReportsPage() {
       case "supplier":
         data = { title: "Supplier Agent Report", columns: ["Supplier","Company","Total Cost","Total Paid","Total Due","Bookings"], rows: supplierRows.map((r: any) => [r.name, r.company, r.totalCost, r.totalPaid, r.totalDue, r.bookingCount]) };
         break;
+      case "supplier_contract":
+        data = { title: "Supplier Contract Report", columns: ["Supplier","Company","Pilgrim Count","Contract Amount","Total Paid","Total Due"], rows: supplierContractRows.map((r: any) => [r.name, r.company, r.pilgrimCount, r.contractAmount, r.totalPaid, r.totalDue]) };
+        break;
       default:
         data = { title: "Report", columns: [], rows: [] };
     }
@@ -361,6 +405,7 @@ export default function AdminReportsPage() {
     { value: "package", label: "Package Wise", icon: Package },
     { value: "moallem", label: "Moallem Wise", icon: Briefcase },
     { value: "supplier", label: "Supplier Agent Wise", icon: Building2 },
+    { value: "supplier_contract", label: "Supplier Contract", icon: FileDown },
   ];
 
   return (
@@ -895,6 +940,94 @@ export default function AdminReportsPage() {
                 <TableCell className="text-right font-bold text-primary">{fmt(supplierRows.reduce((s: number, r: any) => s + r.totalPaid, 0))}</TableCell>
                 <TableCell className="text-right font-bold text-destructive">{fmt(supplierRows.reduce((s: number, r: any) => s + r.totalDue, 0))}</TableCell>
                 <TableCell className="text-right font-bold">{supplierRows.reduce((s: number, r: any) => s + r.bookingCount, 0)}</TableCell>
+              </>
+            }
+          />
+        </TabsContent>
+
+        {/* ═══════════════════════════════════════
+            SUPPLIER CONTRACT TAB
+        ═══════════════════════════════════════ */}
+        <TabsContent value="supplier_contract">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+            <SummaryCard label="Total Suppliers" value={supplierContractRows.length} icon={Building2} color="text-foreground" />
+            <SummaryCard label="Total Pilgrims" value={supplierContractRows.reduce((s: number, r: any) => s + r.pilgrimCount, 0)} icon={Users} color="text-foreground" />
+            <SummaryCard label="Total Paid" value={fmt(supplierContractRows.reduce((s: number, r: any) => s + r.totalPaid, 0))} icon={TrendingUp} color="text-primary" />
+            <SummaryCard label="Total Due" value={fmt(supplierContractRows.reduce((s: number, r: any) => s + r.totalDue, 0))} icon={TrendingDown} color="text-destructive" />
+          </div>
+          <ExpandableReportTable
+            rows={supplierContractRows}
+            headers={["", "Supplier Name", "Pilgrim Count", "Contract Amount", "Total Paid", "Total Due"]}
+            renderRow={(r: any) => (
+              <>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"><Building2 className="h-3.5 w-3.5 text-primary" /></div>
+                    <div>
+                      <p>{r.name}</p>
+                      {r.company !== "-" && <p className="text-[11px] text-muted-foreground">{r.company}</p>}
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="text-right font-medium">{r.pilgrimCount}</TableCell>
+                <TableCell className="text-right font-bold">{fmt(r.contractAmount)}</TableCell>
+                <TableCell className="text-right text-primary font-medium">{fmt(r.totalPaid)}</TableCell>
+                <TableCell className="text-right text-destructive font-medium">{fmt(r.totalDue)}</TableCell>
+              </>
+            )}
+            renderExpanded={(r: any) => (
+              <div className="space-y-4">
+                {r.contracts.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">Contracts — {r.name}</p>
+                    <table className="w-full text-sm">
+                      <thead><tr className="text-left text-muted-foreground border-b border-border/50">
+                        <th className="pb-2 pr-3">Date</th><th className="pb-2 pr-3 text-right">Pilgrims</th>
+                        <th className="pb-2 pr-3 text-right">Amount</th><th className="pb-2 pr-3 text-right">Paid</th><th className="pb-2 text-right">Due</th>
+                      </tr></thead>
+                      <tbody>
+                        {r.contracts.map((c: any, j: number) => (
+                          <tr key={j} className="border-b border-border/30">
+                            <td className="py-2 pr-3 text-muted-foreground">{format(parseISO(c.created_at), "dd MMM yyyy")}</td>
+                            <td className="py-2 pr-3 text-right">{c.pilgrim_count}</td>
+                            <td className="py-2 pr-3 text-right font-bold">{fmt(c.contract_amount)}</td>
+                            <td className="py-2 pr-3 text-right text-primary">{fmt(c.total_paid)}</td>
+                            <td className="py-2 text-right text-destructive">{fmt(c.total_due)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {r.paymentDetails.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">Payment History</p>
+                    <table className="w-full text-sm">
+                      <thead><tr className="text-left text-muted-foreground border-b border-border/50">
+                        <th className="pb-2 pr-3">Date</th><th className="pb-2 pr-3 text-right">Amount</th><th className="pb-2 pr-3">Method</th><th className="pb-2">Notes</th>
+                      </tr></thead>
+                      <tbody>
+                        {r.paymentDetails.map((pd: any, j: number) => (
+                          <tr key={j} className="border-b border-border/30">
+                            <td className="py-2 pr-3 text-muted-foreground">{pd.date}</td>
+                            <td className="py-2 pr-3 text-right text-primary font-medium">{fmt(pd.amount)}</td>
+                            <td className="py-2 pr-3 capitalize">{pd.method}</td>
+                            <td className="py-2 text-muted-foreground">{pd.notes}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+            totalRow={
+              <>
+                <TableCell>Total</TableCell>
+                <TableCell className="text-right font-bold">{supplierContractRows.reduce((s: number, r: any) => s + r.pilgrimCount, 0)}</TableCell>
+                <TableCell className="text-right font-bold">{fmt(supplierContractRows.reduce((s: number, r: any) => s + r.contractAmount, 0))}</TableCell>
+                <TableCell className="text-right font-bold text-primary">{fmt(supplierContractRows.reduce((s: number, r: any) => s + r.totalPaid, 0))}</TableCell>
+                <TableCell className="text-right font-bold text-destructive">{fmt(supplierContractRows.reduce((s: number, r: any) => s + r.totalDue, 0))}</TableCell>
               </>
             }
           />

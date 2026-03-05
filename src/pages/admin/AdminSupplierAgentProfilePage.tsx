@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { generateSupplierPdf, getCompanyInfoForPdf, SupplierPdfData } from "@/lib/entityPdfGenerator";
+import SupplierContractManager from "@/components/admin/SupplierContractManager";
 
 const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
 const PAYMENT_METHODS = ["cash", "bkash", "nagad", "bank", "other"];
@@ -32,6 +33,8 @@ export default function AdminSupplierAgentProfilePage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [agentPayments, setAgentPayments] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
+  const [contracts, setContracts] = useState<any[]>([]);
+  const [contractPayments, setContractPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
@@ -50,16 +53,20 @@ export default function AdminSupplierAgentProfilePage() {
   const loadData = async () => {
     if (!id) return;
     setLoading(true);
-    const [agRes, bRes, apRes, accRes] = await Promise.all([
+    const [agRes, bRes, apRes, accRes, cRes, cpRes] = await Promise.all([
       supabase.from("supplier_agents").select("*").eq("id", id).maybeSingle(),
       supabase.from("bookings").select("*, packages(name, type, price)").eq("supplier_agent_id", id).order("created_at", { ascending: false }),
       supabase.from("supplier_agent_payments").select("*").eq("supplier_agent_id", id).order("date", { ascending: false }),
       supabase.from("accounts").select("id, name, type, balance").order("name"),
+      supabase.from("supplier_contracts").select("*").eq("supplier_id", id).order("created_at", { ascending: false }),
+      supabase.from("supplier_contract_payments").select("*").eq("supplier_id", id).order("payment_date", { ascending: false }),
     ]);
     setAgent(agRes.data);
     setBookings((bRes.data as any[]) || []);
     setAgentPayments(apRes.data || []);
     setAccounts(accRes.data || []);
+    setContracts(cRes.data || []);
+    setContractPayments(cpRes.data || []);
     setLoading(false);
   };
 
@@ -222,6 +229,18 @@ export default function AdminSupplierAgentProfilePage() {
       </Card>
 
       {/* Bookings */}
+      {/* Supplier Contracts */}
+      <SupplierContractManager
+        supplierId={id!}
+        supplierName={agent.agent_name}
+        contracts={contracts}
+        contractPayments={contractPayments}
+        accounts={accounts}
+        isViewer={isViewer}
+        onRefresh={loadData}
+      />
+
+      {/* Bookings (existing) */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> বুকিং তালিকা ({bookings.length})</CardTitle>

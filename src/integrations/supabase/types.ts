@@ -1322,6 +1322,105 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_contract_payments: {
+        Row: {
+          amount: number
+          contract_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          payment_date: string
+          payment_method: string | null
+          supplier_id: string
+          wallet_account_id: string | null
+        }
+        Insert: {
+          amount: number
+          contract_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          payment_date?: string
+          payment_method?: string | null
+          supplier_id: string
+          wallet_account_id?: string | null
+        }
+        Update: {
+          amount?: number
+          contract_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          payment_date?: string
+          payment_method?: string | null
+          supplier_id?: string
+          wallet_account_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_contract_payments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_contract_payments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_contract_payments_wallet_account_id_fkey"
+            columns: ["wallet_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_contracts: {
+        Row: {
+          contract_amount: number
+          created_at: string
+          id: string
+          pilgrim_count: number
+          supplier_id: string
+          total_due: number
+          total_paid: number
+        }
+        Insert: {
+          contract_amount?: number
+          created_at?: string
+          id?: string
+          pilgrim_count?: number
+          supplier_id: string
+          total_due?: number
+          total_paid?: number
+        }
+        Update: {
+          contract_amount?: number
+          created_at?: string
+          id?: string
+          pilgrim_count?: number
+          supplier_id?: string
+          total_due?: number
+          total_paid?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_contracts_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number

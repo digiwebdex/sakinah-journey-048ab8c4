@@ -13,11 +13,13 @@ export default function AdminDashboardPage() {
   const [commissionPayments, setCommissionPayments] = useState<any[]>([]);
   const [moallems, setMoallems] = useState<any[]>([]);
   const [supplierAgents, setSupplierAgents] = useState<any[]>([]);
+  const [supplierContracts, setSupplierContracts] = useState<any[]>([]);
+  const [supplierContractPayments, setSupplierContractPaymentsState] = useState<any[]>([]);
 
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
-    const [bk, py, ex, ac, fs, mp, sp, cp, ml, sa] = await Promise.all([
+    const [bk, py, ex, ac, fs, mp, sp, cp, ml, sa, sc, scp] = await Promise.all([
       supabase.from("bookings").select("*, packages(name, type)").order("created_at", { ascending: false }),
       supabase.from("payments").select("*, bookings(tracking_id)").order("created_at", { ascending: false }),
       supabase.from("expenses").select("*").order("date", { ascending: false }),
@@ -28,6 +30,8 @@ export default function AdminDashboardPage() {
       supabase.from("moallem_commission_payments").select("*, moallems(name)").order("created_at", { ascending: false }),
       supabase.from("moallems").select("*"),
       supabase.from("supplier_agents").select("*"),
+      supabase.from("supplier_contracts").select("*"),
+      supabase.from("supplier_contract_payments").select("*").order("created_at", { ascending: false }),
     ]);
     setBookings(bk.data || []);
     setPayments(py.data || []);
@@ -39,6 +43,8 @@ export default function AdminDashboardPage() {
     setCommissionPayments(cp.data || []);
     setMoallems(ml.data || []);
     setSupplierAgents(sa.data || []);
+    setSupplierContracts(sc.data || []);
+    setSupplierContractPaymentsState(scp.data || []);
   };
 
   const markPaymentCompleted = async (paymentId: string) => {
@@ -59,6 +65,8 @@ export default function AdminDashboardPage() {
       commissionPayments={commissionPayments}
       moallems={moallems}
       supplierAgents={supplierAgents}
+      supplierContracts={supplierContracts}
+      supplierContractPayments={supplierContractPayments}
       onMarkPaid={markPaymentCompleted}
     />
   );

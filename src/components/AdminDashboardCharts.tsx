@@ -25,6 +25,8 @@ interface Props {
   commissionPayments?: any[];
   moallems?: any[];
   supplierAgents?: any[];
+  supplierContracts?: any[];
+  supplierContractPayments?: any[];
   onMarkPaid: (id: string) => void;
 }
 
@@ -34,7 +36,8 @@ const ttStyle = { backgroundColor: "hsl(220, 18%, 14%)", border: "1px solid hsl(
 const AdminDashboardCharts = ({
   bookings, payments, expenses = [], accounts = [], financialSummary,
   moallemPayments = [], supplierPayments = [], commissionPayments = [],
-  moallems = [], supplierAgents = [], onMarkPaid
+  moallems = [], supplierAgents = [], supplierContracts = [], supplierContractPayments = [],
+  onMarkPaid
 }: Props) => {
   const navigate = useNavigate();
   const canSeeProfit = useCanSeeProfit();
