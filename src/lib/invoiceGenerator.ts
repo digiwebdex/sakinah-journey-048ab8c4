@@ -522,8 +522,8 @@ async function generateIndividualInvoice(
   let y = addHeader(doc, { name: "RAHE KABA", phone: "+880 1601-505050", email: "rahekaba.info@gmail.com", address: "Dailorbagh Palli Bidyut Adjacent, Sonargaon Thana Road, Narayanganj-Dhaka" } as CompanyInfo, logoBase64);
 
 
-  // QR verification stamp (small, left side)
-  addQrToDoc(doc, qrDataUrl, { size: 16, trackingId: booking.tracking_id, position: "left" });
+  // QR verification stamp (small, right side)
+  addQrToDoc(doc, qrDataUrl, { size: 16, trackingId: booking.tracking_id, position: "top" });
 
 
   // Payment watermark
