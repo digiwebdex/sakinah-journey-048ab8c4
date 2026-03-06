@@ -123,7 +123,8 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
   let y = addHeader(doc, company, logoBase64);
   const pw = doc.internal.pageSize.getWidth();
 
-  if (qrDataUrl) addQrToDoc(doc, qrDataUrl, { size: 26, trackingId: firstTrackingId, position: "bottom" });
+
+  if (qrDataUrl) addQrToDoc(doc, qrDataUrl, { size: 16, trackingId: firstTrackingId, position: "left" });
 
   // Watermark based on moallem summary
   addPaymentWatermark(doc, getWatermarkStatus(data.summary.totalPaid, data.summary.totalDue));
