@@ -50,7 +50,7 @@ export default function AdminSupplierAgentsPage() {
   const fetchData = async () => {
     setLoading(true);
     const [a, p] = await Promise.all([
-      supabase.from("supplier_agents").select("*").order("created_at", { ascending: false }),
+      supabase.from("supplier_agents").select("*").neq("status", "deleted").order("created_at", { ascending: false }),
       supabase.from("supplier_agent_payments").select("id, supplier_agent_id, amount"),
     ]);
     if (a.data) setAgents(a.data as SupplierAgent[]);
@@ -110,7 +110,7 @@ export default function AdminSupplierAgentsPage() {
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    const { error } = await supabase.from("supplier_agents").delete().eq("id", deleteId);
+    const { error } = await supabase.from("supplier_agents").update({ status: "deleted" }).eq("id", deleteId);
     if (error) { toast({ title: "মুছতে ব্যর্থ", description: error.message, variant: "destructive" }); return; }
     toast({ title: "সাপ্লায়ার এজেন্ট মুছে ফেলা হয়েছে" }); setDeleteId(null); fetchData();
   };
