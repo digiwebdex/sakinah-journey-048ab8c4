@@ -89,14 +89,25 @@ async function migrate() {
       {id:'2cc6a51a-d9e8-4ec0-8381-d38c641322a3',amount:50000,booking_id:'6a8b863e-f3a2-4a00-b1fe-ba024241dfe9',customer_id:'81b6e43b-4c5b-4494-aa9f-9198ad2c9bd5',user_id:'81b6e43b-4c5b-4494-aa9f-9198ad2c9bd5',installment_number:1,due_date:null,paid_at:null,payment_method:'cash',status:'completed',notes:null},
     ];
 
+    // Get existing booking IDs to skip orphaned payments
+    const { rows: existingBookings } = await client.query('SELECT id FROM bookings');
+    const bookingIds = new Set(existingBookings.map(r => r.id));
+    
+    let insertedPayments = 0;
+    let skippedPayments = 0;
     for (const p of payments) {
+      if (!bookingIds.has(p.booking_id)) {
+        skippedPayments++;
+        continue;
+      }
       await client.query(
         `INSERT INTO payments (id, amount, booking_id, customer_id, user_id, installment_number, due_date, paid_at, payment_method, status, notes)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT (id) DO NOTHING`,
         [p.id, p.amount, p.booking_id, p.customer_id, p.user_id, p.installment_number, p.due_date, p.paid_at, p.payment_method, p.status, p.notes]
       );
+      insertedPayments++;
     }
-    console.log(`  Inserted ${payments.length} payment records`);
+    console.log(`  Inserted ${insertedPayments} payments (skipped ${skippedPayments} with missing bookings)`);
 
     // =============================================
     // 2. TRANSACTIONS (master ledger)
