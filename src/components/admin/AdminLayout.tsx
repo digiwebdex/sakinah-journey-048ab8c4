@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import { useEffect, useState } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { auth as api } from "@/lib/api";
 import { toast } from "sonner";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
