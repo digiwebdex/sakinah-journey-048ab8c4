@@ -360,6 +360,44 @@ export default function AdminReportsPage() {
   }, [supplierContracts, supplierContractPayments, supplierMap, searchQuery]);
 
   // ══════════════════════════════════════════════
+  //  DAILY BOOKING REPORT
+  // ══════════════════════════════════════════════
+  const dailyBookingRows = useMemo(() => {
+    const map: Record<string, any> = {};
+    filteredBookings.forEach(b => {
+      const dateKey = format(parseISO(b.created_at), "yyyy-MM-dd");
+      if (!map[dateKey]) {
+        map[dateKey] = {
+          date: dateKey,
+          dateFormatted: format(parseISO(b.created_at), "dd MMM yyyy"),
+          bookings: [],
+          totalAmount: 0,
+          totalPaid: 0,
+          totalDue: 0,
+          travelers: 0,
+          count: 0,
+        };
+      }
+      map[dateKey].count++;
+      map[dateKey].totalAmount += Number(b.total_amount || 0);
+      map[dateKey].totalPaid += Number(b.paid_amount || 0);
+      map[dateKey].totalDue += Number(b.due_amount || 0);
+      map[dateKey].travelers += Number(b.num_travelers || 0);
+      map[dateKey].bookings.push({
+        trackingId: b.tracking_id,
+        guestName: b.guest_name || profileMap[b.user_id]?.full_name || "-",
+        packageName: b.packages?.name || "-",
+        travelers: b.num_travelers,
+        totalAmount: Number(b.total_amount || 0),
+        paidAmount: Number(b.paid_amount || 0),
+        dueAmount: Number(b.due_amount || 0),
+        status: b.status,
+      });
+    });
+    return Object.values(map).sort((a: any, b: any) => b.date.localeCompare(a.date));
+  }, [filteredBookings, profileMap]);
+
+  // ══════════════════════════════════════════════
   //  EXPORT HANDLERS
   // ══════════════════════════════════════════════
   const handleExport = (type: "pdf" | "excel") => {
