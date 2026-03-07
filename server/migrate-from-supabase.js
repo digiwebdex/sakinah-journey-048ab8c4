@@ -325,10 +325,17 @@ async function migrate() {
       { section_key: 'services', content: {"description":"Comprehensive travel services to make your sacred journey comfortable","heading":"Our","heading_highlight":"Services","items":[{"desc":"Complete Hajj packages","icon":"BookOpen","title":"Hajj"},{"desc":"Year-round Umrah packages","icon":"Globe","title":"Umrah"},{"desc":"Hassle-free visa processing","icon":"CreditCard","title":"Visa"},{"desc":"Best-price airline tickets","icon":"Plane","title":"Air Ticket"},{"desc":"Premium hotels near Haram","icon":"Building2","title":"Hotel"},{"desc":"Comfortable ground transportation","icon":"Bus","title":"Transport"},{"desc":"Guided tours to sacred sites","icon":"MapPin","title":"Ziyara"},{"desc":"Experienced multilingual guides","icon":"Users","title":"Guide"}],"section_label":"What We Offer"} },
     ];
     for (const sc of siteContent) {
-      await client.query(
-        `INSERT INTO site_content (section_key, content) VALUES ($1, $2) ON CONFLICT (section_key) DO UPDATE SET content = $2`,
+      const updateRes = await client.query(
+        `UPDATE site_content SET content = $2, updated_at = now() WHERE section_key = $1`,
         [sc.section_key, JSON.stringify(sc.content)]
       );
+
+      if (updateRes.rowCount === 0) {
+        await client.query(
+          `INSERT INTO site_content (section_key, content) VALUES ($1, $2)`,
+          [sc.section_key, JSON.stringify(sc.content)]
+        );
+      }
     }
 
     // =============================================
