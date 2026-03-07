@@ -1,9 +1,14 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import logoImg from "@/assets/logo-nobg.png";
+import QRCode from "qrcode";
 import { CompanyInfo } from "./invoiceGenerator";
 import { getSignatureData, SignatureData } from "./pdfSignature";
 import { generateTrackingQr, addQrToDoc, addPaymentWatermark, getWatermarkStatus } from "./pdfQrCode";
+
+const GOLD = { r: 198, g: 165, b: 92 };
+const DARK = { r: 40, g: 46, b: 56 };
+const COMPANY_URL = "https://rahe-kaba-journeys.lovable.app";
 
 const fmt = (n: number) => `BDT ${n.toLocaleString()}`;
 const fmtDate = (d: string | null) =>
@@ -26,30 +31,56 @@ function loadLogoBase64(): Promise<string> {
   });
 }
 
-function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string) {
+async function generateCompanyQr(): Promise<string> {
+  try {
+    return await QRCode.toDataURL(COMPANY_URL, {
+      width: 200, margin: 1,
+      color: { dark: "#282E38", light: "#FFFFFF" },
+      errorCorrectionLevel: "M",
+    });
+  } catch { return ""; }
+}
+
+function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string, qrDataUrl: string): number {
   const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Top gold accent bar
+  doc.setFillColor(GOLD.r, GOLD.g, GOLD.b);
+  doc.rect(0, 0, pageWidth, 3, "F");
+
+  // Logo
   if (logoBase64) {
-    try { doc.addImage(logoBase64, "PNG", 14, 12, 16, 16); } catch { /* skip */ }
+    try { doc.addImage(logoBase64, "PNG", 14, 10, 16, 16); } catch { /* skip */ }
   }
+
+  // QR code top-right (always present)
+  if (qrDataUrl) {
+    try { doc.addImage(qrDataUrl, "PNG", pageWidth - 30, 10, 16, 16); } catch { /* skip */ }
+  }
+
   const textX = logoBase64 ? 38 : 14;
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.text(company.name || "RAHE KABA Tours & Travels", textX, 20);
-  doc.setFontSize(9);
+  doc.setTextColor(DARK.r, DARK.g, DARK.b);
+  doc.text(company.name || "RAHE KABA Tours & Travels", textX, 18);
+  doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  doc.text("Hajj & Umrah Services", textX, 26);
+  doc.setTextColor(100);
+  doc.text("Hajj & Umrah Services", textX, 23);
   const contactParts: string[] = [];
-  if (company.phone) contactParts.push(`Phone: ${company.phone}`);
+  if (company.phone) contactParts.push(`Tel: ${company.phone}`);
   if (company.email) contactParts.push(`Email: ${company.email}`);
-  if (contactParts.length) doc.text(contactParts.join("  |  "), textX, 31);
-  if (company.address) doc.text(company.address, textX, 36);
-  
+  if (contactParts.length) doc.text(contactParts.join("  |  "), textX, 28);
+  if (company.address) doc.text(company.address, textX, 33);
+
   // Gold accent line
-  doc.setDrawColor(198, 165, 92);
+  doc.setDrawColor(GOLD.r, GOLD.g, GOLD.b);
   doc.setLineWidth(0.8);
-  doc.line(14, 40, pageWidth - 14, 40);
+  doc.line(14, 38, pageWidth - 14, 38);
   doc.setLineWidth(0.2);
-  return 46;
+  doc.setTextColor(0);
+
+  return 44;
 }
 
 function addSignatureAndFooter(doc: jsPDF, sig: SignatureData) {
@@ -113,18 +144,13 @@ export interface MoallemPdfData {
 
 export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyInfo) {
   const doc = new jsPDF();
-  // Use first booking tracking_id for QR if available
-  const firstTrackingId = data.bookings[0]?.tracking_id;
-  const [logoBase64, sig, qrDataUrl] = await Promise.all([
+  const [logoBase64, sig, companyQr] = await Promise.all([
     loadLogoBase64(),
     getSignatureData(),
-    firstTrackingId ? generateTrackingQr(firstTrackingId) : Promise.resolve(""),
+    generateCompanyQr(),
   ]);
-  let y = addHeader(doc, company, logoBase64);
+  let y = addHeader(doc, company, logoBase64, companyQr);
   const pw = doc.internal.pageSize.getWidth();
-
-
-  if (qrDataUrl) addQrToDoc(doc, qrDataUrl, { size: 16, trackingId: firstTrackingId, position: "top" });
 
   // Watermark based on moallem summary
   addPaymentWatermark(doc, getWatermarkStatus(data.summary.totalPaid, data.summary.totalDue));
@@ -231,17 +257,13 @@ export interface SupplierPdfData {
 
 export async function generateSupplierPdf(data: SupplierPdfData, company: CompanyInfo) {
   const doc = new jsPDF();
-  const firstTrackingId = data.bookings[0]?.tracking_id;
-  const [logoBase64, sig, qrDataUrl] = await Promise.all([
+  const [logoBase64, sig, companyQr] = await Promise.all([
     loadLogoBase64(),
     getSignatureData(),
-    firstTrackingId ? generateTrackingQr(firstTrackingId) : Promise.resolve(""),
+    generateCompanyQr(),
   ]);
-  let y = addHeader(doc, company, logoBase64);
+  let y = addHeader(doc, company, logoBase64, companyQr);
   const pw = doc.internal.pageSize.getWidth();
-
-
-  if (qrDataUrl) addQrToDoc(doc, qrDataUrl, { size: 16, trackingId: firstTrackingId, position: "top" });
 
   // Watermark based on supplier summary
   addPaymentWatermark(doc, getWatermarkStatus(data.summary.totalPaid, data.summary.totalDue));
@@ -326,17 +348,13 @@ export interface CustomerPdfData {
 
 export async function generateCustomerPdf(data: CustomerPdfData, company: CompanyInfo) {
   const doc = new jsPDF();
-  const firstTrackingId = data.bookings[0]?.tracking_id;
-  const [logoBase64, sig, qrDataUrl] = await Promise.all([
+  const [logoBase64, sig, companyQr] = await Promise.all([
     loadLogoBase64(),
     getSignatureData(),
-    firstTrackingId ? generateTrackingQr(firstTrackingId) : Promise.resolve(""),
+    generateCompanyQr(),
   ]);
-  let y = addHeader(doc, company, logoBase64);
+  let y = addHeader(doc, company, logoBase64, companyQr);
   const pw = doc.internal.pageSize.getWidth();
-
-
-  if (qrDataUrl) addQrToDoc(doc, qrDataUrl, { size: 16, trackingId: firstTrackingId, position: "top" });
 
   // Watermark based on customer summary
   addPaymentWatermark(doc, getWatermarkStatus(data.summary.totalPaid, data.summary.totalDue));
