@@ -91,7 +91,7 @@ export default function SupplierItemsManager({ supplierId, items, isViewer, onRe
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    const { error } = await (supabase.from("supplier_agent_items" as any) as any).delete().eq("id", deleteId);
+    const { error } = await supabase.from("supplier_agent_items").delete().eq("id", deleteId);
     if (error) { toast({ title: "মুছতে ব্যর্থ", description: error.message, variant: "destructive" }); return; }
     toast({ title: "আইটেম মুছে ফেলা হয়েছে" });
     setDeleteId(null);
