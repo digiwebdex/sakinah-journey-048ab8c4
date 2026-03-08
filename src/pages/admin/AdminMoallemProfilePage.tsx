@@ -181,8 +181,10 @@ export default function AdminMoallemProfilePage() {
   if (!moallem) return <div className="text-center py-20 text-muted-foreground">মোয়াল্লেম পাওয়া যায়নি</div>;
 
   const totalSelling = Number(moallem.contracted_amount || 0);
+  const totalItemsBilled = moallemItems.reduce((s: number, item: any) => s + Number(item.total_amount || 0), 0);
+  const effectiveTotal = totalItemsBilled > 0 ? totalItemsBilled : totalSelling;
   const totalPaid = moallemPayments.reduce((s, p) => s + Number(p.amount || 0), 0);
-  const totalMoallemDue = Math.max(0, totalSelling - totalPaid);
+  const totalMoallemDue = Math.max(0, effectiveTotal - totalPaid);
 
   // Filter payments by date
   const filterByDate = (items: any[]) => {
