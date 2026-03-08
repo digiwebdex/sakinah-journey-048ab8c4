@@ -340,7 +340,7 @@ export async function exportHajjiPDF({ title, customers }: HajjiReportData) {
   doc.setTextColor(0, 0, 0);
 
   addCompanyFooter(doc, sig);
-  doc.save(`${title.replace(/\s+/g, "_")}.pdf`);
+  doc.save(buildSafeFileName(title, "pdf"));
 }
 
 // ═══════════════════════════════════════════════════════════════
