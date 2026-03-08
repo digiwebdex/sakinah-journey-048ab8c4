@@ -180,7 +180,7 @@ export default function AdminSupplierAgentProfilePage() {
           <p className="text-sm text-muted-foreground">সাপ্লায়ার এজেন্ট প্রোফাইল</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={handleDownloadStatement}><Download className="h-4 w-4 mr-1" /> স্টেটমেন্ট PDF</Button>
+          <Button variant="outline" size="sm" onClick={handleDownloadStatement}><Download className="h-4 w-4 mr-1" /> সম্পূর্ণ সারসংক্ষেপ PDF</Button>
           {!isViewer && <Button size="sm" onClick={() => setShowPaymentForm(true)}><Plus className="h-4 w-4 mr-1" /> পেমেন্ট</Button>}
           <Badge variant={agent.status === "active" ? "default" : "secondary"}>{agent.status === "active" ? "সক্রিয়" : "নিষ্ক্রিয়"}</Badge>
         </div>
