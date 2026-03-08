@@ -134,6 +134,10 @@ export default function AdminSupplierAgentProfilePage() {
     const pdfData: SupplierPdfData = {
       agent_name: agent.agent_name, company_name: agent.company_name,
       phone: agent.phone, address: agent.address, status: agent.status, notes: agent.notes,
+      items: supplierItems.map((i: any) => ({
+        description: i.description, quantity: Number(i.quantity),
+        unit_price: Number(i.unit_price), total_amount: Number(i.total_amount),
+      })),
       bookings: bookings.map(b => ({
         tracking_id: b.tracking_id, guest_name: b.guest_name || "—",
         package_name: b.packages?.name || "—",
@@ -147,7 +151,8 @@ export default function AdminSupplierAgentProfilePage() {
         totalTravelers: bookings.reduce((s, b) => s + Number(b.num_travelers || 0), 0),
         contractedHajji: Number(agent.contracted_hajji || 0),
         totalPaid: totalAgentPaid,
-        totalDue: Math.max(0, Number(agent.contracted_amount || 0) - totalAgentPaid),
+        totalDue,
+        totalBilled,
       },
     };
     await generateSupplierPdf(pdfData, company);
