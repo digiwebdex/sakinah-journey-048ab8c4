@@ -15,11 +15,12 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, FileText, CreditCard, TrendingDown,
-  Phone, MapPin, Truck, Building2, Plus, Wallet, Download,
+  Phone, MapPin, Truck, Building2, Plus, Wallet, Download, Package,
 } from "lucide-react";
 import { format } from "date-fns";
 import { generateSupplierPdf, getCompanyInfoForPdf, SupplierPdfData } from "@/lib/entityPdfGenerator";
 import SupplierContractManager from "@/components/admin/SupplierContractManager";
+import SupplierItemsManager from "@/components/admin/SupplierItemsManager";
 
 const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
 const PAYMENT_METHODS = ["cash", "bkash", "nagad", "bank", "other"];
@@ -35,6 +36,7 @@ export default function AdminSupplierAgentProfilePage() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [contractPayments, setContractPayments] = useState<any[]>([]);
+  const [supplierItems, setSupplierItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
@@ -53,13 +55,14 @@ export default function AdminSupplierAgentProfilePage() {
   const loadData = async () => {
     if (!id) return;
     setLoading(true);
-    const [agRes, bRes, apRes, accRes, cRes, cpRes] = await Promise.all([
+    const [agRes, bRes, apRes, accRes, cRes, cpRes, itemsRes] = await Promise.all([
       supabase.from("supplier_agents").select("*").eq("id", id).maybeSingle(),
       supabase.from("bookings").select("*, packages(name, type, price)").eq("supplier_agent_id", id).order("created_at", { ascending: false }),
       supabase.from("supplier_agent_payments").select("*").eq("supplier_agent_id", id).order("date", { ascending: false }),
       supabase.from("accounts").select("id, name, type, balance").order("name"),
       supabase.from("supplier_contracts").select("*").eq("supplier_id", id).order("created_at", { ascending: false }),
       supabase.from("supplier_contract_payments").select("*").eq("supplier_id", id).order("payment_date", { ascending: false }),
+      (supabase.from("supplier_agent_items" as any) as any).select("*").eq("supplier_agent_id", id).order("created_at", { ascending: true }),
     ]);
     setAgent(agRes.data);
     setBookings((bRes.data as any[]) || []);
@@ -67,6 +70,7 @@ export default function AdminSupplierAgentProfilePage() {
     setAccounts(accRes.data || []);
     setContracts(cRes.data || []);
     setContractPayments(cpRes.data || []);
+    setSupplierItems(itemsRes.data || []);
     setLoading(false);
   };
 
@@ -109,9 +113,13 @@ export default function AdminSupplierAgentProfilePage() {
   if (loading) return <div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
   if (!agent) return <div className="text-center py-20 text-muted-foreground">সাপ্লায়ার এজেন্ট পাওয়া যায়নি</div>;
 
+  const itemsTotal = supplierItems.reduce((s: number, i: any) => s + Number(i.total_amount || 0), 0);
   const totalCost = bookings.reduce((s, b) => s + Number(b.total_cost || 0), 0);
   const totalAgentPaid = agentPayments.reduce((s, p) => s + Number(p.amount || 0), 0);
-  const totalDue = Math.max(0, totalCost - totalAgentPaid);
+  const contractedAmount = Number(agent.contracted_amount || 0);
+  // Use items total if items exist, otherwise fall back to contracted_amount
+  const totalBilled = itemsTotal > 0 ? itemsTotal : contractedAmount;
+  const totalDue = Math.max(0, totalBilled - totalAgentPaid);
 
   const filterByDate = (items: any[]) => items.filter(p => {
     if (dateFrom && p.date < dateFrom) return false;
@@ -126,6 +134,10 @@ export default function AdminSupplierAgentProfilePage() {
     const pdfData: SupplierPdfData = {
       agent_name: agent.agent_name, company_name: agent.company_name,
       phone: agent.phone, address: agent.address, status: agent.status, notes: agent.notes,
+      items: supplierItems.map((i: any) => ({
+        description: i.description, quantity: Number(i.quantity),
+        unit_price: Number(i.unit_price), total_amount: Number(i.total_amount),
+      })),
       bookings: bookings.map(b => ({
         tracking_id: b.tracking_id, guest_name: b.guest_name || "—",
         package_name: b.packages?.name || "—",
@@ -139,7 +151,8 @@ export default function AdminSupplierAgentProfilePage() {
         totalTravelers: bookings.reduce((s, b) => s + Number(b.num_travelers || 0), 0),
         contractedHajji: Number(agent.contracted_hajji || 0),
         totalPaid: totalAgentPaid,
-        totalDue: Math.max(0, Number(agent.contracted_amount || 0) - totalAgentPaid),
+        totalDue,
+        totalBilled,
       },
     };
     await generateSupplierPdf(pdfData, company);
@@ -173,11 +186,16 @@ export default function AdminSupplierAgentProfilePage() {
       </CardContent></Card>
 
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card><CardContent className="pt-4 pb-4 text-center">
-          <CreditCard className="h-5 w-5 text-primary mx-auto mb-1" />
+          <Package className="h-5 w-5 text-primary mx-auto mb-1" />
+          <p className="text-lg font-bold">{fmt(totalBilled)}</p>
+          <p className="text-[10px] text-muted-foreground uppercase">মোট বিল</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4 pb-4 text-center">
+          <CreditCard className="h-5 w-5 text-blue-500 mx-auto mb-1" />
           <p className="text-lg font-bold">{fmt(totalCost)}</p>
-          <p className="text-[10px] text-muted-foreground uppercase">মোট খরচ</p>
+          <p className="text-[10px] text-muted-foreground uppercase">বুকিং খরচ</p>
         </CardContent></Card>
         <Card><CardContent className="pt-4 pb-4 text-center">
           <Wallet className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
@@ -190,6 +208,14 @@ export default function AdminSupplierAgentProfilePage() {
           <p className="text-[10px] text-muted-foreground uppercase">মোট বকেয়া</p>
         </CardContent></Card>
       </div>
+
+      {/* Supplier Items / Services */}
+      <SupplierItemsManager
+        supplierId={id!}
+        items={supplierItems}
+        isViewer={isViewer}
+        onRefresh={loadData}
+      />
 
       {/* Date Filter */}
       <div className="flex items-center gap-3 flex-wrap">
