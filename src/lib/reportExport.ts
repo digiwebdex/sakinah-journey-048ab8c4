@@ -4,6 +4,7 @@ import * as XLSX from "xlsx";
 import logoImg from "@/assets/logo-nobg.png";
 import QRCode from "qrcode";
 import { getSignatureData, SignatureData } from "./pdfSignature";
+import { registerBengaliFont } from "./pdfFontLoader";
 
 // ── Brand Constants ──
 const GOLD = { r: 198, g: 165, b: 92 };
@@ -219,6 +220,7 @@ export async function exportPDF({ title, columns, rows, summary }: ReportData) {
     loadLogoBase64(), generateCompanyQr(), getSignatureData(),
   ]);
   const doc = new jsPDF();
+  await registerBengaliFont(doc);
 
   let y = addCompanyHeader(doc, logoBase64, qrDataUrl);
   y = addReportTitle(doc, y, title);
@@ -232,7 +234,7 @@ export async function exportPDF({ title, columns, rows, summary }: ReportData) {
     head: [columns],
     body: formattedRows,
     startY: y,
-    styles: { fontSize: 7.5, cellPadding: 2.5, font: "helvetica" },
+    styles: { fontSize: 7.5, cellPadding: 2.5, font: "NotoSansBengali" },
     headStyles: { fillColor: [DARK.r, DARK.g, DARK.b], font: "helvetica", fontStyle: "bold", fontSize: 7.5 },
     alternateRowStyles: { fillColor: [250, 249, 247] },
     margin: { left: 14, right: 14 },
@@ -269,6 +271,7 @@ export async function exportHajjiPDF({ title, customers }: HajjiReportData) {
     loadLogoBase64(), generateCompanyQr(), getSignatureData(),
   ]);
   const doc = new jsPDF({ orientation: "landscape" });
+  await registerBengaliFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
 
   let y = addCompanyHeader(doc, logoBase64, qrDataUrl);
@@ -306,7 +309,7 @@ export async function exportHajjiPDF({ title, customers }: HajjiReportData) {
           fmt(b.total), fmt(b.paid), fmt(b.due),
           b.status.charAt(0).toUpperCase() + b.status.slice(1),
         ]),
-        styles: { fontSize: 7 },
+        styles: { fontSize: 7, font: "NotoSansBengali" },
         headStyles: { fillColor: [60, 70, 85] },
         alternateRowStyles: { fillColor: [250, 249, 247] },
         margin: { left: 18, right: 18 },

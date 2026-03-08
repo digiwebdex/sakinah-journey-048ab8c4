@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { CompanyInfo } from "./invoiceGenerator";
 import { getSignatureData, SignatureData } from "./pdfSignature";
 import { generateTrackingQr, addQrToDoc, addPaymentWatermark, getWatermarkStatus } from "./pdfQrCode";
+import { registerBengaliFont } from "./pdfFontLoader";
 
 const GOLD = { r: 198, g: 165, b: 92 };
 const DARK = { r: 40, g: 46, b: 56 };
@@ -144,6 +145,7 @@ export interface MoallemPdfData {
 
 export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyInfo) {
   const doc = new jsPDF();
+  await registerBengaliFont(doc);
   const [logoBase64, sig, companyQr] = await Promise.all([
     loadLogoBase64(),
     getSignatureData(),
@@ -166,7 +168,7 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
   doc.setFillColor(248, 248, 248);
   doc.rect(14, y, pw - 28, 24, "F");
   doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("NotoSansBengali", "normal");
   doc.text(data.name, 18, y + 6);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
@@ -198,7 +200,7 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
       startY: y,
       head: [["Tracking ID", "Guest", "Package", "Total", "Paid", "Due", "Status"]],
       body: data.bookings.map(b => [b.tracking_id, b.guest_name, b.package_name, fmt(b.total), fmt(b.paid), fmt(b.due), b.status]),
-      styles: { fontSize: 7 },
+      styles: { fontSize: 7, font: "NotoSansBengali" },
       headStyles: { fillColor: [40, 46, 56] },
       margin: { left: 14, right: 14 },
     });
@@ -215,7 +217,7 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
       startY: y,
       head: [["Amount", "Date", "Method", "Notes"]],
       body: data.moallemPayments.map(p => [fmt(p.amount), fmtDate(p.date), p.method, p.notes || "—"]),
-      styles: { fontSize: 7 },
+      styles: { fontSize: 7, font: "NotoSansBengali" },
       headStyles: { fillColor: [60, 70, 85] },
       margin: { left: 14, right: 14 },
     });
@@ -232,7 +234,7 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
       startY: y,
       head: [["Amount", "Date", "Method", "Notes"]],
       body: data.commissionPayments.map(p => [fmt(p.amount), fmtDate(p.date), p.method, p.notes || "—"]),
-      styles: { fontSize: 7 },
+      styles: { fontSize: 7, font: "NotoSansBengali" },
       headStyles: { fillColor: [60, 70, 85] },
       margin: { left: 14, right: 14 },
     });
@@ -260,6 +262,7 @@ export interface SupplierPdfData {
 
 export async function generateSupplierPdf(data: SupplierPdfData, company: CompanyInfo) {
   const doc = new jsPDF();
+  await registerBengaliFont(doc);
   const [logoBase64, sig, companyQr] = await Promise.all([
     loadLogoBase64(),
     getSignatureData(),
@@ -282,7 +285,7 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
   doc.setFillColor(248, 248, 248);
   doc.rect(14, y, pw - 28, 18, "F");
   doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("NotoSansBengali", "normal");
   doc.text(data.agent_name, 18, y + 6);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
@@ -312,7 +315,7 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
         ...data.items.map((item, i) => [String(i + 1), item.description, String(item.quantity), fmt(item.unit_price), fmt(item.total_amount)]),
         ["", "", "", "Grand Total", fmt(itemsTotal)],
       ],
-      styles: { fontSize: 7 },
+      styles: { fontSize: 7, font: "NotoSansBengali" },
       headStyles: { fillColor: [40, 46, 56] },
       margin: { left: 14, right: 14 },
       didParseCell: (hookData: any) => {
@@ -334,7 +337,7 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
       startY: y,
       head: [["Tracking ID", "Guest", "Package", "Total", "Cost", "Paid", "Due", "Status"]],
       body: data.bookings.map(b => [b.tracking_id, b.guest_name, b.package_name, fmt(b.total), fmt(b.cost), fmt(b.paid_to_supplier), fmt(b.supplier_due), b.status]),
-      styles: { fontSize: 7 },
+      styles: { fontSize: 7, font: "NotoSansBengali" },
       headStyles: { fillColor: [40, 46, 56] },
       margin: { left: 14, right: 14 },
     });
@@ -351,7 +354,7 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
       startY: y,
       head: [["Amount", "Date", "Method", "Notes"]],
       body: data.agentPayments.map(p => [fmt(p.amount), fmtDate(p.date), p.method, p.notes || "—"]),
-      styles: { fontSize: 7 },
+      styles: { fontSize: 7, font: "NotoSansBengali" },
       headStyles: { fillColor: [60, 70, 85] },
       margin: { left: 14, right: 14 },
     });
@@ -369,7 +372,7 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
       startY: y,
       head: [["Date", "Pilgrim Count", "Contract Amount", "Paid", "Due"]],
       body: data.contracts.map(c => [fmtDate(c.created_at), String(c.pilgrim_count), fmt(c.contract_amount), fmt(c.total_paid), fmt(c.total_due)]),
-      styles: { fontSize: 7 },
+      styles: { fontSize: 7, font: "NotoSansBengali" },
       headStyles: { fillColor: [40, 46, 56] },
       margin: { left: 14, right: 14 },
     });
@@ -387,7 +390,7 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
       startY: y,
       head: [["Amount", "Date", "Method", "Note"]],
       body: data.contractPayments.map(p => [fmt(p.amount), fmtDate(p.payment_date), p.payment_method || "cash", p.note || "—"]),
-      styles: { fontSize: 7 },
+      styles: { fontSize: 7, font: "NotoSansBengali" },
       headStyles: { fillColor: [60, 70, 85] },
       margin: { left: 14, right: 14 },
     });
@@ -414,6 +417,7 @@ export interface CustomerPdfData {
 
 export async function generateCustomerPdf(data: CustomerPdfData, company: CompanyInfo) {
   const doc = new jsPDF();
+  await registerBengaliFont(doc);
   const [logoBase64, sig, companyQr] = await Promise.all([
     loadLogoBase64(),
     getSignatureData(),
@@ -436,7 +440,7 @@ export async function generateCustomerPdf(data: CustomerPdfData, company: Compan
   doc.setFillColor(248, 248, 248);
   doc.rect(14, y, pw - 28, 24, "F");
   doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("NotoSansBengali", "normal");
   doc.text(data.full_name || "N/A", 18, y + 6);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
@@ -462,7 +466,7 @@ export async function generateCustomerPdf(data: CustomerPdfData, company: Compan
       startY: y,
       head: [["Tracking ID", "Package", "Date", "Total", "Paid", "Due", "Status"]],
       body: data.bookings.map(b => [b.tracking_id, b.package_name, fmtDate(b.date), fmt(b.total), fmt(b.paid), fmt(b.due), b.status]),
-      styles: { fontSize: 7 },
+      styles: { fontSize: 7, font: "NotoSansBengali" },
       headStyles: { fillColor: [40, 46, 56] },
       margin: { left: 14, right: 14 },
     });
@@ -479,7 +483,7 @@ export async function generateCustomerPdf(data: CustomerPdfData, company: Compan
       startY: y,
       head: [["#", "Booking", "Amount", "Date", "Method", "Status"]],
       body: data.payments.map(p => [p.installment || "—", p.tracking_id, fmt(p.amount), fmtDate(p.date), p.method || "—", p.status]),
-      styles: { fontSize: 7 },
+      styles: { fontSize: 7, font: "NotoSansBengali" },
       headStyles: { fillColor: [60, 70, 85] },
       margin: { left: 14, right: 14 },
     });

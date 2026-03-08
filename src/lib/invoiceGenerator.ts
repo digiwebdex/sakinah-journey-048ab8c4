@@ -4,6 +4,7 @@ import logoImg from "@/assets/logo-nobg.png";
 import { getSignatureData, SignatureData } from "./pdfSignature";
 import { generateTrackingQr, addQrToDoc, addPaymentWatermark, getWatermarkStatus } from "./pdfQrCode";
 import { supabase } from "@/integrations/supabase/client";
+import { registerBengaliFont } from "./pdfFontLoader";
 
 export interface CompanyInfo {
   name?: string;
@@ -392,7 +393,7 @@ function addPaymentHistoryTable(doc: jsPDF, y: number, payments: InvoicePayment[
     head: [["#", "Date", "Method", "Amount (BDT)", "Status"]],
     body: bodyRows,
     foot: completed.length > 0 ? [["", "", "Total Paid", totalPaid.toLocaleString(), ""]] : undefined,
-    styles: { fontSize: 7.5, cellPadding: 2.5 },
+    styles: { fontSize: 7.5, cellPadding: 2.5, font: "NotoSansBengali" },
     headStyles: {
       fillColor: [DARK.r, DARK.g, DARK.b],
       textColor: [255, 255, 255],
@@ -554,7 +555,7 @@ async function generateIndividualInvoice(
         Number(booking.total_amount).toLocaleString(),
       ],
     ],
-    styles: { fontSize: 8, cellPadding: 3 },
+    styles: { fontSize: 8, cellPadding: 3, font: "NotoSansBengali" },
     headStyles: {
       fillColor: [DARK.r, DARK.g, DARK.b],
       textColor: [255, 255, 255],
@@ -633,7 +634,7 @@ async function generateFamilyInvoice(
       totalDiscount.toLocaleString(),
       totalFinal.toLocaleString(),
     ]],
-    styles: { fontSize: 7.5, cellPadding: 2.5 },
+    styles: { fontSize: 7.5, cellPadding: 2.5, font: "NotoSansBengali" },
     headStyles: {
       fillColor: [DARK.r, DARK.g, DARK.b],
       textColor: [255, 255, 255],
@@ -681,6 +682,7 @@ export async function generateInvoice(
   company: CompanyInfo
 ) {
   const doc = new jsPDF();
+  await registerBengaliFont(doc);
   const [logoBase64, sig, qrDataUrl] = await Promise.all([
     loadLogoBase64(),
     getSignatureData(),
@@ -721,6 +723,7 @@ export async function generateReceipt(
   allPayments?: InvoicePayment[]
 ) {
   const doc = new jsPDF();
+  await registerBengaliFont(doc);
   const [logoBase64, sig, qrDataUrl] = await Promise.all([
     loadLogoBase64(),
     getSignatureData(),
@@ -767,7 +770,7 @@ export async function generateReceipt(
       ["Payment Date", fmtDate(payment.paid_at)],
       ["Payment Method", (payment.payment_method || "Manual").charAt(0).toUpperCase() + (payment.payment_method || "manual").slice(1)],
     ],
-    styles: { fontSize: 8, cellPadding: 3 },
+    styles: { fontSize: 8, cellPadding: 3, font: "NotoSansBengali" },
     headStyles: { fillColor: [DARK.r, DARK.g, DARK.b], textColor: [255, 255, 255], fontSize: 7.5 },
     columnStyles: { 0: { fontStyle: "bold", cellWidth: 50 } },
     margin: { left: 14, right: 14 },
@@ -819,6 +822,7 @@ export async function generateCommissionReceipt(
   company: CompanyInfo
 ) {
   const doc = new jsPDF();
+  await registerBengaliFont(doc);
   const [logoBase64, sig, qrDataUrl] = await Promise.all([
     loadLogoBase64(),
     getSignatureData(),
@@ -878,7 +882,7 @@ export async function generateCommissionReceipt(
       ["Commission Due", fmt(data.commissionDue)],
       ...(data.notes ? [["Notes", data.notes]] : []),
     ],
-    styles: { fontSize: 8, cellPadding: 3 },
+    styles: { fontSize: 8, cellPadding: 3, font: "NotoSansBengali" },
     headStyles: { fillColor: [DARK.r, DARK.g, DARK.b], textColor: [255, 255, 255], fontSize: 7.5 },
     columnStyles: { 0: { fontStyle: "bold", cellWidth: 55 } },
     margin: { left: 14, right: 14 },
