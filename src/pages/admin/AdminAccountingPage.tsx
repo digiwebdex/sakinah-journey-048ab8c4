@@ -171,19 +171,22 @@ export default function AdminAccountingPage() {
   const netProfit = revenue - totalExpenses;
 
   const today = new Date().toISOString().split("T")[0];
-  const dailyExpense = useMemo(() => expenses.filter((e: any) => e.date === today).reduce((s: number, e: any) => s + Number(e.amount), 0), [expenses, today]);
-  const [dailyIncome, setDailyIncome] = useState(0);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.from("payments").select("amount").eq("status", "completed").gte("paid_at", `${today}T00:00:00`).lte("paid_at", `${today}T23:59:59`);
-      const { data: mp } = await supabase.from("moallem_payments").select("amount").gte("date", today).lte("date", today);
-      setDailyIncome(
-        (data || []).reduce((s: number, p: any) => s + Number(p.amount), 0) +
-        (mp || []).reduce((s: number, p: any) => s + Number(p.amount), 0)
-      );
-    })();
-  }, [today]);
+  const dailyIncome = useMemo(
+    () =>
+      dailyCashbookEntries
+        .filter((e: any) => normalizeDate(e.date) === today && e.type === "income")
+        .reduce((s: number, e: any) => s + Number(e.amount), 0),
+    [dailyCashbookEntries, today]
+  );
+
+  const dailyExpense = useMemo(
+    () =>
+      dailyCashbookEntries
+        .filter((e: any) => normalizeDate(e.date) === today && e.type === "expense")
+        .reduce((s: number, e: any) => s + Number(e.amount), 0),
+    [dailyCashbookEntries, today]
+  );
 
   const filtered = useMemo(() => {
     return expenses.filter((e: any) => {
