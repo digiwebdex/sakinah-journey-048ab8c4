@@ -55,13 +55,14 @@ export default function AdminSupplierAgentProfilePage() {
   const loadData = async () => {
     if (!id) return;
     setLoading(true);
-    const [agRes, bRes, apRes, accRes, cRes, cpRes] = await Promise.all([
+    const [agRes, bRes, apRes, accRes, cRes, cpRes, itemsRes] = await Promise.all([
       supabase.from("supplier_agents").select("*").eq("id", id).maybeSingle(),
       supabase.from("bookings").select("*, packages(name, type, price)").eq("supplier_agent_id", id).order("created_at", { ascending: false }),
       supabase.from("supplier_agent_payments").select("*").eq("supplier_agent_id", id).order("date", { ascending: false }),
       supabase.from("accounts").select("id, name, type, balance").order("name"),
       supabase.from("supplier_contracts").select("*").eq("supplier_id", id).order("created_at", { ascending: false }),
       supabase.from("supplier_contract_payments").select("*").eq("supplier_id", id).order("payment_date", { ascending: false }),
+      (supabase.from("supplier_agent_items" as any) as any).select("*").eq("supplier_agent_id", id).order("created_at", { ascending: true }),
     ]);
     setAgent(agRes.data);
     setBookings((bRes.data as any[]) || []);
@@ -69,6 +70,7 @@ export default function AdminSupplierAgentProfilePage() {
     setAccounts(accRes.data || []);
     setContracts(cRes.data || []);
     setContractPayments(cpRes.data || []);
+    setSupplierItems(itemsRes.data || []);
     setLoading(false);
   };
 
