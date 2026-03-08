@@ -168,8 +168,7 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
   doc.setFillColor(248, 248, 248);
   doc.rect(14, y, pw - 28, 24, "F");
   doc.setFontSize(10);
-  doc.setFont("NotoSansBengali", "normal");
-  doc.text(data.name, 18, y + 6);
+  await addBengaliText(doc, data.name, 18, y + 6, { fontSize: 10, fontWeight: "bold" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.text(`Phone: ${data.phone || "N/A"} | NID: ${data.nid_number || "N/A"}`, 18, y + 12);
