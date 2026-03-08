@@ -20,6 +20,7 @@ import {
 import { format } from "date-fns";
 import { generateSupplierPdf, getCompanyInfoForPdf, SupplierPdfData } from "@/lib/entityPdfGenerator";
 import SupplierContractManager from "@/components/admin/SupplierContractManager";
+import SupplierItemsManager from "@/components/admin/SupplierItemsManager";
 
 const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
 const PAYMENT_METHODS = ["cash", "bkash", "nagad", "bank", "other"];
