@@ -178,11 +178,7 @@ export default function DailyCashbook() {
         Number(e.amount),
         PAYMENT_METHODS.find(p => p.value === e.payment_method)?.label || e.payment_method,
       ]),
-      summaryRows: [
-        ["", "", "মোট জমা", dailyIncome, ""],
-        ["", "", "মোট খরচ", dailyExpense, ""],
-        ["", "", "ব্যালেন্স", dailyBalance, ""],
-      ],
+      summary: [`মোট জমা: ৳${dailyIncome.toLocaleString()} | মোট খরচ: ৳${dailyExpense.toLocaleString()} | ব্যালেন্স: ৳${dailyBalance.toLocaleString()}`],
     });
   };
 
