@@ -36,6 +36,7 @@ export default function AdminSupplierAgentProfilePage() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [contractPayments, setContractPayments] = useState<any[]>([]);
+  const [supplierItems, setSupplierItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
