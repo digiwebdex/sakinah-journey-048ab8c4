@@ -15,7 +15,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, FileText, CreditCard, TrendingDown,
-  Phone, MapPin, Truck, Building2, Plus, Wallet, Download,
+  Phone, MapPin, Truck, Building2, Plus, Wallet, Download, Package,
 } from "lucide-react";
 import { format } from "date-fns";
 import { generateSupplierPdf, getCompanyInfoForPdf, SupplierPdfData } from "@/lib/entityPdfGenerator";
