@@ -38,6 +38,7 @@ const AdminMoallemsPage = lazy(() => import("./pages/admin/AdminMoallemsPage"));
 const AdminMoallemProfilePage = lazy(() => import("./pages/admin/AdminMoallemProfilePage"));
 const AdminSupplierAgentsPage = lazy(() => import("./pages/admin/AdminSupplierAgentsPage"));
 const AdminSupplierAgentProfilePage = lazy(() => import("./pages/admin/AdminSupplierAgentProfilePage"));
+const AdminCalculatorPage = lazy(() => import("./pages/admin/AdminCalculatorPage"));
 
 const queryClient = new QueryClient();
 
