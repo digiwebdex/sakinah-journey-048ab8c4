@@ -168,7 +168,7 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
   doc.setFillColor(248, 248, 248);
   doc.rect(14, y, pw - 28, 24, "F");
   doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("NotoSansBengali", "normal");
   doc.text(data.name, 18, y + 6);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
