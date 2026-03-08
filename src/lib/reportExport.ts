@@ -25,6 +25,16 @@ interface ReportData {
   summary?: string[];
 }
 
+const buildSafeFileName = (title: string, ext: "pdf" | "xlsx") => {
+  const base = title
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_-]/g, "")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return `${base || "report"}.${ext}`;
+};
+
 export interface HajjiReportData {
   title: string;
   customers: {
@@ -247,7 +257,7 @@ export async function exportPDF({ title, columns, rows, summary }: ReportData) {
   }
 
   addCompanyFooter(doc, sig);
-  doc.save(`${title.replace(/\s+/g, "_")}.pdf`);
+  doc.save(buildSafeFileName(title, "pdf"));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -330,7 +340,7 @@ export async function exportHajjiPDF({ title, customers }: HajjiReportData) {
   doc.setTextColor(0, 0, 0);
 
   addCompanyFooter(doc, sig);
-  doc.save(`${title.replace(/\s+/g, "_")}.pdf`);
+  doc.save(buildSafeFileName(title, "pdf"));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -360,7 +370,7 @@ export function exportHajjiExcel({ title, customers }: HajjiReportData) {
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, title.slice(0, 31));
-  XLSX.writeFile(wb, `${title.replace(/\s+/g, "_")}.xlsx`);
+  XLSX.writeFile(wb, buildSafeFileName(title, "xlsx"));
 }
 
 export function exportExcel({ title, columns, rows, summary }: ReportData) {
@@ -375,5 +385,5 @@ export function exportExcel({ title, columns, rows, summary }: ReportData) {
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, title.slice(0, 31));
-  XLSX.writeFile(wb, `${title.replace(/\s+/g, "_")}.xlsx`);
+  XLSX.writeFile(wb, buildSafeFileName(title, "xlsx"));
 }

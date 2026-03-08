@@ -53,6 +53,7 @@ const TABS = [
 ];
 
 const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
+const normalizeDate = (d: string) => (d ? d.substring(0, 10) : "");
 
 export default function AdminAccountingPage() {
   const isViewer = useIsViewer();
@@ -72,6 +73,7 @@ export default function AdminAccountingPage() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
   const [walletAccounts, setWalletAccounts] = useState<any[]>([]);
+  const [dailyCashbookEntries, setDailyCashbookEntries] = useState<any[]>([]);
   const [revenue, setRevenue] = useState(0);
   const [filterType, setFilterType] = useState("all");
   const [filterAssign, setFilterAssign] = useState("all");
@@ -82,13 +84,14 @@ export default function AdminAccountingPage() {
   const [customerProfit, setCustomerProfit] = useState<any[]>([]);
 
   const fetchData = async () => {
-    const [expRes, payRes, bkRes, custRes, pkgRes, walletRes] = await Promise.all([
+    const [expRes, payRes, bkRes, custRes, pkgRes, walletRes, cashbookRes] = await Promise.all([
       supabase.from("expenses").select("*").order("date", { ascending: false }),
       supabase.from("payments").select("amount").eq("status", "completed"),
       supabase.from("bookings").select("id, tracking_id, guest_name, user_id").order("created_at", { ascending: false }),
       supabase.from("profiles").select("id, user_id, full_name, phone").order("full_name"),
       supabase.from("packages").select("id, name, type").eq("is_active", true).order("name"),
       supabase.from("accounts" as any).select("*").eq("type", "asset"),
+      supabase.from("daily_cashbook" as any).select("date, type, amount, category, payment_method").order("date", { ascending: false }),
     ]);
     setExpenses(expRes.data || []);
     setRevenue((payRes.data || []).reduce((s: number, p: any) => s + Number(p.amount), 0));
@@ -96,6 +99,7 @@ export default function AdminAccountingPage() {
     setCustomers(custRes.data || []);
     setPackages(pkgRes.data || []);
     setWalletAccounts((walletRes.data as any[]) || []);
+    setDailyCashbookEntries((cashbookRes.data as any[]) || []);
   };
 
   const fetchProfitViews = async () => {
@@ -167,19 +171,22 @@ export default function AdminAccountingPage() {
   const netProfit = revenue - totalExpenses;
 
   const today = new Date().toISOString().split("T")[0];
-  const dailyExpense = useMemo(() => expenses.filter((e: any) => e.date === today).reduce((s: number, e: any) => s + Number(e.amount), 0), [expenses, today]);
-  const [dailyIncome, setDailyIncome] = useState(0);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.from("payments").select("amount").eq("status", "completed").gte("paid_at", `${today}T00:00:00`).lte("paid_at", `${today}T23:59:59`);
-      const { data: mp } = await supabase.from("moallem_payments").select("amount").gte("date", today).lte("date", today);
-      setDailyIncome(
-        (data || []).reduce((s: number, p: any) => s + Number(p.amount), 0) +
-        (mp || []).reduce((s: number, p: any) => s + Number(p.amount), 0)
-      );
-    })();
-  }, [today]);
+  const dailyIncome = useMemo(
+    () =>
+      dailyCashbookEntries
+        .filter((e: any) => normalizeDate(e.date) === today && e.type === "income")
+        .reduce((s: number, e: any) => s + Number(e.amount), 0),
+    [dailyCashbookEntries, today]
+  );
+
+  const dailyExpense = useMemo(
+    () =>
+      dailyCashbookEntries
+        .filter((e: any) => normalizeDate(e.date) === today && e.type === "expense")
+        .reduce((s: number, e: any) => s + Number(e.amount), 0),
+    [dailyCashbookEntries, today]
+  );
 
   const filtered = useMemo(() => {
     return expenses.filter((e: any) => {
@@ -194,6 +201,95 @@ export default function AdminAccountingPage() {
     expenses.forEach((e: any) => { const t = e.expense_type || "other"; map[t] = (map[t] || 0) + Number(e.amount); });
     return map;
   }, [expenses]);
+
+  const todayCashbookRows = useMemo(
+    () =>
+      dailyCashbookEntries
+        .filter((e: any) => normalizeDate(e.date) === today)
+        .map((e: any) => [
+          e.type === "income" ? "Income" : "Expense",
+          e.category || "—",
+          e.payment_method || "—",
+          Number(e.amount || 0),
+          normalizeDate(e.date),
+        ]),
+    [dailyCashbookEntries, today]
+  );
+
+  const handleTopExportPDF = async () => {
+    try {
+      if (tab === "cashbook") {
+        if (!todayCashbookRows.length) {
+          toast.error("আজকের ক্যাশবুক ডেটা নেই");
+          return;
+        }
+        await exportPDF({
+          title: `Daily Cashbook ${today}`,
+          columns: ["Type", "Category", "Method", "Amount", "Date"],
+          rows: todayCashbookRows,
+          summary: [
+            `Total Income: BDT ${dailyIncome.toLocaleString("en-IN")}`,
+            `Total Expense: BDT ${dailyExpense.toLocaleString("en-IN")}`,
+          ],
+        });
+        return;
+      }
+
+      if (tab === "expenses") {
+        await exportPDF({
+          title: "Expenses Report",
+          columns: ["Title", "Type", "Category", "Amount", "Date"],
+          rows: filtered.map((e) => [e.title, e.expense_type, e.category, Number(e.amount), normalizeDate(e.date)]),
+        });
+      } else if (tab === "booking") {
+        await exportPDF({
+          title: "Booking Profit Report",
+          columns: ["Tracking ID", "Customer", "Package", "Revenue", "Expenses", "Profit"],
+          rows: bookingProfit.map((b: any) => [b.tracking_id || "—", b.guest_name || "—", b.package_name || "—", Number(b.total_payments || 0), Number(b.total_expenses || 0), Number(b.profit_amount || 0)]),
+        });
+      } else if (tab === "package") {
+        await exportPDF({
+          title: "Package Profit Report",
+          columns: ["Package", "Type", "Bookings", "Revenue", "Expenses", "Profit"],
+          rows: packageProfit.map((p: any) => [p.package_name || "—", p.package_type || "—", Number(p.total_bookings || 0), Number(p.total_revenue || 0), Number(p.total_expenses || 0), Number(p.profit || 0)]),
+        });
+      } else if (tab === "customer") {
+        await exportPDF({
+          title: "Customer Profit Report",
+          columns: ["Customer", "Phone", "Bookings", "Payments", "Expenses", "Profit"],
+          rows: customerProfit.map((c: any) => [c.full_name || "—", c.phone || "—", Number(c.total_bookings || 0), Number(c.total_payments || 0), Number(c.total_expenses || 0), Number(c.profit || 0)]),
+        });
+      }
+    } catch (error) {
+      console.error("PDF export failed:", error);
+      toast.error("PDF export failed");
+    }
+  };
+
+  const handleTopExportExcel = () => {
+    try {
+      if (tab === "cashbook") {
+        if (!todayCashbookRows.length) {
+          toast.error("আজকের ক্যাশবুক ডেটা নেই");
+          return;
+        }
+        exportExcel({
+          title: `Daily Cashbook ${today}`,
+          columns: ["Type", "Category", "Method", "Amount", "Date"],
+          rows: todayCashbookRows,
+        });
+        return;
+      }
+
+      if (tab === "expenses") exportExcel({ title: "Expenses Report", columns: ["Title", "Type", "Category", "Amount", "Date"], rows: filtered.map((e) => [e.title, e.expense_type, e.category, Number(e.amount), normalizeDate(e.date)]) });
+      else if (tab === "booking") exportExcel({ title: "Booking Profit Report", columns: ["Tracking ID", "Customer", "Package", "Revenue", "Expenses", "Profit"], rows: bookingProfit.map((b: any) => [b.tracking_id || "—", b.guest_name || "—", b.package_name || "—", Number(b.total_payments || 0), Number(b.total_expenses || 0), Number(b.profit_amount || 0)]) });
+      else if (tab === "package") exportExcel({ title: "Package Profit Report", columns: ["Package", "Type", "Bookings", "Revenue", "Expenses", "Profit"], rows: packageProfit.map((p: any) => [p.package_name || "—", p.package_type || "—", Number(p.total_bookings || 0), Number(p.total_revenue || 0), Number(p.total_expenses || 0), Number(p.profit || 0)]) });
+      else if (tab === "customer") exportExcel({ title: "Customer Profit Report", columns: ["Customer", "Phone", "Bookings", "Payments", "Expenses", "Profit"], rows: customerProfit.map((c: any) => [c.full_name || "—", c.phone || "—", Number(c.total_bookings || 0), Number(c.total_payments || 0), Number(c.total_expenses || 0), Number(c.profit || 0)]) });
+    } catch (error) {
+      console.error("Excel export failed:", error);
+      toast.error("Excel export failed");
+    }
+  };
 
   const getBookingLabel = (id: string) => { const b = bookings.find((bk: any) => bk.id === id); return b ? `${b.tracking_id} — ${b.guest_name || "N/A"}` : id?.slice(0, 8); };
   const getCustomerLabel = (id: string) => { const c = customers.find((cu: any) => cu.user_id === id); return c ? `${c.full_name || "N/A"} (${c.phone || ""})` : id?.slice(0, 8); };
@@ -239,18 +335,8 @@ export default function AdminAccountingPage() {
               <Plus className="h-4 w-4" /> নতুন খরচ
             </button>
           )}
-          <button onClick={() => {
-            if (tab === "expenses") exportPDF({ title: "Expenses Report", columns: ["Title", "Type", "Category", "Amount", "Date"], rows: filtered.map(e => [e.title, e.expense_type, e.category, Number(e.amount), new Date(e.date).toLocaleDateString()]) });
-            else if (tab === "booking") exportPDF({ title: "Booking Profit Report", columns: ["Tracking ID", "Customer", "Package", "Revenue", "Expenses", "Profit"], rows: bookingProfit.map((b: any) => [b.tracking_id || "—", b.guest_name || "—", b.package_name || "—", Number(b.total_payments || 0), Number(b.total_expenses || 0), Number(b.profit_amount || 0)]) });
-            else if (tab === "package") exportPDF({ title: "Package Profit Report", columns: ["Package", "Type", "Bookings", "Revenue", "Expenses", "Profit"], rows: packageProfit.map((p: any) => [p.package_name || "—", p.package_type || "—", Number(p.total_bookings || 0), Number(p.total_revenue || 0), Number(p.total_expenses || 0), Number(p.profit || 0)]) });
-            else if (tab === "customer") exportPDF({ title: "Customer Profit Report", columns: ["Customer", "Phone", "Bookings", "Payments", "Expenses", "Profit"], rows: customerProfit.map((c: any) => [c.full_name || "—", c.phone || "—", Number(c.total_bookings || 0), Number(c.total_payments || 0), Number(c.total_expenses || 0), Number(c.profit || 0)]) });
-          }} className="inline-flex items-center gap-1 text-xs bg-secondary px-3 py-1.5 rounded-md hover:bg-muted transition-colors"><FileDown className="h-3.5 w-3.5" />PDF</button>
-          <button onClick={() => {
-            if (tab === "expenses") exportExcel({ title: "Expenses Report", columns: ["Title", "Type", "Category", "Amount", "Date"], rows: filtered.map(e => [e.title, e.expense_type, e.category, Number(e.amount), new Date(e.date).toLocaleDateString()]) });
-            else if (tab === "booking") exportExcel({ title: "Booking Profit Report", columns: ["Tracking ID", "Customer", "Package", "Revenue", "Expenses", "Profit"], rows: bookingProfit.map((b: any) => [b.tracking_id || "—", b.guest_name || "—", b.package_name || "—", Number(b.total_payments || 0), Number(b.total_expenses || 0), Number(b.profit_amount || 0)]) });
-            else if (tab === "package") exportExcel({ title: "Package Profit Report", columns: ["Package", "Type", "Bookings", "Revenue", "Expenses", "Profit"], rows: packageProfit.map((p: any) => [p.package_name || "—", p.package_type || "—", Number(p.total_bookings || 0), Number(p.total_revenue || 0), Number(p.total_expenses || 0), Number(p.profit || 0)]) });
-            else if (tab === "customer") exportExcel({ title: "Customer Profit Report", columns: ["Customer", "Phone", "Bookings", "Payments", "Expenses", "Profit"], rows: customerProfit.map((c: any) => [c.full_name || "—", c.phone || "—", Number(c.total_bookings || 0), Number(c.total_payments || 0), Number(c.total_expenses || 0), Number(c.profit || 0)]) });
-          }} className="inline-flex items-center gap-1 text-xs bg-secondary px-3 py-1.5 rounded-md hover:bg-muted transition-colors"><FileSpreadsheet className="h-3.5 w-3.5" />Excel</button>
+          <button onClick={handleTopExportPDF} className="inline-flex items-center gap-1 text-xs bg-secondary px-3 py-1.5 rounded-md hover:bg-muted transition-colors"><FileDown className="h-3.5 w-3.5" />PDF</button>
+          <button onClick={handleTopExportExcel} className="inline-flex items-center gap-1 text-xs bg-secondary px-3 py-1.5 rounded-md hover:bg-muted transition-colors"><FileSpreadsheet className="h-3.5 w-3.5" />Excel</button>
         </div>
       </div>
 
@@ -293,7 +379,7 @@ export default function AdminAccountingPage() {
       </div>
 
       {/* ============ DAILY CASHBOOK TAB ============ */}
-      {tab === "cashbook" && <DailyCashbook />}
+      {tab === "cashbook" && <DailyCashbook onEntriesChanged={fetchData} />}
 
       {/* ============ EXPENSES TAB ============ */}
       {tab === "expenses" && (
