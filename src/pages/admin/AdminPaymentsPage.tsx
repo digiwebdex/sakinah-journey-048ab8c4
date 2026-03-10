@@ -598,9 +598,10 @@ export default function AdminPaymentsPage() {
                           <td className="py-2.5 px-4 text-xs">{p.date ? new Date(p.date).toLocaleDateString() : "—"}</td>
                           <td className="py-2.5 px-4 text-xs text-muted-foreground truncate max-w-[150px]">{p.notes || "—"}</td>
                           <td className="py-2.5 px-4" onClick={(e) => e.stopPropagation()}>
-                            <AdminActionMenu inlineCount={0} actions={[
+                             <AdminActionMenu inlineCount={0} actions={[
+                              { label: "Edit", icon: <Edit2 className="h-3.5 w-3.5" />, onClick: () => startEdit({ ...p, _type: "supplier" }), variant: "warning", hidden: !canModify },
                               { label: "Delete", icon: <Trash2 className="h-3.5 w-3.5" />, onClick: () => { setDeleteId(p.id); setDeleteType("supplier"); }, variant: "destructive", hidden: !canModify },
-                            ]} />
+                             ]} />
                           </td>
                         </tr>
                       ))}
