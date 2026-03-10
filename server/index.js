@@ -89,7 +89,7 @@ const createCrudRoutes = (tableName, options = {}) => {
           ilike: 'ILIKE',
         }[operator] || '=';
 
-        params.push(operator === 'ilike' ? String(value).replace(/%/g, '') + '%' : value);
+        params.push(operator === 'ilike' ? `%${String(value).replace(/%/g, '')}%` : value);
         conditions.push(`${column} ${sqlOp} $${params.length}`);
       });
 
@@ -176,6 +176,61 @@ app.use('/api/blog-posts', createCrudRoutes('blog_posts', { readAuth: false, wri
 app.use('/api/installment-plans', createCrudRoutes('installment_plans', { readAuth: false, writeAuth: true, adminOnly: true }));
 
 // Auth required routes
+// Custom bookings GET with JOINs (must be before generic CRUD)
+app.get('/api/bookings', authenticate, async (req, res) => {
+  try {
+    const { limit = 1000, offset = 0, ...filters } = req.query;
+    let conditions = [];
+    let params = [];
+    const validColumn = (col) => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(col);
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value === undefined || value === '') return;
+      const opMatch = key.match(/^(.+?)_(not_is|neq|gt|gte|lt|lte|ilike|in|is)$/);
+      const column = opMatch ? opMatch[1] : key;
+      const operator = opMatch ? opMatch[2] : 'eq';
+      if (!validColumn(column)) return;
+      
+      const prefixedCol = `b.${column}`;
+      if (operator === 'is') {
+        if (String(value).toLowerCase() === 'null') conditions.push(`${prefixedCol} IS NULL`);
+        else { params.push(value); conditions.push(`${prefixedCol} = $${params.length}`); }
+        return;
+      }
+      if (operator === 'not_is') {
+        if (String(value).toLowerCase() === 'null') conditions.push(`${prefixedCol} IS NOT NULL`);
+        else { params.push(value); conditions.push(`${prefixedCol} <> $${params.length}`); }
+        return;
+      }
+      if (operator === 'in') {
+        const arr = String(value).split(',').filter(Boolean);
+        if (!arr.length) return;
+        params.push(arr);
+        conditions.push(`${prefixedCol} = ANY($${params.length})`);
+        return;
+      }
+      const sqlOp = { eq: '=', neq: '<>', gt: '>', gte: '>=', lt: '<', lte: '<=', ilike: 'ILIKE' }[operator] || '=';
+      params.push(operator === 'ilike' ? `%${String(value).replace(/%/g, '')}%` : value);
+      conditions.push(`${prefixedCol} ${sqlOp} $${params.length}`);
+    });
+
+    let sql = `SELECT b.*, 
+      json_build_object('name', p.name, 'type', p.type, 'duration_days', p.duration_days, 'price', p.price) as packages,
+      CASE WHEN m.id IS NOT NULL THEN json_build_object('name', m.name, 'phone', m.phone) ELSE NULL END as moallems
+      FROM bookings b
+      LEFT JOIN packages p ON b.package_id = p.id
+      LEFT JOIN moallems m ON b.moallem_id = m.id`;
+    if (conditions.length) sql += ' WHERE ' + conditions.join(' AND ');
+    sql += ` ORDER BY b.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(Number(limit) || 1000, Number(offset) || 0);
+
+    const result = await query(sql, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('GET /api/bookings error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 app.use('/api/bookings', createCrudRoutes('bookings', { adminOnly: true }));
 app.use('/api/payments', createCrudRoutes('payments', { adminOnly: true }));
 app.use('/api/expenses', createCrudRoutes('expenses', { adminOnly: true }));
