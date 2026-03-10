@@ -130,6 +130,65 @@ export default function AdminMoallemProfilePage() {
     loadData();
   };
 
+  const startEditItem = (item: any) => {
+    setEditItemId(item.id);
+    setItemForm({ description: item.description, quantity: String(item.quantity), unit_price: String(item.unit_price) });
+    setShowItemForm(true);
+  };
+
+  const handleSaveItem = async () => {
+    const qty = parseFloat(itemForm.quantity) || 0;
+    const price = parseFloat(itemForm.unit_price) || 0;
+    if (!itemForm.description.trim()) { toast({ title: "বিবরণ দিন", variant: "destructive" }); return; }
+    if (qty <= 0 || price <= 0) { toast({ title: "সঠিক পরিমাণ ও মূল্য দিন", variant: "destructive" }); return; }
+    if (editItemId) {
+      const { error } = await (supabase as any).from("moallem_items").update({
+        description: itemForm.description.trim(), quantity: qty, unit_price: price, total_amount: qty * price,
+      }).eq("id", editItemId);
+      if (error) { toast({ title: "আপডেট ব্যর্থ", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "আইটেম আপডেট হয়েছে" });
+    } else {
+      const { error } = await (supabase as any).from("moallem_items").insert({
+        moallem_id: id, description: itemForm.description.trim(), quantity: qty, unit_price: price, total_amount: qty * price,
+      });
+      if (error) { toast({ title: "ত্রুটি", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "আইটেম যোগ হয়েছে" });
+    }
+    setItemForm({ description: "", quantity: "1", unit_price: "0" });
+    setEditItemId(null);
+    setShowItemForm(false);
+    loadData();
+  };
+
+  // Payment edit/delete handlers
+  const startEditPayment = (p: any, type: "payment" | "commission") => {
+    setEditPaymentId(p.id);
+    setEditPaymentType(type);
+    setEditPaymentForm({ amount: String(p.amount), payment_method: p.payment_method || "cash", date: p.date || "", notes: p.notes || "" });
+    setShowEditPaymentModal(true);
+  };
+
+  const handleSavePaymentEdit = async () => {
+    if (!editPaymentId) return;
+    const table = editPaymentType === "commission" ? "moallem_commission_payments" : "moallem_payments";
+    const { error } = await (supabase as any).from(table).update({
+      amount: parseFloat(editPaymentForm.amount), payment_method: editPaymentForm.payment_method,
+      date: editPaymentForm.date || undefined, notes: editPaymentForm.notes || null,
+    }).eq("id", editPaymentId);
+    if (error) { toast({ title: "আপডেট ব্যর্থ", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "পেমেন্ট আপডেট হয়েছে" });
+    setEditPaymentId(null); setShowEditPaymentModal(false); loadData();
+  };
+
+  const confirmDeletePayment = async () => {
+    if (!deletePaymentId) return;
+    const table = deletePaymentType === "commission" ? "moallem_commission_payments" : "moallem_payments";
+    const { error } = await (supabase as any).from(table).delete().eq("id", deletePaymentId);
+    if (error) { toast({ title: "মুছতে ব্যর্থ", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "পেমেন্ট মুছে ফেলা হয়েছে" });
+    setDeletePaymentId(null); loadData();
+  };
+
   const handleRecordPayment = async () => {
     const amount = parseFloat(paymentForm.amount);
     if (!amount || amount <= 0) { toast({ title: "সঠিক পরিমাণ দিন", variant: "destructive" }); return; }
