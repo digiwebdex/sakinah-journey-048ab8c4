@@ -5,10 +5,78 @@ import QRCode from "qrcode";
 import { CompanyInfo } from "./invoiceGenerator";
 import { getSignatureData, SignatureData } from "./pdfSignature";
 import { generateTrackingQr, addQrToDoc, addPaymentWatermark, getWatermarkStatus } from "./pdfQrCode";
-import { registerBengaliFont, addBengaliText } from "./pdfFontLoader";
+import { registerBengaliFont, addBengaliText, hasBengali } from "./pdfFontLoader";
 
 const GOLD = { r: 198, g: 165, b: 92 };
 const DARK = { r: 40, g: 46, b: 56 };
+
+/**
+ * Renders Bengali text on a hidden canvas and returns an image data URL.
+ * Used by the autoTable didDrawCell hook to replace garbled Bengali glyphs.
+ */
+function renderBengaliCellText(
+  text: string,
+  fontSize: number,
+  fontWeight: "normal" | "bold" = "normal"
+): { dataUrl: string; width: number; height: number } {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d")!;
+  const fontFamily = "'Noto Sans Bengali', 'Kalpurush', sans-serif";
+  const scale = 3;
+  const pxSize = fontSize * 1.33 * scale;
+
+  ctx.font = `${fontWeight} ${pxSize}px ${fontFamily}`;
+  const tw = ctx.measureText(text).width;
+  const th = pxSize * 1.3;
+
+  canvas.width = Math.ceil(tw + 4);
+  canvas.height = Math.ceil(th + 4);
+
+  ctx.font = `${fontWeight} ${pxSize}px ${fontFamily}`;
+  ctx.fillStyle = "#000000";
+  ctx.textBaseline = "top";
+  ctx.fillText(text, 0, 2);
+
+  return {
+    dataUrl: canvas.toDataURL("image/png"),
+    width: canvas.width / scale,
+    height: canvas.height / scale,
+  };
+}
+
+/**
+ * autoTable didDrawCell hook that re-renders Bengali text via canvas overlay.
+ */
+function bengaliCellHook(hookData: any) {
+  if (hookData.section !== "body") return;
+  const cellText = String(hookData.cell.raw ?? "");
+  if (!hasBengali(cellText)) return;
+
+  const doc = hookData.doc as jsPDF;
+  const { x, y, width, height } = hookData.cell;
+  const fontSize = hookData.cell.styles?.fontSize || 7;
+
+  // Clear the garbled text by painting over with cell background
+  const fillColor = hookData.cell.styles?.fillColor;
+  if (fillColor && Array.isArray(fillColor)) {
+    doc.setFillColor(fillColor[0], fillColor[1], fillColor[2]);
+  } else {
+    doc.setFillColor(255, 255, 255);
+  }
+  doc.rect(x + 0.5, y + 0.5, width - 1, height - 1, "F");
+
+  try {
+    const img = renderBengaliCellText(cellText, fontSize);
+    const imgH = Math.min(img.height, height - 1);
+    const imgY = y + (height - imgH) / 2;
+    doc.addImage(img.dataUrl, "PNG", x + 1.5, imgY, img.width, imgH);
+  } catch {
+    // fallback: just write with default font
+    doc.setFontSize(fontSize);
+    doc.setFont("helvetica", "normal");
+    doc.text(cellText, x + 2, y + height / 2 + 1);
+  }
+}
 const COMPANY_URL = "https://rahe-kaba-journeys.lovable.app";
 
 const fmt = (n: number) => `BDT ${n.toLocaleString()}`;
