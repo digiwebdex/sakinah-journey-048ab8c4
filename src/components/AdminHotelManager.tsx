@@ -452,7 +452,7 @@ const AdminHotelManager = ({ hotels, onRefresh }: Props) => {
                         {room.image_url && <img src={room.image_url} alt={room.name} className="w-14 h-14 rounded object-cover flex-shrink-0" />}
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm">{room.name}</p>
-                          <p className="text-xs text-muted-foreground">ধারণক্ষমতা: {room.capacity} জন • ৳{Number(room.price_per_night).toLocaleString()}/রাত</p>
+                          <p className="text-xs text-muted-foreground">Capacity: {room.capacity} guests • BDT {Number(room.price_per_night).toLocaleString()}/night</p>
                           {Array.isArray(room.amenities) && room.amenities.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {room.amenities.map((a: string, i: number) => <span key={i} className="text-[10px] bg-secondary px-1.5 py-0.5 rounded">{a}</span>)}

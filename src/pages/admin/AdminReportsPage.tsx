@@ -444,7 +444,7 @@ export default function AdminReportsPage() {
         const totalPaid = dailyBookingRows.reduce((s: number, r: any) => s + r.totalPaid, 0);
         const totalDue = dailyBookingRows.reduce((s: number, r: any) => s + r.totalDue, 0);
         const totalAmount = dailyBookingRows.reduce((s: number, r: any) => s + r.totalAmount, 0);
-        data = { title: "Daily Booking Report", columns: ["Date", "Bookings", "Travelers", "Total Amount", "Total Paid", "Total Due"], rows: dailyBookingRows.map((r: any) => [r.dateFormatted, r.count, r.travelers, r.totalAmount, r.totalPaid, r.totalDue]), summary: [`Total Amount: ৳${totalAmount.toLocaleString()}`, ...makeSummary(totalPaid, totalDue)] };
+        data = { title: "Daily Booking Report", columns: ["Date", "Bookings", "Travelers", "Total Amount", "Total Paid", "Total Due"], rows: dailyBookingRows.map((r: any) => [r.dateFormatted, r.count, r.travelers, r.totalAmount, r.totalPaid, r.totalDue]), summary: [`Total Amount: BDT ${totalAmount.toLocaleString()}`, ...makeSummary(totalPaid, totalDue)] };
         break;
       }
       default:
