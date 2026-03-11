@@ -519,9 +519,9 @@ export default function AdminBookingsPage() {
                     onChange={(e) => setEditForm((f: any) => ({ ...f, paid_amount: Math.min(Math.max(0, parseFloat(e.target.value) || 0), editTotalSelling) }))} />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Due (৳)</label>
+                   <label className="text-xs text-muted-foreground block mb-1">Due (BDT)</label>
                   <div className={`${inputClass} bg-muted/50 font-bold ${editDue > 0 ? "text-destructive" : "text-emerald"}`}>
-                    ৳{editDue.toLocaleString()}
+                    BDT {editDue.toLocaleString()}
                   </div>
                 </div>
                 <div>
