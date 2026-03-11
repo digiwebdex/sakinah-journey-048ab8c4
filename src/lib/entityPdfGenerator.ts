@@ -306,6 +306,7 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
       styles: { fontSize: 7, font: "NotoSansBengali" },
       headStyles: { fillColor: [60, 70, 85] },
       margin: { left: 14, right: 14 },
+      didDrawCell: bengaliCellHook,
     });
   }
 
