@@ -89,7 +89,7 @@ function BookingDetail({ bookingId }: { bookingId: string }) {
         const completedPayments = payments.filter(p => p.status === "completed" && p.paid_at).sort((a, b) => new Date(a.paid_at).getTime() - new Date(b.paid_at).getTime());
         return completedPayments.length > 0 ? (
           <div>
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">পেমেন্ট টাইমলাইন ({completedPayments.length})</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Payment Timeline ({completedPayments.length})</h4>
             <div className="space-y-1.5">
               {completedPayments.map((p: any, i: number) => (
                 <div key={p.id} className="flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/15 rounded-lg px-3 py-2">
