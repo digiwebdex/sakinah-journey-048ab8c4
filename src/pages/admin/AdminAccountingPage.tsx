@@ -600,7 +600,7 @@ export default function AdminAccountingPage() {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground block mb-1">পেমেন্ট পদ্ধতি</label>
+                <label className="text-xs text-muted-foreground block mb-1">Payment Method</label>
                 <select className={inputClass} value={form.payment_method} onChange={(e) => setForm({ ...form, payment_method: e.target.value })}>
                   {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
                 </select>
