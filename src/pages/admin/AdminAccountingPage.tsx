@@ -579,7 +579,7 @@ export default function AdminAccountingPage() {
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-heading">নতুন খরচ যোগ করুন</DialogTitle>
+            <DialogTitle className="font-heading">Add New Expense</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
