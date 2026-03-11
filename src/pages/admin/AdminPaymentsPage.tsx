@@ -651,6 +651,7 @@ export default function AdminPaymentsPage() {
               <th className="pb-3 pr-4">Name</th>
               <th className="pb-3 pr-4">Amount</th>
               <th className="pb-3 pr-4">Method</th>
+              <th className="pb-3 pr-4">Service Type</th>
               <th className="pb-3 pr-4">Date</th>
               <th className="pb-3 pr-4">Status</th>
               <th className="pb-3">Actions</th>
@@ -659,6 +660,7 @@ export default function AdminPaymentsPage() {
           <tbody>
             {allCombined.map((p: any) => {
               const badge = getTypeBadge(p._type);
+              const { serviceLabel: pServiceLabel, cleanNotes: pCleanNotes } = extractServiceType(p.notes);
               return (
               <tr key={`${p._type}-${p.id}`} className="border-b border-border/50 cursor-pointer hover:bg-secondary/30 transition-colors"
                 onClick={() => { if (editingId !== p.id && markPaidId !== p.id) setViewPayment(p); }}>
@@ -671,6 +673,11 @@ export default function AdminPaymentsPage() {
                     <td className="py-3 pr-4">
                       <select className={inputClass + " w-24"} value={editForm.payment_method} onChange={(e) => setEditForm({ ...editForm, payment_method: e.target.value })}>
                         {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                      </select>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <select className={inputClass + " w-28"} value={editForm.service_type || ""} onChange={(e) => setEditForm({ ...editForm, service_type: e.target.value })}>
+                        {SERVICE_TYPES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                       </select>
                     </td>
                     <td className="py-3 pr-4"><input className={inputClass + " w-32"} type="date" value={editForm.due_date} onChange={(e) => setEditForm({ ...editForm, due_date: e.target.value })} /></td>
