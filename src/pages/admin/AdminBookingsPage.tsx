@@ -496,8 +496,8 @@ export default function AdminBookingsPage() {
                       onChange={(e) => setEditForm((f: any) => ({ ...f, commission_per_person: e.target.value }))} />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground block mb-1">Total Commission (৳)</label>
-                    <div className={`${inputClass} bg-muted/50 font-bold`}>৳{editTotalCommission.toLocaleString()}</div>
+                     <label className="text-xs text-muted-foreground block mb-1">Total Commission (BDT)</label>
+                    <div className={`${inputClass} bg-muted/50 font-bold`}>BDT {editTotalCommission.toLocaleString()}</div>
                   </div>
                 </div>
               )}
