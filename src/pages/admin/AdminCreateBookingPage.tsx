@@ -304,7 +304,7 @@ export default function AdminCreateBookingPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Selling Price (৳)</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Selling Price (BDT)</label>
                   <input className={inputClass} type="number" min={0} value={m.selling_price}
                     onChange={(e) => updateMember(m.id, "selling_price", Math.max(0, parseFloat(e.target.value) || 0))} />
                 </div>
