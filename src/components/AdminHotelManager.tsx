@@ -406,7 +406,7 @@ const AdminHotelManager = ({ hotels, onRefresh }: Props) => {
                   <span className="font-medium flex items-center gap-1"><Star className="h-3 w-3 text-primary" /> {"★".repeat(viewHotel.star_rating || 0)}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground text-xs block">অবস্থান</span>
+                  <span className="text-muted-foreground text-xs block">Location</span>
                   <span className="font-medium">{viewHotel.location}</span>
                 </div>
                 <div>
