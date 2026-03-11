@@ -421,7 +421,7 @@ const AdminHotelManager = ({ hotels, onRefresh }: Props) => {
                 </div>
               </div>
               {viewHotel.description && (
-                <div><span className="text-muted-foreground text-xs block">বিবরণ</span><p>{viewHotel.description}</p></div>
+                <div><span className="text-muted-foreground text-xs block">Description</span><p>{viewHotel.description}</p></div>
               )}
               {Array.isArray(viewHotel.amenities) && viewHotel.amenities.length > 0 && (
                 <div>
