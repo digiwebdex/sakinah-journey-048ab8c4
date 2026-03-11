@@ -1051,7 +1051,7 @@ export default function AdminPaymentsPage() {
                 </div>
               )}
               {viewPayment.notes && (
-                <div><span className="text-muted-foreground text-xs block">নোট</span><p>{viewPayment.notes}</p></div>
+                <div><span className="text-muted-foreground text-xs block">Notes</span><p>{viewPayment.notes}</p></div>
               )}
             </div>
             );
