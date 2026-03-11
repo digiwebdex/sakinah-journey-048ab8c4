@@ -290,9 +290,10 @@ export default function AdminPaymentsPage() {
   };
 
   const startEdit = (p: any) => {
+    const { serviceValue, cleanNotes } = extractServiceType(p.notes);
     setEditingId(p.id);
     setEditType(p._type || "customer");
-    setEditForm({ amount: p.amount, due_date: p.due_date || "", status: p.status || "completed", payment_method: p.payment_method || "manual", notes: p.notes || "", transaction_id: p.transaction_id || "", date: p.date || "" });
+    setEditForm({ amount: p.amount, due_date: p.due_date || "", status: p.status || "completed", payment_method: p.payment_method || "manual", notes: cleanNotes, transaction_id: p.transaction_id || "", date: p.date || "", service_type: serviceValue });
     if (p._type === "moallem" || p._type === "supplier") {
       setShowEditModal(true);
     }
