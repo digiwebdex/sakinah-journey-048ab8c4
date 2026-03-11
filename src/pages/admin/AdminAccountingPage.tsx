@@ -405,7 +405,7 @@ export default function AdminAccountingPage() {
               <option value="all">All Assignments</option>
               {ASSIGN_TO.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
             </select>
-            <span className="text-xs text-muted-foreground ml-auto">{filtered.length} টি খরচ</span>
+            <span className="text-xs text-muted-foreground ml-auto">{filtered.length} expenses</span>
           </div>
 
           {/* Expense List */}
