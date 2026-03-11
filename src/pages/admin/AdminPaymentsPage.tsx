@@ -865,21 +865,21 @@ export default function AdminPaymentsPage() {
               <div className="bg-secondary/50 rounded-lg p-3 grid grid-cols-3 gap-2 text-xs">
                 {paymentType === "customer" ? (
                   <>
-                    <div><span className="text-muted-foreground block">মোট</span><span className="font-bold">{fmt(Number(selectedBookingInfo.total_amount))}</span></div>
-                    <div><span className="text-muted-foreground block">পরিশোধিত</span><span className="font-bold text-emerald">{fmt(Number(selectedBookingInfo.paid_amount))}</span></div>
-                    <div><span className="text-muted-foreground block">বকেয়া</span><span className="font-bold text-destructive">{fmt(Number(selectedBookingInfo.due_amount || 0))}</span></div>
+                    <div><span className="text-muted-foreground block">Total</span><span className="font-bold">{fmt(Number(selectedBookingInfo.total_amount))}</span></div>
+                    <div><span className="text-muted-foreground block">Paid</span><span className="font-bold text-emerald">{fmt(Number(selectedBookingInfo.paid_amount))}</span></div>
+                    <div><span className="text-muted-foreground block">Due</span><span className="font-bold text-destructive">{fmt(Number(selectedBookingInfo.due_amount || 0))}</span></div>
                   </>
                 ) : paymentType === "moallem" ? (
                   <>
-                    <div><span className="text-muted-foreground block">মোট</span><span className="font-bold">{fmt(Number(selectedBookingInfo.total_amount))}</span></div>
-                    <div><span className="text-muted-foreground block">মোয়াল্লেম পরিশোধিত</span><span className="font-bold text-emerald">{fmt(Number(selectedBookingInfo.paid_by_moallem || 0))}</span></div>
-                    <div><span className="text-muted-foreground block">মোয়াল্লেম বকেয়া</span><span className="font-bold text-destructive">{fmt(Number(selectedBookingInfo.moallem_due || 0))}</span></div>
+                    <div><span className="text-muted-foreground block">Total</span><span className="font-bold">{fmt(Number(selectedBookingInfo.total_amount))}</span></div>
+                    <div><span className="text-muted-foreground block">Moallem Paid</span><span className="font-bold text-emerald">{fmt(Number(selectedBookingInfo.paid_by_moallem || 0))}</span></div>
+                    <div><span className="text-muted-foreground block">Moallem Due</span><span className="font-bold text-destructive">{fmt(Number(selectedBookingInfo.moallem_due || 0))}</span></div>
                   </>
                 ) : (
                   <>
-                    <div><span className="text-muted-foreground block">মোট খরচ</span><span className="font-bold">{fmt(Number(selectedBookingInfo.total_cost || 0))}</span></div>
-                    <div><span className="text-muted-foreground block">সাপ্লায়ার পেইড</span><span className="font-bold text-emerald">{fmt(Number(selectedBookingInfo.paid_to_supplier || 0))}</span></div>
-                    <div><span className="text-muted-foreground block">সাপ্লায়ার বকেয়া</span><span className="font-bold text-destructive">{fmt(Number(selectedBookingInfo.supplier_due || 0))}</span></div>
+                    <div><span className="text-muted-foreground block">Total Cost</span><span className="font-bold">{fmt(Number(selectedBookingInfo.total_cost || 0))}</span></div>
+                    <div><span className="text-muted-foreground block">Supplier Paid</span><span className="font-bold text-emerald">{fmt(Number(selectedBookingInfo.paid_to_supplier || 0))}</span></div>
+                    <div><span className="text-muted-foreground block">Supplier Due</span><span className="font-bold text-destructive">{fmt(Number(selectedBookingInfo.supplier_due || 0))}</span></div>
                   </>
                 )}
               </div>
