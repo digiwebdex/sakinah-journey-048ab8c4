@@ -445,7 +445,7 @@ const AdminHotelManager = ({ hotels, onRefresh }: Props) => {
               )}
               {viewHotelRooms.length > 0 && (
                 <div>
-                  <span className="text-muted-foreground text-xs block mb-2">কক্ষসমূহ ({viewHotelRooms.length})</span>
+                  <span className="text-muted-foreground text-xs block mb-2">Rooms ({viewHotelRooms.length})</span>
                   <div className="space-y-2">
                     {viewHotelRooms.map((room: any) => (
                       <div key={room.id} className="bg-secondary/30 rounded-lg p-3 flex items-center gap-3">
