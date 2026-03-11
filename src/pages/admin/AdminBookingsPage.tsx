@@ -491,7 +491,7 @@ export default function AdminBookingsPage() {
               {editForm.moallem_id && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="text-xs text-muted-foreground block mb-1">Commission/Person (৳)</label>
+                    <label className="text-xs text-muted-foreground block mb-1">Commission/Person (BDT)</label>
                     <input className={inputClass} type="number" min={0} value={editForm.commission_per_person}
                       onChange={(e) => setEditForm((f: any) => ({ ...f, commission_per_person: e.target.value }))} />
                   </div>
