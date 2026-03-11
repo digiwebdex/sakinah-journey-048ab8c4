@@ -1090,7 +1090,7 @@ export default function AdminPaymentsPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">সার্ভিস ধরন</label>
+              <label className="text-xs text-muted-foreground block mb-1">Service Type</label>
               <select className={inputClass} value={editForm.service_type || ""} onChange={(e) => setEditForm({ ...editForm, service_type: e.target.value })}>
                 {SERVICE_TYPES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
