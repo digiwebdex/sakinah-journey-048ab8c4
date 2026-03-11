@@ -542,6 +542,7 @@ export async function generateCustomerPdf(data: CustomerPdfData, company: Compan
       styles: { fontSize: 7, font: "NotoSansBengali" },
       headStyles: { fillColor: [40, 46, 56] },
       margin: { left: 14, right: 14 },
+      didDrawCell: bengaliCellHook,
     });
     y = (doc as any).lastAutoTable?.finalY + 8 || y + 20;
   }
