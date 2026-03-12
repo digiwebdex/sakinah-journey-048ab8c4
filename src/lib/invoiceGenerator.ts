@@ -78,6 +78,20 @@ const GOLD = { r: 198, g: 165, b: 92 };
 const DARK = { r: 40, g: 46, b: 56 };
 const LIGHT_BG = { r: 250, g: 249, b: 247 };
 
+const FOOTER_HEIGHT = 16;
+const CONTENT_BOTTOM_PADDING = 4;
+const CONTINUATION_START_Y = 18;
+
+function getContentBottomY(doc: jsPDF): number {
+  return doc.internal.pageSize.getHeight() - FOOTER_HEIGHT - CONTENT_BOTTOM_PADDING;
+}
+
+function ensurePageSpace(doc: jsPDF, y: number, requiredHeight: number, nextPageStartY = CONTINUATION_START_Y): number {
+  if (y + requiredHeight <= getContentBottomY(doc)) return y;
+  doc.addPage();
+  return nextPageStartY;
+}
+
 function loadLogoBase64(): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
