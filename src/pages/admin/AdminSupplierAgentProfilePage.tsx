@@ -42,6 +42,28 @@ const SERVICE_TYPES = [
   { value: "other", label: "Other" },
 ];
 
+const normalizeDateForInput = (value: unknown) => {
+  if (!value) return "";
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  const str = String(value).trim();
+  const match = str.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match) return match[1];
+  const parsed = new Date(str);
+  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
+};
+
+const splitPaymentNotes = (rawNotes: unknown) => {
+  const raw = String(rawNotes || "").trim();
+  if (!raw) return { service: "", notes: "" };
+
+  const parts = raw.split(/\s+[—-]\s+/).map((p) => p.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    return { service: parts[0], notes: parts.slice(1).join(" — ") };
+  }
+
+  return { service: "", notes: raw };
+};
+
 export default function AdminSupplierAgentProfilePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
