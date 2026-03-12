@@ -25,7 +25,7 @@ export default function AdminDashboardPage() {
       supabase.from("payments").select("*, bookings(tracking_id)").order("created_at", { ascending: false }),
       supabase.from("expenses").select("*").order("date", { ascending: false }),
       supabase.from("accounts").select("*"),
-      supabase.from("financial_summary").select("*").limit(1).single(),
+      supabase.from("financial_summary").select("*").limit(1).maybeSingle(),
       supabase.from("moallem_payments").select("*, moallems(name)").order("created_at", { ascending: false }),
       supabase.from("supplier_agent_payments").select("*, supplier_agents(agent_name)").order("created_at", { ascending: false }),
       supabase.from("moallem_commission_payments").select("*, moallems(name)").order("created_at", { ascending: false }),
