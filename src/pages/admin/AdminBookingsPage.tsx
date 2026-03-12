@@ -184,6 +184,7 @@ export default function AdminBookingsPage() {
   const [statusChangeId, setStatusChangeId] = useState<string | null>(null);
   const [statusChangeVal, setStatusChangeVal] = useState("");
   const [bookingPayments, setBookingPayments] = useState<Record<string, any[]>>({});
+  const [editMembers, setEditMembers] = useState<any[]>([]);
 
   const fetchBookings = () =>
     supabase.from("bookings").select("*, packages(name, type, duration_days, price, start_date), moallems(name, phone)")
@@ -217,7 +218,7 @@ export default function AdminBookingsPage() {
     if (searchParams.get("action") === "create") navigate("/admin/bookings/create", { replace: true });
   }, [searchParams]);
 
-  const startEdit = (b: any) => {
+  const startEdit = async (b: any) => {
     setEditingId(b.id);
     setEditForm({
       status: b.status, selling_price_per_person: Number(b.selling_price_per_person || 0),
@@ -229,10 +230,24 @@ export default function AdminBookingsPage() {
       guest_email: b.guest_email || "", guest_address: b.guest_address || "",
       guest_passport: b.guest_passport || "", user_id: b.user_id || null,
       moallem_id: b.moallem_id || "",
+      booking_type: b.booking_type || "individual",
     });
+    // Load family members if family booking
+    if (b.booking_type === "family") {
+      const { data } = await supabase.from("booking_members")
+        .select("*, packages(name)")
+        .eq("booking_id", b.id)
+        .order("created_at", { ascending: true });
+      setEditMembers(data || []);
+    } else {
+      setEditMembers([]);
+    }
   };
 
-  const editTotalSelling = editingId ? (Number(editForm.selling_price_per_person || 0) * Number(editForm.num_travelers || 1)) : 0;
+  const isEditingFamily = editForm.booking_type === "family" && editMembers.length > 0;
+  const editTotalSelling = editingId
+    ? (isEditingFamily ? editMembers.reduce((s: number, m: any) => s + Number(m.final_price || 0), 0) : Number(editForm.selling_price_per_person || 0) * Number(editForm.num_travelers || 1))
+    : 0;
   const editTotalCost = editingId ? (Number(editForm.cost_price_per_person || 0) * Number(editForm.num_travelers || 1)) : 0;
   const editTotalCommission = editingId ? (Number(editForm.commission_per_person || 0) * Number(editForm.num_travelers || 1)) : 0;
   const editProfit = editTotalSelling - editTotalCost - editTotalCommission - Number(editForm.extra_expense || 0);
@@ -240,17 +255,43 @@ export default function AdminBookingsPage() {
 
   const saveEdit = async () => {
     if (!editingId) return;
+    const isFamily = editForm.booking_type === "family";
     const sellingPP = Math.max(0, parseFloat(editForm.selling_price_per_person) || 0);
     const costPP = Math.max(0, parseFloat(editForm.cost_price_per_person) || 0);
     const commPP = Math.max(0, parseFloat(editForm.commission_per_person) || 0);
     const extraExp = Math.max(0, parseFloat(editForm.extra_expense) || 0);
     const travelers = parseInt(editForm.num_travelers) || 1;
-    const totalSelling = sellingPP * travelers;
+
+    // For family bookings, total comes from member sum
+    let totalSelling: number;
+    if (isFamily && editMembers.length > 0) {
+      totalSelling = editMembers.reduce((s, m) => s + Number(m.final_price || 0), 0);
+    } else {
+      totalSelling = sellingPP * travelers;
+    }
+
     const totalCostVal = costPP * travelers;
     const totalCommVal = commPP * travelers;
     const paid = Math.min(Math.max(0, parseFloat(editForm.paid_amount) || 0), totalSelling);
     const due = Math.max(0, totalSelling - paid);
     const profit = totalSelling - totalCostVal - totalCommVal - extraExp;
+
+    // Save family members first
+    if (isFamily && editMembers.length > 0) {
+      for (const m of editMembers) {
+        if (m.id) {
+          await supabase.from("booking_members").update({
+            full_name: m.full_name,
+            passport_number: m.passport_number || null,
+            selling_price: Number(m.selling_price || 0),
+            discount: Number(m.discount || 0),
+            final_price: Number(m.final_price || 0),
+            package_id: m.package_id || null,
+          }).eq("id", m.id);
+        }
+      }
+    }
+
     const { error } = await supabase.from("bookings").update({
       status: editForm.status, selling_price_per_person: sellingPP,
       total_amount: totalSelling, paid_amount: paid,
@@ -266,6 +307,7 @@ export default function AdminBookingsPage() {
     if (error) { toast.error(error.message); return; }
     toast.success("Booking updated successfully");
     setEditingId(null);
+    setEditMembers([]);
     fetchBookings();
     fetchAllPayments();
   };
@@ -424,7 +466,7 @@ export default function AdminBookingsPage() {
                 <p className="font-mono font-bold text-primary text-sm">{b.tracking_id}</p>
                 <div className="flex gap-2">
                   <button onClick={saveEdit} className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><Save className="h-3 w-3" /> Save</button>
-                  <button onClick={() => setEditingId(null)} className="text-xs bg-secondary text-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><X className="h-3 w-3" /> Cancel</button>
+                  <button onClick={() => { setEditingId(null); setEditMembers([]); }} className="text-xs bg-secondary text-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><X className="h-3 w-3" /> Cancel</button>
                 </div>
               </div>
 
@@ -498,6 +540,68 @@ export default function AdminBookingsPage() {
                   <div>
                      <label className="text-xs text-muted-foreground block mb-1">Total Commission (BDT)</label>
                     <div className={`${inputClass} bg-muted/50 font-bold`}>BDT {editTotalCommission.toLocaleString()}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Family Members Editing Section */}
+              {isEditingFamily && (
+                <div className="border border-primary/30 rounded-lg p-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                      <User className="h-4 w-4 text-primary" />
+                      Family Members ({editMembers.length})
+                    </h4>
+                    <Badge variant="outline" className="text-[10px]">Family Booking</Badge>
+                  </div>
+                  {editMembers.map((m: any, idx: number) => (
+                    <div key={m.id} className="grid grid-cols-2 sm:grid-cols-5 gap-2 bg-secondary/30 rounded-md p-2">
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-0.5">Name</label>
+                        <input className={inputClass + " text-xs"} value={m.full_name}
+                          onChange={(e) => {
+                            const updated = [...editMembers];
+                            updated[idx] = { ...updated[idx], full_name: e.target.value };
+                            setEditMembers(updated);
+                          }} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-0.5">Passport</label>
+                        <input className={inputClass + " text-xs"} value={m.passport_number || ""}
+                          onChange={(e) => {
+                            const updated = [...editMembers];
+                            updated[idx] = { ...updated[idx], passport_number: e.target.value };
+                            setEditMembers(updated);
+                          }} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-0.5">Selling Price</label>
+                        <input className={inputClass + " text-xs"} type="number" min={0} value={m.selling_price}
+                          onChange={(e) => {
+                            const updated = [...editMembers];
+                            const sp = Number(e.target.value) || 0;
+                            updated[idx] = { ...updated[idx], selling_price: sp, final_price: sp - Number(updated[idx].discount || 0) };
+                            setEditMembers(updated);
+                          }} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-0.5">Discount</label>
+                        <input className={inputClass + " text-xs"} type="number" min={0} value={m.discount}
+                          onChange={(e) => {
+                            const updated = [...editMembers];
+                            const d = Number(e.target.value) || 0;
+                            updated[idx] = { ...updated[idx], discount: d, final_price: Number(updated[idx].selling_price || 0) - d };
+                            setEditMembers(updated);
+                          }} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-0.5">Final Price</label>
+                        <div className={`${inputClass} bg-muted/50 font-bold text-xs`}>BDT {Number(m.final_price || 0).toLocaleString()}</div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="text-right text-xs font-bold text-primary">
+                    Members Total: BDT {editMembers.reduce((s: number, m: any) => s + Number(m.final_price || 0), 0).toLocaleString()}
                   </div>
                 </div>
               )}
