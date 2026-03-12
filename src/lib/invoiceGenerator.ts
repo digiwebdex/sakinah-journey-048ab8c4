@@ -519,14 +519,14 @@ function addPaymentHistoryTable(doc: jsPDF, y: number, payments: InvoicePayment[
       String(i + 1),
       fmtDate(p.paid_at),
       (p.payment_method || "Manual").charAt(0).toUpperCase() + (p.payment_method || "manual").slice(1),
-      Number(p.amount).toLocaleString(),
+      formatAmount(Number(p.amount)),
       "Paid",
     ]),
     ...pending.map((p, i) => [
       String(completed.length + i + 1),
       p.due_date ? fmtDate(p.due_date) + " (Due)" : "—",
       "—",
-      Number(p.amount).toLocaleString(),
+      formatAmount(Number(p.amount)),
       "Pending",
     ]),
   ];
@@ -535,7 +535,7 @@ function addPaymentHistoryTable(doc: jsPDF, y: number, payments: InvoicePayment[
     startY: y,
     head: [["#", "Date", "Method", "Amount (BDT)", "Status"]],
     body: bodyRows,
-    foot: completed.length > 0 ? [["", "", "Total Paid", totalPaid.toLocaleString(), ""]] : undefined,
+    foot: completed.length > 0 ? [["", "", "Total Paid", formatAmount(totalPaid), ""]] : undefined,
     styles: { fontSize: 7.5, cellPadding: 2.5, font: "NotoSansBengali" },
     headStyles: {
       fillColor: [DARK.r, DARK.g, DARK.b],
