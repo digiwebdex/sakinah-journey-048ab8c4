@@ -918,6 +918,8 @@ export async function generateInvoice(
 
   const customerName = cleanText(customer.full_name, "Primary Traveler");
   const customerPassport = cleanText(customer.passport_number);
+  const fallbackGuestNames = extractDelimitedValues(normalizedBooking.guest_name);
+  const fallbackGuestPassports = extractDelimitedValues(normalizedBooking.guest_passport);
 
   const invoiceMembers = rawInvoiceMembers.map((member, index) => {
     const resolvedPackageName = cleanText(
@@ -929,12 +931,22 @@ export async function generateInvoice(
 
     const resolvedName = cleanText(
       member.full_name,
+      (member as any)?.traveler_name,
+      (member as any)?.travelerName,
+      (member as any)?.member_name,
+      (member as any)?.memberName,
+      fallbackGuestNames[index],
       index === 0 ? customerName : "",
       `Traveler ${index + 1}`
     );
 
     const resolvedPassport = cleanText(
       member.passport_number,
+      (member as any)?.traveler_passport,
+      (member as any)?.travelerPassport,
+      (member as any)?.member_passport,
+      (member as any)?.memberPassport,
+      fallbackGuestPassports[index],
       index === 0 ? customerPassport : ""
     );
 
