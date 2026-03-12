@@ -86,10 +86,10 @@ function loadLogoBase64(): Promise<string> {
 }
 
 // ── Fetch booking members ──
-async function fetchBookingMembers(bookingId: string): Promise<BookingMember[]> {
+async function fetchBookingMembers(bookingId: string, fallbackPackageName = "N/A"): Promise<BookingMember[]> {
   const { data, error } = await supabase
     .from("booking_members")
-    .select("full_name, passport_number, selling_price, discount, final_price, package_id")
+    .select("full_name, passport_number, selling_price, discount, final_price, package_id, packages(name)")
     .eq("booking_id", bookingId)
     .order("created_at", { ascending: true });
 
@@ -98,29 +98,7 @@ async function fetchBookingMembers(bookingId: string): Promise<BookingMember[]> 
     return [];
   }
 
-  if (!data || data.length === 0) return [];
-
-  // Get package names for members
-  const packageIds = [...new Set(data.filter(m => m.package_id).map(m => m.package_id!))];
-  let packageMap: Record<string, string> = {};
-  if (packageIds.length > 0) {
-    const { data: pkgs } = await supabase.from("packages").select("id, name").in("id", packageIds);
-    if (pkgs) pkgs.forEach(p => { packageMap[p.id] = p.name; });
-  }
-
-  return data.map(m => {
-    const selling = Number(m.selling_price || 0);
-    const discount = Number(m.discount || 0);
-    const computedFinal = Math.max(0, selling - discount);
-
-    return {
-      ...m,
-      selling_price: selling,
-      discount,
-      final_price: Number(m.final_price ?? computedFinal),
-      packages: m.package_id ? { name: packageMap[m.package_id] || "N/A" } : null,
-    };
-  });
+  return normalizeMembers((data || []) as Partial<BookingMember>[], fallbackPackageName);
 }
 
 // ── Fetch moallem name ──
