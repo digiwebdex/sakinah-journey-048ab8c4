@@ -376,6 +376,24 @@ export default function AdminCreateBookingPage() {
               onChange={(e) => setForm(f => ({ ...f, paid_amount: Math.max(0, parseFloat(e.target.value) || 0) }))} />
           </div>
           <div>
+            <label className="text-xs text-muted-foreground block mb-1">Payment Method</label>
+            <select className={inputClass} value={form.payment_method} onChange={(e) => setForm({ ...form, payment_method: e.target.value })}>
+              <option value="cash">Cash</option>
+              <option value="bkash">bKash</option>
+              <option value="nagad">Nagad</option>
+              <option value="bank">Bank Transfer</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Wallet Account</label>
+            <select className={inputClass} value={form.wallet_account_id} onChange={(e) => setForm({ ...form, wallet_account_id: e.target.value })}>
+              <option value="">Auto (based on method)</option>
+              {walletAccounts.map((w: any) => (
+                <option key={w.id} value={w.id}>{w.name} — BDT {Number(w.balance || 0).toLocaleString()}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="text-xs text-muted-foreground block mb-1">Status</label>
             <select className={inputClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
               {["pending", "confirmed", "completed", "cancelled"].map(s => (
