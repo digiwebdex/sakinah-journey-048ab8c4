@@ -252,17 +252,43 @@ export default function AdminBookingsPage() {
 
   const saveEdit = async () => {
     if (!editingId) return;
+    const isFamily = editForm.booking_type === "family";
     const sellingPP = Math.max(0, parseFloat(editForm.selling_price_per_person) || 0);
     const costPP = Math.max(0, parseFloat(editForm.cost_price_per_person) || 0);
     const commPP = Math.max(0, parseFloat(editForm.commission_per_person) || 0);
     const extraExp = Math.max(0, parseFloat(editForm.extra_expense) || 0);
     const travelers = parseInt(editForm.num_travelers) || 1;
-    const totalSelling = sellingPP * travelers;
+
+    // For family bookings, total comes from member sum
+    let totalSelling: number;
+    if (isFamily && editMembers.length > 0) {
+      totalSelling = editMembers.reduce((s, m) => s + Number(m.final_price || 0), 0);
+    } else {
+      totalSelling = sellingPP * travelers;
+    }
+
     const totalCostVal = costPP * travelers;
     const totalCommVal = commPP * travelers;
     const paid = Math.min(Math.max(0, parseFloat(editForm.paid_amount) || 0), totalSelling);
     const due = Math.max(0, totalSelling - paid);
     const profit = totalSelling - totalCostVal - totalCommVal - extraExp;
+
+    // Save family members first
+    if (isFamily && editMembers.length > 0) {
+      for (const m of editMembers) {
+        if (m.id) {
+          await supabase.from("booking_members").update({
+            full_name: m.full_name,
+            passport_number: m.passport_number || null,
+            selling_price: Number(m.selling_price || 0),
+            discount: Number(m.discount || 0),
+            final_price: Number(m.final_price || 0),
+            package_id: m.package_id || null,
+          }).eq("id", m.id);
+        }
+      }
+    }
+
     const { error } = await supabase.from("bookings").update({
       status: editForm.status, selling_price_per_person: sellingPP,
       total_amount: totalSelling, paid_amount: paid,
@@ -278,6 +304,7 @@ export default function AdminBookingsPage() {
     if (error) { toast.error(error.message); return; }
     toast.success("Booking updated successfully");
     setEditingId(null);
+    setEditMembers([]);
     fetchBookings();
     fetchAllPayments();
   };
