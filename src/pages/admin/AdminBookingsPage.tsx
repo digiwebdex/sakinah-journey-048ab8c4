@@ -184,6 +184,7 @@ export default function AdminBookingsPage() {
   const [statusChangeId, setStatusChangeId] = useState<string | null>(null);
   const [statusChangeVal, setStatusChangeVal] = useState("");
   const [bookingPayments, setBookingPayments] = useState<Record<string, any[]>>({});
+  const [editMembers, setEditMembers] = useState<any[]>([]);
 
   const fetchBookings = () =>
     supabase.from("bookings").select("*, packages(name, type, duration_days, price, start_date), moallems(name, phone)")
