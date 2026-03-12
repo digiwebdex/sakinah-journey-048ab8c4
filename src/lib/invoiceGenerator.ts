@@ -87,11 +87,17 @@ function loadLogoBase64(): Promise<string> {
 
 // ── Fetch booking members ──
 async function fetchBookingMembers(bookingId: string): Promise<BookingMember[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("booking_members")
     .select("full_name, passport_number, selling_price, discount, final_price, package_id")
     .eq("booking_id", bookingId)
     .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("fetchBookingMembers error:", error);
+    return [];
+  }
+
   if (!data || data.length === 0) return [];
 
   // Get package names for members
@@ -102,10 +108,19 @@ async function fetchBookingMembers(bookingId: string): Promise<BookingMember[]> 
     if (pkgs) pkgs.forEach(p => { packageMap[p.id] = p.name; });
   }
 
-  return data.map(m => ({
-    ...m,
-    packages: m.package_id ? { name: packageMap[m.package_id] || "N/A" } : null,
-  }));
+  return data.map(m => {
+    const selling = Number(m.selling_price || 0);
+    const discount = Number(m.discount || 0);
+    const computedFinal = Math.max(0, selling - discount);
+
+    return {
+      ...m,
+      selling_price: selling,
+      discount,
+      final_price: Number(m.final_price ?? computedFinal),
+      packages: m.package_id ? { name: packageMap[m.package_id] || "N/A" } : null,
+    };
+  });
 }
 
 // ── Fetch moallem name ──
