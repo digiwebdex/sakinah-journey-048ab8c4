@@ -45,15 +45,23 @@ export default function InvoicePage() {
       return;
     }
 
-    const [payRes, profRes, sigRes] = await Promise.all([
+    const [payRes, profRes, sigRes, moallemRes] = await Promise.all([
       supabase.from("payments").select("*").eq("booking_id", bk.id).order("installment_number"),
-      bk.user_id ? supabase.from("profiles").select("full_name, phone, passport_number, address").eq("user_id", bk.user_id).single() : Promise.resolve({ data: null }),
+      bk.user_id ? supabase.from("profiles").select("full_name, phone, passport_number, address, email").eq("user_id", bk.user_id).single() : Promise.resolve({ data: null }),
       supabase.from("company_settings").select("setting_value").eq("setting_key", "signature").maybeSingle(),
+      bk.moallem_id ? supabase.from("moallems").select("name").eq("id", bk.moallem_id).single() : Promise.resolve({ data: null }),
     ]);
 
     setBooking(bk);
     setPayments(payRes.data || []);
-    setCustomer(profRes.data || { full_name: bk.guest_name, phone: bk.guest_phone, passport_number: bk.guest_passport, address: bk.guest_address });
+    setCustomer({
+      full_name: profRes.data?.full_name || bk.guest_name,
+      phone: profRes.data?.phone || bk.guest_phone,
+      passport_number: profRes.data?.passport_number || bk.guest_passport,
+      address: profRes.data?.address || bk.guest_address,
+      email: profRes.data?.email || bk.guest_email,
+      moallem_name: moallemRes.data?.name || null,
+    });
     if (sigRes.data?.setting_value) setSignatureData(sigRes.data.setting_value);
     setLoading(false);
   };
