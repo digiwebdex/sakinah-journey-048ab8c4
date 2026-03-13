@@ -144,6 +144,7 @@ const createCrudRoutes = (tableName, options = {}) => {
 
       res.status(201).json(Array.isArray(req.body) ? results : results[0]);
     } catch (err) {
+      console.error(`POST /${tableName} error:`, err.message, 'Body:', JSON.stringify(req.body).substring(0, 500));
       res.status(500).json({ error: err.message });
     }
   });
