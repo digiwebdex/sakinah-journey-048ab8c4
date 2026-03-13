@@ -152,10 +152,19 @@ const createCrudRoutes = (tableName, options = {}) => {
   // Update
   router.patch('/:id', writeAuth ? authenticate : optionalAuth, adminOnly ? requireRole('admin') : (req, res, next) => next(), async (req, res) => {
     try {
-      const keys = Object.keys(req.body);
-      const values = Object.values(req.body);
-      const sets = keys.map((key, i) => `${key} = $${i + 1}`);
+      const validColumn = (col) => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(col);
+      const quote = (identifier) => `"${String(identifier).replace(/"/g, '""')}"`;
+      const entries = Object.entries(req.body || {}).filter(([key, value]) => validColumn(key) && value !== undefined);
+
+      if (!entries.length) {
+        return res.status(400).json({ error: 'No valid columns provided for update' });
+      }
+
+      const keys = entries.map(([key]) => key);
+      const values = entries.map(([, value]) => value);
+      const sets = keys.map((key, i) => `${quote(key)} = $${i + 1}`);
       values.push(req.params.id);
+
       const result = await query(
         `UPDATE ${tableName} SET ${sets.join(', ')} WHERE id = $${values.length} RETURNING *`,
         values
