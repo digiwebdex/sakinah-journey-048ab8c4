@@ -35,9 +35,15 @@ export default function InvoicePage() {
 
     const { data: bk, error: bkErr } = await supabase
       .from("bookings")
-      .select("*, packages(name, type, duration_days, start_date, price)")
+      .select("*")
       .eq("tracking_id", trackingId.trim().toUpperCase())
       .single();
+
+    // Fetch package separately since VPS API doesn't support nested selects
+    if (bk && bk.package_id) {
+      const { data: pkgData } = await supabase.from("packages").select("name, type, duration_days, start_date, price").eq("id", bk.package_id).maybeSingle();
+      if (pkgData) (bk as any).packages = pkgData;
+    }
 
     if (bkErr || !bk) {
       setError("Booking not found. Please check the tracking ID.");
