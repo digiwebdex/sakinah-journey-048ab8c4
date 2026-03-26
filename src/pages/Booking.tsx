@@ -71,15 +71,23 @@ const Booking = () => {
         }
       }
 
-      const [pkgRes, planRes] = await Promise.all([
+      const [pkgRes, planRes, pmRes] = await Promise.all([
         packageId
           ? supabase.from("packages").select("*").eq("id", packageId).eq("is_active", true).single()
           : Promise.resolve({ data: null }),
         supabase.from("installment_plans").select("*").eq("is_active", true).order("num_installments"),
+        supabase.from("company_settings").select("setting_value").eq("setting_key", "payment_methods").maybeSingle(),
       ]);
 
       setPkg(pkgRes.data);
       setPlans(planRes.data || []);
+      if (pmRes.data?.setting_value) {
+        const methods = typeof pmRes.data.setting_value === "string"
+          ? JSON.parse(pmRes.data.setting_value)
+          : pmRes.data.setting_value;
+        const enabled = Array.isArray(methods) ? methods.filter((m: any) => m.enabled) : [];
+        setPaymentMethods(enabled);
+      }
       setLoading(false);
     };
     init();
