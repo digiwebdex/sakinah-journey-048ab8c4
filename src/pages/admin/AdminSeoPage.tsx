@@ -309,8 +309,8 @@ export default function AdminSeoPage() {
         <TabsContent value="tracking" className="space-y-4 mt-4">
           <Card>
             <CardHeader>
-              <CardTitle>অ্যানালিটিক্স ও ট্র্যাকিং</CardTitle>
-              <CardDescription>Google Analytics, Search Console ও Facebook Pixel</CardDescription>
+              <CardTitle>Google অ্যানালিটিক্স</CardTitle>
+              <CardDescription>Google Analytics ও Search Console কনফিগারেশন</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -321,9 +321,87 @@ export default function AdminSeoPage() {
                 <Label>Google Search Console Verification</Label>
                 <Input value={settings.google_search_console} onChange={(e) => updateField("google_search_console", e.target.value)} placeholder="meta tag content value" />
               </div>
-              <div className="space-y-2">
-                <Label>Facebook Pixel ID</Label>
-                <Input value={settings.facebook_pixel_id} onChange={(e) => updateField("facebook_pixel_id", e.target.value)} placeholder="XXXXXXXXXXXXXXX" />
+            </CardContent>
+          </Card>
+
+          {/* Facebook Pixel + CAPI */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Facebook Pixel + Conversions API</CardTitle>
+                  <CardDescription>ক্লায়েন্ট-সাইড পিক্সেল এবং সার্ভার-সাইড ট্র্যাকিং</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch checked={settings.facebook_pixel?.enabled || false} onCheckedChange={(v) => updateFBConfig("enabled", v)} />
+                  <Label className="font-semibold">{settings.facebook_pixel?.enabled ? "চালু" : "বন্ধ"}</Label>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Facebook Pixel ID</Label>
+                  <Input value={settings.facebook_pixel?.pixel_id || ""} onChange={(e) => updateFBConfig("pixel_id", e.target.value)} placeholder="XXXXXXXXXXXXXXX" />
+                  <p className="text-xs text-muted-foreground">Facebook Events Manager থেকে পাবেন</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Test Event Code (ঐচ্ছিক)</Label>
+                  <Input value={settings.facebook_pixel?.test_event_code || ""} onChange={(e) => updateFBConfig("test_event_code", e.target.value)} placeholder="TEST12345" />
+                  <p className="text-xs text-muted-foreground">Events Manager → Test Events থেকে পাবেন</p>
+                </div>
+              </div>
+
+              {/* Event Toggles */}
+              <div>
+                <Label className="text-sm font-semibold mb-3 block">ইভেন্ট ট্র্যাকিং</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[
+                    { key: "track_page_view" as const, label: "PageView", desc: "পেজ ভিজিট" },
+                    { key: "track_view_content" as const, label: "ViewContent", desc: "প্যাকেজ/হোটেল দেখা" },
+                    { key: "track_lead" as const, label: "Lead", desc: "যোগাযোগ ফর্ম" },
+                    { key: "track_initiate_checkout" as const, label: "InitiateCheckout", desc: "বুকিং শুরু" },
+                    { key: "track_purchase" as const, label: "Purchase", desc: "পেমেন্ট সম্পন্ন" },
+                    { key: "track_contact" as const, label: "Contact", desc: "হোয়াটসঅ্যাপ ক্লিক" },
+                    { key: "track_search" as const, label: "Search", desc: "সার্চ ইভেন্ট" },
+                  ].map((evt) => (
+                    <div key={evt.key} className="flex items-center gap-2 p-2 border border-border rounded-lg">
+                      <Switch
+                        checked={settings.facebook_pixel?.[evt.key] ?? false}
+                        onCheckedChange={(v) => updateFBConfig(evt.key, v)}
+                      />
+                      <div>
+                        <p className="text-sm font-medium">{evt.label}</p>
+                        <p className="text-xs text-muted-foreground">{evt.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CAPI Section */}
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <Label className="text-sm font-semibold">Conversions API (Server-Side)</Label>
+                    <p className="text-xs text-muted-foreground">সার্ভার থেকে Facebook-এ ইভেন্ট পাঠান — ব্রাউজার ব্লকার এড়াতে</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={settings.facebook_pixel?.capi_enabled || false} onCheckedChange={(v) => updateFBConfig("capi_enabled", v)} />
+                    <Label>{settings.facebook_pixel?.capi_enabled ? "চালু" : "বন্ধ"}</Label>
+                  </div>
+                </div>
+                {settings.facebook_pixel?.capi_enabled && (
+                  <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
+                    <p className="font-medium">⚙️ সেটআপ নির্দেশনা:</p>
+                    <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                      <li>Facebook Events Manager → Settings → Generate Access Token</li>
+                      <li>Lovable Cloud-এ <code className="bg-muted px-1 rounded">FB_CONVERSIONS_API_TOKEN</code> সিক্রেট যোগ করুন</li>
+                      <li>Lovable Cloud-এ <code className="bg-muted px-1 rounded">FB_PIXEL_ID</code> সিক্রেট যোগ করুন</li>
+                    </ol>
+                    <p className="text-xs mt-2">✅ ডুপ্লিকেশন প্রতিরোধে event_id ম্যাচিং স্বয়ংক্রিয়ভাবে কাজ করবে</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
