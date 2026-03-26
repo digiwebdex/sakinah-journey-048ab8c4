@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/api";
 import { toast } from "sonner";
-import { Plus, X, Bell, PenTool, Database, Lock } from "lucide-react";
+import { Plus, X, Bell, PenTool, Database, Lock, LayoutGrid } from "lucide-react";
 import AdminDocumentViewer from "@/components/AdminDocumentViewer";
 import { useAdminRole } from "@/components/admin/AdminLayout";
 import NotificationSettingsManager from "@/components/admin/NotificationSettingsManager";
@@ -9,6 +9,7 @@ import SignatureSettingsManager from "@/components/admin/SignatureSettingsManage
 import AdminUserManager from "@/components/admin/AdminUserManager";
 import BackupRestoreManager from "@/components/admin/BackupRestoreManager";
 import AdminPasswordChange from "@/components/admin/AdminPasswordChange";
+import SectionVisibilityManager from "@/components/admin/SectionVisibilityManager";
 
 const inputClass = "w-full bg-secondary border border-border rounded-md px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
 
