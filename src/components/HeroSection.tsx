@@ -142,7 +142,7 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 1 }}
         >
-          <div className="bg-card/40 backdrop-blur-2xl border border-primary/10 rounded-2xl p-5 sm:p-6 grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8 max-w-4xl mx-auto">
+          <div className="bg-white/10 backdrop-blur-2xl border border-white/15 rounded-2xl p-5 sm:p-6 grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8 max-w-4xl mx-auto">
             {stats.map((stat: any, i: number) => {
               const IconComp = defaultIcons[i % defaultIcons.length];
               return (
