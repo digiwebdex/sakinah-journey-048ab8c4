@@ -179,8 +179,12 @@ export default function AdminAccountingPage() {
     fetchData(); fetchProfitViews();
   };
 
-  const totalExpenses = expenses.reduce((s: number, e: any) => s + Number(e.amount), 0);
-  const netProfit = revenue - totalExpenses;
+  const totalExpenseAmount = expenses.reduce((s: number, e: any) => s + Number(e.amount), 0);
+  const cashbookTotalIncome = dailyCashbookEntries.filter((e: any) => e.type === "income").reduce((s: number, e: any) => s + Number(e.amount), 0);
+  const cashbookTotalExpense = dailyCashbookEntries.filter((e: any) => e.type === "expense").reduce((s: number, e: any) => s + Number(e.amount), 0);
+  const totalIncome = customerRevenue + moallemRevenue + cashbookTotalIncome;
+  const totalExpenses = totalExpenseAmount + supplierExpenseTotal + supplierContractExpenseTotal + commissionExpenseTotal + cashbookTotalExpense;
+  const netProfit = totalIncome - totalExpenses;
 
   const today = new Date().toISOString().split("T")[0];
 
