@@ -392,6 +392,8 @@ const Booking = () => {
                           </div>
                         ) : null;
                       })()}
+                    </div>
+                  )}
 
                   <div>
                     <textarea
