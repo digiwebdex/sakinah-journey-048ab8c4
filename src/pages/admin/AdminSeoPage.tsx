@@ -165,6 +165,13 @@ export default function AdminSeoPage() {
     }));
   };
 
+  const updateFBConfig = (field: keyof FBPixelConfig, value: string | boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      facebook_pixel: { ...prev.facebook_pixel, [field]: value },
+    }));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
