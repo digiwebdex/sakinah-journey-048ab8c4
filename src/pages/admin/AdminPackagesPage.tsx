@@ -140,7 +140,13 @@ export default function AdminPackagesPage() {
     setDeleteId(null); fetchPkgs();
   };
 
-  const closeModal = () => { setShowForm(false); setEditingId(null); setForm({ ...EMPTY_FORM }); };
+  const closeModal = () => { setShowForm(false); setEditingId(null); setForm({ ...EMPTY_FORM, type: urlType && TYPES.includes(urlType) ? urlType : "umrah" }); };
+
+  const TYPE_DISPLAY: Record<string, string> = {
+    air_ticket: "Air Ticket", visa: "Visa", tour: "Tour", hajj: "Hajj",
+    umrah: "Umrah", hotel: "Hotel", transport: "Transport", ziyara: "Ziyara",
+  };
+  const pageTitle = urlType && TYPE_DISPLAY[urlType] ? `${TYPE_DISPLAY[urlType]} Management` : "Package Management";
 
   const renderForm = () => (
     <form onSubmit={editingId ? handleSave : handleCreate} className="space-y-4">
