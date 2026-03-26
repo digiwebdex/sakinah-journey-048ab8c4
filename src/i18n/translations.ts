@@ -4,8 +4,10 @@ export const translations: Record<Language, Record<string, string>> = {
   en: {
     // Navbar
     "nav.home": "Home",
+    "nav.services": "Services",
     "nav.packages": "Packages",
     "nav.hotels": "Hotels",
+    "nav.gallery": "Gallery",
     "nav.about": "About",
     "nav.contact": "Contact",
     "nav.track": "Track",
@@ -354,8 +356,10 @@ export const translations: Record<Language, Record<string, string>> = {
   bn: {
     // Navbar
     "nav.home": "হোম",
+    "nav.services": "সেবাসমূহ",
     "nav.packages": "প্যাকেজ",
     "nav.hotels": "হোটেল",
+    "nav.gallery": "গ্যালারি",
     "nav.about": "আমাদের সম্পর্কে",
     "nav.contact": "যোগাযোগ",
     "nav.track": "ট্র্যাক",
