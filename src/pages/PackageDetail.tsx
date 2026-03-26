@@ -51,6 +51,27 @@ const PackageDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={pkg.name}
+        description={pkg.description || `${pkg.name} - Rahe Kaba Tours package`}
+        canonicalUrl={`/packages/${pkg.id}`}
+        ogImage={pkg.image_url || undefined}
+        ogType="product"
+        jsonLd={[
+          productJsonLd({
+            name: pkg.name,
+            description: pkg.description,
+            price: pkg.price,
+            image: pkg.image_url,
+            url: `/packages/${pkg.id}`,
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", url: "/" },
+            { name: "Packages", url: "/packages" },
+            { name: pkg.name, url: `/packages/${pkg.id}` },
+          ]),
+        ]}
+      />
       <Navbar />
 
       <div className="relative pt-20 pb-12 overflow-hidden">
