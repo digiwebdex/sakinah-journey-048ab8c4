@@ -299,7 +299,7 @@ export default function AdminPackagesPage() {
             </div>
           </div>
         ))}
-        {packages.length === 0 && <p className="text-center text-muted-foreground py-12">No packages found.</p>}
+        {filteredPackages.length === 0 && <p className="text-center text-muted-foreground py-12">No packages found.</p>}
       </div>
 
       {/* Create/Edit Modal */}
