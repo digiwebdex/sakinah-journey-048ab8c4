@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -52,8 +52,8 @@
     --sidebar-border: 40 15% 88%;
     --sidebar-ring: 36 60% 48%;
 
-    --font-heading: 'Playfair Display', serif;
-    --font-body: 'Inter', sans-serif;
+    --font-heading: 'Noto Sans Bengali', 'Noto Sans', sans-serif;
+    --font-body: 'Noto Sans Bengali', 'Noto Sans', sans-serif;
 
     --gradient-gold: linear-gradient(135deg, hsl(38 65% 58%), hsl(36 60% 48%), hsl(34 55% 38%));
     --gradient-warm: linear-gradient(180deg, hsl(40 30% 98%), hsl(40 25% 95%));
