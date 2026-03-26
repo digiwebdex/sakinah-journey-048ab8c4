@@ -177,6 +177,8 @@ export default function AdminCreateBookingPage() {
     }
     setDocUploading(null);
   };
+
+  const handleSubmit = async () => {
     if (!selectedCustomerId) { toast.error("Please select a customer"); return; }
     if (bookingType === "individual" && !form.package_id) { toast.error("Please select a package"); return; }
     if (bookingType === "family" && members.length === 0) { toast.error("Please add family members"); return; }
