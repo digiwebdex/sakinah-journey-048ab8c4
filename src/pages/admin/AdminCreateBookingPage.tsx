@@ -139,7 +139,44 @@ export default function AdminCreateBookingPage() {
   const numTravelers = bookingType === "family" ? members.length : 1;
   const dueAmount = Math.max(0, totalSellingPrice - paidAmount);
 
-  const handleSubmit = async () => {
+  const handleDocSelect = (docType: string, file: File | null) => {
+    if (file && file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+    setDocFiles(prev => ({ ...prev, [docType]: file }));
+  };
+
+  const uploadDocuments = async (bookingId: string, userId: string) => {
+    const filesToUpload = Object.entries(docFiles).filter(([_, file]) => file !== null);
+    if (filesToUpload.length === 0) return;
+
+    for (const [docType, file] of filesToUpload) {
+      if (!file) continue;
+      setDocUploading(docType);
+      try {
+        const ext = file.name.split(".").pop() || "pdf";
+        const filePath = `${bookingId}/${docType}_${Date.now()}.${ext}`;
+        
+        const { error: uploadError } = await supabase.storage.from("booking-documents").upload(filePath, file, { upsert: true });
+        if (uploadError) throw uploadError;
+        
+        await supabase.from("booking_documents").insert({
+          booking_id: bookingId,
+          user_id: userId,
+          document_type: docType,
+          file_name: file.name,
+          file_path: filePath,
+          file_size: file.size,
+        });
+        
+        setUploadedDocs(prev => ({ ...prev, [docType]: file.name }));
+      } catch (err: any) {
+        toast.error(`Failed to upload ${docType}: ${err.message}`);
+      }
+    }
+    setDocUploading(null);
+  };
     if (!selectedCustomerId) { toast.error("Please select a customer"); return; }
     if (bookingType === "individual" && !form.package_id) { toast.error("Please select a package"); return; }
     if (bookingType === "family" && members.length === 0) { toast.error("Please add family members"); return; }
