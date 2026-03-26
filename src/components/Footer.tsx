@@ -54,8 +54,8 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-heading font-semibold mb-4 text-primary">{t("footer.services")}</h4>
-            <ul className="space-y-2.5 text-sm text-muted-foreground">
+            <h4 className="font-heading font-semibold mb-4 text-gold-light">{t("footer.services")}</h4>
+            <ul className="space-y-2.5 text-sm text-white/60">
               {servicesList.map((s: string) => (
                 <li key={s}><span>{s}</span></li>
               ))}
