@@ -70,6 +70,21 @@ export default function AdminSettingsPage() {
         </section>
       )}
 
+      {/* Section Visibility (Admin only) */}
+      {currentRole === "admin" && (
+        <section id="section-visibility">
+          <h2 className="font-heading text-xl font-bold flex items-center gap-2 mb-4">
+            <LayoutGrid className="h-5 w-5 text-primary" /> Website Section Visibility
+          </h2>
+          <div className="bg-card border border-border rounded-lg p-5">
+            <p className="text-sm text-muted-foreground mb-4">
+              Enable or disable individual sections on your public website. Disabled sections will be hidden from visitors.
+            </p>
+            <SectionVisibilityManager />
+          </div>
+        </section>
+      )}
+
       {/* Installment Plans */}
       <section>
         <div className="flex justify-between items-center mb-4">
