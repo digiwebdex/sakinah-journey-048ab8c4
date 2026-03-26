@@ -24,6 +24,12 @@ const num = (v: string | number): number => {
   return isNaN(n) ? 0 : Math.max(0, n);
 };
 
+const DOC_TYPES = [
+  { key: "passport", label: "Passport Copy" },
+  { key: "nid", label: "NID Copy" },
+  { key: "photo", label: "Photo" },
+];
+
 export default function AdminCreateBookingPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -33,6 +39,13 @@ export default function AdminCreateBookingPage() {
   const [bookingType, setBookingType] = useState<"individual" | "family">("individual");
 
   const [walletAccounts, setWalletAccounts] = useState<any[]>([]);
+  
+  // Document upload state
+  const [docFiles, setDocFiles] = useState<Record<string, File | null>>({});
+  const [docUploading, setDocUploading] = useState<string | null>(null);
+  const [uploadedDocs, setUploadedDocs] = useState<Record<string, string>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
   const [form, setForm] = useState({
     guest_name: "",
     guest_phone: "",
