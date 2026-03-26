@@ -1,20 +1,22 @@
-import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, Star, MapPin, Shield, Plane } from "lucide-react";
-import { useRef } from "react";
-import heroImage from "@/assets/hero-kaaba.jpg";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, Star, MapPin, Shield, Plane, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRef, useState, useEffect, useCallback } from "react";
+import heroKaaba from "@/assets/hero-kaaba-golden.jpg";
+import heroMedina from "@/assets/hero-medina.jpg";
+import heroHotel from "@/assets/hero-hotel.jpg";
 import { useSiteContent } from "@/hooks/useSiteContent";
 import { useLanguage } from "@/i18n/LanguageContext";
+
+const heroSlides = [
+  { image: heroKaaba, alt: "Holy Kaaba at Masjid al-Haram during golden sunset" },
+  { image: heroMedina, alt: "Prophet's Mosque Masjid an-Nabawi in Medina" },
+  { image: heroHotel, alt: "Premium hotel near Haram with luxury amenities" },
+];
 
 const HeroSection = () => {
   const { data: content } = useSiteContent("hero");
   const { t, language } = useLanguage();
-  const sectionRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end start"],
-  });
-  const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const overlayOpacity = useTransform(scrollYProgress, [0, 0.5], [0.5, 0.85]);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   const lc = content?.[language];
   const badge = lc?.badge || t("hero.badge");
@@ -29,24 +31,65 @@ const HeroSection = () => {
 
   const defaultIcons = [Shield, Star, Plane, MapPin];
 
+  // Auto-slide
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const goTo = useCallback((dir: number) => {
+    setCurrentSlide((prev) => (prev + dir + heroSlides.length) % heroSlides.length);
+  }, []);
+
   return (
-    <section ref={sectionRef} id="home" className="relative min-h-[100dvh] flex flex-col justify-center overflow-hidden">
-      {/* Parallax Background */}
-      <motion.div className="absolute inset-0 will-change-transform" style={{ y: imgY }}>
-        <img src={heroImage} alt="The Holy Kaaba at night, illuminated by golden lights" className="w-full h-[130%] object-cover object-center brightness-[0.7] saturate-[1.1]" loading="eager" fetchPriority="high" decoding="async" />
-      </motion.div>
+    <section id="home" className="relative min-h-[100dvh] flex flex-col justify-center overflow-hidden">
+      {/* Sliding Background Images */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentSlide}
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.2 }}
+          className="absolute inset-0"
+        >
+          <img
+            src={heroSlides[currentSlide].image}
+            alt={heroSlides[currentSlide].alt}
+            className="w-full h-full object-cover brightness-[0.6] saturate-[1.1]"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+          />
+        </motion.div>
+      </AnimatePresence>
 
       {/* Overlays */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a2e]/85 via-[#1a1a2e]/40 to-transparent" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(26,26,46,0.3)_100%)]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a2e]/80 via-[#1a1a2e]/30 to-transparent" />
+
+      {/* Slide Navigation Arrows */}
+      <button onClick={() => goTo(-1)} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-colors">
+        <ChevronLeft className="h-5 w-5" />
+      </button>
+      <button onClick={() => goTo(1)} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-colors">
+        <ChevronRight className="h-5 w-5" />
+      </button>
+
+      {/* Slide Dots */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        {heroSlides.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrentSlide(i)}
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${i === currentSlide ? "bg-primary w-8" : "bg-white/50 hover:bg-white/70"}`}
+          />
+        ))}
+      </div>
 
       {/* Top gold accent */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-gold" />
-
-      {/* Decorative Islamic geometric pattern overlay */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C6A55C' fill-opacity='1'%3E%3Cpath d='M30 0l30 30-30 30L0 30z M30 4.24L4.24 30 30 55.76 55.76 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-      }} />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-gold z-10" />
 
       <div className="relative z-10 container mx-auto px-4 py-16 sm:py-20 text-center">
         {/* Badge */}
@@ -67,14 +110,12 @@ const HeroSection = () => {
           transition={{ duration: 0.9, delay: 0.15 }}
           className="max-w-3xl mx-auto mb-12"
         >
-          {/* Decorative divider top */}
           <div className="flex items-center justify-center gap-4 mb-8">
             <div className="h-px w-16 sm:w-24 bg-gradient-to-r from-transparent to-primary/50" />
             <Star className="h-4 w-4 text-primary fill-primary/30" />
             <div className="h-px w-16 sm:w-24 bg-gradient-to-l from-transparent to-primary/50" />
           </div>
 
-          {/* Arabic text */}
           <motion.p
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -86,7 +127,6 @@ const HeroSection = () => {
             وَأَتِمُّوا الْحَجَّ وَالْعُمْرَةَ لِلَّهِ
           </motion.p>
 
-          {/* Bengali translation with gold gradient */}
           <motion.p
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -96,7 +136,6 @@ const HeroSection = () => {
             "আর তোমরা আল্লাহর সন্তুষ্টির জন্য হজ্জ ও ওমরাহ পূর্ণ কর"
           </motion.p>
 
-          {/* Surah reference */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -106,7 +145,6 @@ const HeroSection = () => {
             — (সূরা আল-বাকারা: ১৯৬)
           </motion.p>
 
-          {/* Decorative divider bottom */}
           <div className="flex items-center justify-center gap-4 mt-8">
             <div className="h-px w-16 sm:w-24 bg-gradient-to-r from-transparent to-primary/50" />
             <Star className="h-4 w-4 text-primary fill-primary/30" />

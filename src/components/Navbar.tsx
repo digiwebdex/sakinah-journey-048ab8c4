@@ -61,10 +61,10 @@ const Navbar = () => {
           <button
             onClick={toggleLang}
             className="flex items-center gap-1.5 text-sm font-medium border border-border px-3 py-2 rounded-md hover:bg-secondary transition-colors"
-            title={language === "en" ? "বাংলায় দেখুন" : "View in English"}
+            title={language === "bn" ? "View in English" : "বাংলায় দেখুন"}
           >
             <Globe className="h-4 w-4" />
-            {language === "en" ? "বাংলা" : "EN"}
+            {language === "bn" ? "English" : "বাংলা"}
           </button>
 
           <a href={`tel:${phone.replace(/[\s-]/g, "")}`} className="flex items-center gap-2 text-sm text-primary">
@@ -97,7 +97,7 @@ const Navbar = () => {
             className="flex items-center gap-1 text-xs font-medium border border-border px-2 py-1.5 rounded-md"
           >
             <Globe className="h-3.5 w-3.5" />
-            {language === "en" ? "বাং" : "EN"}
+            {language === "bn" ? "EN" : "বাং"}
           </button>
           <button onClick={() => setOpen(!open)} className="text-foreground p-2">
             {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
