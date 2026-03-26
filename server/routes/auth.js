@@ -173,6 +173,32 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+// Change password (authenticated user)
+router.post('/change-password', authenticate, async (req, res) => {
+  try {
+    const { current_password, new_password } = req.body;
+    if (!current_password || !new_password) return res.status(400).json({ error: 'Current and new password required' });
+    if (new_password.length < 8) return res.status(400).json({ error: 'New password must be at least 8 characters' });
+
+    const userResult = await query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+    if (!userResult.rows[0]) return res.status(404).json({ error: 'User not found' });
+
+    const valid = await bcrypt.compare(current_password, userResult.rows[0].password_hash);
+    if (!valid) return res.status(401).json({ error: 'Current password is incorrect' });
+
+    const newHash = await bcrypt.hash(new_password, 10);
+    await query('UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2', [newHash, req.user.id]);
+
+    // Invalidate all other sessions
+    await query('DELETE FROM sessions WHERE user_id = $1', [req.user.id]);
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Admin: Create user
 router.post('/admin/create-user', authenticate, requireRole('admin'), async (req, res) => {
   try {
