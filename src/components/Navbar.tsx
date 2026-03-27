@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Menu, X, Phone, User, Globe } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
