@@ -875,8 +875,210 @@ app.delete('/api/storage/:bucket', authenticate, async (req, res) => {
 });
 
 // =============================================
+// =============================================
+// CREATE GUEST BOOKING (public)
+// =============================================
+app.post('/api/create-guest-booking', async (req, res) => {
+  try {
+    const { guest_name, guest_phone, guest_email, guest_address, guest_passport, package_id, num_travelers, installment_plan_id, notes, payment_method } = req.body;
+    if (!guest_name || !guest_phone || !package_id) {
+      return res.status(400).json({ error: 'guest_name, guest_phone, and package_id are required' });
+    }
+
+    // Fetch active package
+    const pkgResult = await query('SELECT * FROM packages WHERE id = $1 AND is_active = true', [package_id]);
+    if (!pkgResult.rows[0]) return res.status(404).json({ error: 'Package not found or inactive' });
+    const pkg = pkgResult.rows[0];
+
+    const travelers = Math.max(1, Number(num_travelers) || 1);
+    const totalAmount = pkg.price * travelers;
+
+    // Insert booking
+    const bookingResult = await query(
+      `INSERT INTO bookings (package_id, total_amount, due_amount, num_travelers, guest_name, guest_phone, guest_email, guest_address, guest_passport, notes, status, booking_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending', 'individual')
+       RETURNING *`,
+      [package_id, totalAmount, totalAmount, travelers, guest_name, guest_phone, guest_email || null, guest_address || null, guest_passport || null, notes || null]
+    );
+
+    const booking = bookingResult.rows[0];
+
+    // Generate installment schedule if plan selected
+    if (installment_plan_id) {
+      const planResult = await query('SELECT * FROM installment_plans WHERE id = $1 AND is_active = true', [installment_plan_id]);
+      if (planResult.rows[0]) {
+        const plan = planResult.rows[0];
+        const installmentAmount = Math.ceil(totalAmount / plan.num_installments);
+        for (let i = 1; i <= plan.num_installments; i++) {
+          const dueDate = new Date();
+          dueDate.setMonth(dueDate.getMonth() + i);
+          await query(
+            `INSERT INTO payments (booking_id, user_id, amount, installment_number, due_date, status)
+             VALUES ($1, $2, $3, $4, $5, 'pending')`,
+            [booking.id, booking.user_id || '00000000-0000-0000-0000-000000000000', i === plan.num_installments ? totalAmount - installmentAmount * (plan.num_installments - 1) : installmentAmount, i, dueDate.toISOString()]
+          );
+        }
+      }
+    }
+
+    // Send email notification if Resend is configured
+    const RESEND_API_KEY = process.env.RESEND_API_KEY;
+    if (RESEND_API_KEY && guest_email) {
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: process.env.NOTIFICATION_FROM_EMAIL || 'RAHE KABA <noreply@rahekabatravels.com>',
+            to: [guest_email],
+            subject: `Booking Confirmed - ${booking.tracking_id}`,
+            html: `<h2>Your Booking is Confirmed!</h2><p>Tracking ID: <strong>${booking.tracking_id}</strong></p><p>Package: ${pkg.name}</p><p>Total: ৳${totalAmount.toLocaleString()}</p><p>Thank you for choosing RAHE KABA Tours & Travels.</p>`,
+          }),
+        });
+      } catch (emailErr) {
+        console.error('Booking email notification failed:', emailErr.message);
+      }
+    }
+
+    res.status(201).json({ success: true, booking_id: booking.id, tracking_id: booking.tracking_id });
+  } catch (err) {
+    console.error('POST /api/create-guest-booking error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =============================================
+// VERIFY INVOICE (public)
+// =============================================
+app.post('/api/verify-invoice', async (req, res) => {
+  try {
+    const { tracking_id } = req.body;
+    if (!tracking_id || typeof tracking_id !== 'string') {
+      return res.status(400).json({ error: 'tracking_id is required' });
+    }
+
+    const result = await query(
+      `SELECT b.tracking_id, b.total_amount, b.paid_amount, b.due_amount, b.status, b.created_at, b.num_travelers, b.guest_name,
+              json_build_object('name', p.name, 'type', p.type) as packages
+       FROM bookings b LEFT JOIN packages p ON b.package_id = p.id
+       WHERE b.tracking_id = $1 LIMIT 1`,
+      [tracking_id.toUpperCase()]
+    );
+
+    if (!result.rows[0]) return res.json({ booking: null });
+
+    const data = result.rows[0];
+    res.json({
+      booking: {
+        tracking_id: data.tracking_id,
+        total_amount: data.total_amount,
+        paid_amount: data.paid_amount,
+        due_amount: data.due_amount,
+        status: data.status,
+        created_at: data.created_at,
+        num_travelers: data.num_travelers,
+        guest_name: data.guest_name,
+        packages: data.packages,
+      }
+    });
+  } catch (err) {
+    console.error('POST /api/verify-invoice error:', err.message);
+    res.status(400).json({ error: 'Invalid request' });
+  }
+});
+
+// =============================================
+// SEND NOTIFICATION (admin only)
+// =============================================
+app.post('/api/functions/send-notification', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const { type, channels, user_id, booking_id, custom_subject, custom_message } = req.body;
+    if (!type || !channels || !user_id) {
+      return res.status(400).json({ error: 'type, channels, and user_id are required' });
+    }
+
+    // Fetch user profile
+    const profileResult = await query('SELECT * FROM profiles WHERE user_id = $1', [user_id]);
+    const profile = profileResult.rows[0];
+    if (!profile) return res.status(404).json({ error: 'User profile not found' });
+
+    // Fetch booking if provided
+    let booking = null;
+    if (booking_id) {
+      const bResult = await query(
+        `SELECT b.*, p.name as package_name, p.type as package_type FROM bookings b LEFT JOIN packages p ON b.package_id = p.id WHERE b.id = $1`,
+        [booking_id]
+      );
+      booking = bResult.rows[0];
+    }
+
+    const results = [];
+    const RESEND_API_KEY = process.env.RESEND_API_KEY;
+
+    // Send email
+    if (channels.includes('email') && profile.email && RESEND_API_KEY) {
+      try {
+        const subject = custom_subject || `Notification: ${type}`;
+        const html = custom_message || `<p>Booking ${booking?.tracking_id || ''} - Status: ${booking?.status || 'N/A'}</p>`;
+        const emailRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: process.env.NOTIFICATION_FROM_EMAIL || 'RAHE KABA <noreply@rahekabatravels.com>',
+            to: [profile.email],
+            subject,
+            html,
+          }),
+        });
+        const status = emailRes.ok ? 'sent' : 'failed';
+        results.push({ channel: 'email', status });
+
+        await query(
+          `INSERT INTO notification_logs (user_id, booking_id, event_type, channel, recipient, subject, message, status)
+           VALUES ($1, $2, $3, 'email', $4, $5, $6, $7)`,
+          [user_id, booking_id || null, type, profile.email, subject, html, status]
+        );
+      } catch (e) {
+        results.push({ channel: 'email', status: 'failed', error: e.message });
+      }
+    }
+
+    // Send SMS
+    if (channels.includes('sms') && profile.phone) {
+      const BULKSMS_API_KEY = process.env.BULKSMS_API_KEY;
+      if (BULKSMS_API_KEY) {
+        try {
+          const smsMessage = custom_message || `RAHE KABA: Booking ${booking?.tracking_id || ''} - ${type}`;
+          const smsRes = await fetch(`https://bulksmsbd.net/api/smsapi?api_key=${BULKSMS_API_KEY}&type=text&number=${profile.phone}&senderid=${process.env.BULKSMS_SENDER_ID || 'RAHEKABA'}&message=${encodeURIComponent(smsMessage)}`);
+          const status = smsRes.ok ? 'sent' : 'failed';
+          results.push({ channel: 'sms', status });
+
+          await query(
+            `INSERT INTO notification_logs (user_id, booking_id, event_type, channel, recipient, message, status)
+             VALUES ($1, $2, $3, 'sms', $4, $5, $6)`,
+            [user_id, booking_id || null, type, profile.phone, smsMessage, status]
+          );
+        } catch (e) {
+          results.push({ channel: 'sms', status: 'failed', error: e.message });
+        }
+      }
+    }
+
+    res.json({ success: true, results });
+  } catch (err) {
+    console.error('POST /api/functions/send-notification error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =============================================
 // CONTACT FORM EMAIL
 // =============================================
+const escapeHtml = (str) => {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+};
+
 app.post('/api/contact', async (req, res) => {
   try {
     const { name, phone, email, service, message } = req.body;
@@ -892,15 +1094,21 @@ app.post('/api/contact', async (req, res) => {
       return res.status(500).json({ error: 'Email service not configured' });
     }
 
+    const safeName = escapeHtml(name);
+    const safePhone = escapeHtml(phone);
+    const safeEmail = escapeHtml(email);
+    const safeService = escapeHtml(service);
+    const safeMessage = escapeHtml(message);
+
     const htmlBody = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
         <h2 style="color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:10px;">📩 New Contact Form Submission</h2>
         <table style="width:100%;border-collapse:collapse;margin-top:15px;">
-          <tr><td style="padding:8px;font-weight:bold;color:#555;width:120px;">Name:</td><td style="padding:8px;">${name}</td></tr>
-          <tr style="background:#f9f9f9;"><td style="padding:8px;font-weight:bold;color:#555;">Phone:</td><td style="padding:8px;">${phone}</td></tr>
-          <tr><td style="padding:8px;font-weight:bold;color:#555;">Email:</td><td style="padding:8px;">${email || 'Not provided'}</td></tr>
-          <tr style="background:#f9f9f9;"><td style="padding:8px;font-weight:bold;color:#555;">Service:</td><td style="padding:8px;">${service || 'Not selected'}</td></tr>
-          <tr><td style="padding:8px;font-weight:bold;color:#555;vertical-align:top;">Message:</td><td style="padding:8px;">${message || 'No message'}</td></tr>
+          <tr><td style="padding:8px;font-weight:bold;color:#555;width:120px;">Name:</td><td style="padding:8px;">${safeName}</td></tr>
+          <tr style="background:#f9f9f9;"><td style="padding:8px;font-weight:bold;color:#555;">Phone:</td><td style="padding:8px;">${safePhone}</td></tr>
+          <tr><td style="padding:8px;font-weight:bold;color:#555;">Email:</td><td style="padding:8px;">${safeEmail || 'Not provided'}</td></tr>
+          <tr style="background:#f9f9f9;"><td style="padding:8px;font-weight:bold;color:#555;">Service:</td><td style="padding:8px;">${safeService || 'Not selected'}</td></tr>
+          <tr><td style="padding:8px;font-weight:bold;color:#555;vertical-align:top;">Message:</td><td style="padding:8px;">${safeMessage || 'No message'}</td></tr>
         </table>
         <p style="color:#999;font-size:12px;margin-top:20px;">Sent from RAHE KABA website contact form</p>
       </div>
