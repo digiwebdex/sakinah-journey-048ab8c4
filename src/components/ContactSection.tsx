@@ -1,12 +1,16 @@
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import { toast } from "sonner";
 import { useSiteContent } from "@/hooks/useSiteContent";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const ContactSection = forwardRef<HTMLElement>(function ContactSection(_, ref) {
   const { data: content } = useSiteContent("contact");
   const { t, language } = useLanguage();
+  const bn = language === "bn";
+  const [form, setForm] = useState({ name: "", phone: "", email: "", service: "", message: "" });
+  const [loading, setLoading] = useState(false);
 
   const lc = content?.[language];
   const phone = content?.phone || "+880 1601-505050";
@@ -20,6 +24,34 @@ const ContactSection = forwardRef<HTMLElement>(function ContactSection(_, ref) {
     { icon: MapPin, label: t("contact.location"), value: location, href: "#" },
     { icon: Clock, label: t("contact.hours"), value: hours, href: "#" },
   ];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.phone.trim()) {
+      toast.error(bn ? "প্রয়োজনীয় তথ্য পূরণ করুন" : "Please fill in required fields");
+      return;
+    }
+    setLoading(true);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api';
+      const res = await fetch(`${API_URL}/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        toast.success(bn ? "আপনার বার্তা সফলভাবে পাঠানো হয়েছে!" : "Your message has been sent successfully!");
+        setForm({ name: "", phone: "", email: "", service: "", message: "" });
+      } else {
+        toast.error(bn ? "বার্তা পাঠাতে সমস্যা হয়েছে" : "Failed to send message");
+      }
+    } catch {
+      toast.error(bn ? "বার্তা পাঠাতে সমস্যা হয়েছে" : "Failed to send message");
+    }
+    setLoading(false);
+  };
+
+  const inputClass = "bg-secondary border border-border rounded-md px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
 
   return (
     <section ref={ref} id="contact" className="py-24 bg-secondary/50 islamic-border-top">
@@ -46,14 +78,14 @@ const ContactSection = forwardRef<HTMLElement>(function ContactSection(_, ref) {
             ))}
           </motion.div>
 
-          <motion.form initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+          <motion.form initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="space-y-4" onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 gap-4">
-              <input type="text" placeholder={t("contact.yourName")} className="bg-secondary border border-border rounded-md px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40" />
-              <input type="tel" placeholder={t("contact.phoneNumber")} className="bg-secondary border border-border rounded-md px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40" />
+              <input type="text" placeholder={t("contact.yourName")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} required />
+              <input type="tel" placeholder={t("contact.phoneNumber")} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputClass} required />
             </div>
-            <input type="email" placeholder={t("contact.emailAddress")} className="w-full bg-secondary border border-border rounded-md px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40" />
-            <select className="w-full bg-secondary border border-border rounded-md px-4 py-3 text-sm text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40">
-              <option>{t("contact.selectService")}</option>
+            <input type="email" placeholder={t("contact.emailAddress")} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={`w-full ${inputClass}`} />
+            <select value={form.service} onChange={(e) => setForm({ ...form, service: e.target.value })} className={`w-full ${inputClass} text-muted-foreground`}>
+              <option value="">{t("contact.selectService")}</option>
               <option>{t("contact.hajjPackage")}</option>
               <option>{t("contact.umrahPackage")}</option>
               <option>{t("contact.visaProcessing")}</option>
@@ -61,9 +93,9 @@ const ContactSection = forwardRef<HTMLElement>(function ContactSection(_, ref) {
               <option>{t("contact.hotelBooking")}</option>
               <option>{t("contact.other")}</option>
             </select>
-            <textarea rows={4} placeholder={t("contact.yourMessage")} className="w-full bg-secondary border border-border rounded-md px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
-            <button type="submit" className="w-full bg-gradient-gold text-primary-foreground font-semibold py-3 rounded-md text-sm hover:opacity-90 transition-opacity shadow-gold">
-              {t("contact.sendMessage")}
+            <textarea rows={4} placeholder={t("contact.yourMessage")} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className={`w-full ${inputClass} resize-none`} />
+            <button type="submit" disabled={loading} className="w-full bg-gradient-gold text-primary-foreground font-semibold py-3 rounded-md text-sm hover:opacity-90 transition-opacity shadow-gold disabled:opacity-50">
+              {loading ? (bn ? "পাঠানো হচ্ছে..." : "Sending...") : t("contact.sendMessage")}
             </button>
           </motion.form>
         </div>

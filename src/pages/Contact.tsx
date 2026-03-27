@@ -27,17 +27,29 @@ const Contact = () => {
     { icon: Clock, label: t("contact.hours"), value: hours, href: "#" },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.phone.trim()) {
       toast.error(bn ? "প্রয়োজনীয় তথ্য পূরণ করুন" : "Please fill in required fields");
       return;
     }
     setLoading(true);
-    const msg = `Hello RAHE KABA!%0A%0AName: ${encodeURIComponent(form.name)}%0APhone: ${encodeURIComponent(form.phone)}%0AEmail: ${encodeURIComponent(form.email)}%0AService: ${encodeURIComponent(form.service)}%0AMessage: ${encodeURIComponent(form.message)}`;
-    const waUrl = `https://wa.me/8801601505050?text=${msg}`;
-    window.open(waUrl, "_blank");
-    toast.success(bn ? "হোয়াটসঅ্যাপে রিডাইরেক্ট হচ্ছে..." : "Redirecting to WhatsApp...");
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api';
+      const res = await fetch(`${API_URL}/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        toast.success(bn ? "আপনার বার্তা সফলভাবে পাঠানো হয়েছে!" : "Your message has been sent successfully!");
+        setForm({ name: "", phone: "", email: "", service: "", message: "" });
+      } else {
+        toast.error(bn ? "বার্তা পাঠাতে সমস্যা হয়েছে" : "Failed to send message");
+      }
+    } catch {
+      toast.error(bn ? "বার্তা পাঠাতে সমস্যা হয়েছে" : "Failed to send message");
+    }
     setLoading(false);
   };
 
