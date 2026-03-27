@@ -124,7 +124,7 @@ const Navbar = () => {
                 <a
                   key={link.href}
                   href={link.href}
-                  onClick={() => setOpen(false)}
+                  onClick={(e) => handleNavClick(e, link.href)}
                   className="text-sm font-medium text-foreground/80 hover:text-primary py-2 uppercase tracking-wide"
                 >
                   {link.label}
