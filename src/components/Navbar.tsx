@@ -110,13 +110,6 @@ const Navbar = () => {
                   {link.label}
                 </a>
               ))}
-              <a
-                href="/packages"
-                onClick={() => setOpen(false)}
-                className="bg-gradient-gold text-primary-foreground font-semibold px-6 py-3 rounded-md text-sm text-center"
-              >
-                {t("nav.bookNow")}
-              </a>
             </div>
           </motion.div>
         )}
