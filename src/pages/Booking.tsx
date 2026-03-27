@@ -171,13 +171,30 @@ const Booking = () => {
       setPlans(planRes.data || []);
 
       let methods: any[] = [];
+      // Try VPS API first
       try {
-        const pmResponse = await fetch("/api/public/payment-methods");
+        const apiUrl = import.meta.env.VITE_API_URL || '/api';
+        const pmResponse = await fetch(`${apiUrl}/public/payment-methods`);
         if (pmResponse.ok) {
           methods = normalizePaymentMethods(await pmResponse.json());
         }
       } catch (error) {
-        console.error("Failed to load public payment methods", error);
+        console.error("Failed to load payment methods from API", error);
+      }
+      // Fallback: try Supabase company_settings directly
+      if (methods.length === 0) {
+        try {
+          const { data: settingsData } = await supabase
+            .from("company_settings")
+            .select("setting_value")
+            .eq("setting_key", "payment_methods")
+            .single();
+          if (settingsData?.setting_value) {
+            methods = normalizePaymentMethods(settingsData.setting_value);
+          }
+        } catch (error) {
+          console.error("Failed to load payment methods from DB", error);
+        }
       }
 
       if (methods.length === 0) {
