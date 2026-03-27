@@ -534,19 +534,24 @@ const Booking = () => {
                         const m = paymentMethods.find((pm: any) => pm.id === selectedPaymentMethod);
                         return m ? (
                           <div className="mt-4 p-4 bg-secondary/50 rounded-lg space-y-2">
-                            <p className="text-sm font-medium">{m.name_bn || m.name} {t("booking.paymentInfo") || "পেমেন্ট তথ্য"}</p>
+                            <p className="text-sm font-semibold text-foreground">{m.name_bn || m.name} — {t("booking.paymentInfo") || "পেমেন্ট তথ্য"}</p>
                             {m.account_number && (
-                              <p className="text-sm text-muted-foreground">
-                                {t("booking.accountNumber") || "অ্যাকাউন্ট নম্বর"}: <span className="font-mono font-bold text-foreground">{m.account_number}</span>
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">{t("booking.accountNumber") || "অ্যাকাউন্ট নম্বর"}:</span>
+                                <span className="font-mono font-bold text-foreground text-base tracking-wide">{m.account_number}</span>
+                              </div>
                             )}
                             {m.account_name && (
-                              <p className="text-sm text-muted-foreground">
-                                {t("booking.accountName") || "অ্যাকাউন্ট নাম"}: <span className="font-bold text-foreground">{m.account_name}</span>
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">{t("booking.accountName") || "অ্যাকাউন্ট নাম"}:</span>
+                                <span className="font-semibold text-foreground">{m.account_name}</span>
+                              </div>
+                            )}
+                            {m.charge_percent > 0 && (
+                              <p className="text-xs text-orange-600">💡 চার্জ: {m.charge_percent}%</p>
                             )}
                             {(m.instructions_bn || m.instructions) && (
-                              <p className="text-xs text-muted-foreground mt-2">{m.instructions_bn || m.instructions}</p>
+                              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{m.instructions_bn || m.instructions}</p>
                             )}
                           </div>
                         ) : null;
