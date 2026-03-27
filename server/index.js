@@ -511,6 +511,16 @@ app.use('/api/notification-logs', createCrudRoutes('notification_logs', { adminO
 app.use('/api/notification-settings', createCrudRoutes('notification_settings', { adminOnly: true, orderBy: 'event_key ASC' }));
 app.use('/api/company-settings', createCrudRoutes('company_settings', { adminOnly: true }));
 app.use('/api/cms-versions', createCrudRoutes('cms_versions', { adminOnly: true }));
+// SECURITY: Block admin role assignment via API (must be BEFORE CRUD routes)
+app.use('/api/user-roles', (req, res, next) => {
+  if (req.method === 'POST' || req.method === 'PATCH') {
+    const role = req.body?.role;
+    if (role === 'admin') {
+      return res.status(403).json({ error: 'Cannot assign admin role. Admin role is permanently locked.' });
+    }
+  }
+  next();
+});
 app.use('/api/user-roles', createCrudRoutes('user_roles', { adminOnly: true }));
 
 // (admin role protection middleware moved before route registration)
