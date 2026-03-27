@@ -65,8 +65,8 @@ const HeroSection = () => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Dark overlay with gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[hsl(220,25%,10%)]/70 via-[hsl(220,25%,10%)]/40 to-[hsl(220,25%,10%)]/80" />
+      {/* Lighter overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
 
       {/* Decorative Islamic geometric corner patterns */}
       <div className="absolute top-0 left-0 w-40 h-40 opacity-10">
