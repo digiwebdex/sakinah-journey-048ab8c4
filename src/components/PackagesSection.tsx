@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, ArrowRight, Clock, Star, Plane } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import BookingDialog from "@/components/BookingDialog";
 import { supabase } from "@/lib/api";
 import { useLanguage } from "@/i18n/LanguageContext";
 import heroImage from "@/assets/hero-kaaba-golden.jpg";
@@ -26,6 +27,8 @@ const PackagesSection = () => {
   const navigate = useNavigate();
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bookingPackageId, setBookingPackageId] = useState<string | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -154,7 +157,7 @@ const PackagesSection = () => {
                         </ul>
                       )}
                       <button
-                        onClick={() => navigate(`/booking?package=${pkg.id}`)}
+                        onClick={() => { setBookingPackageId(pkg.id); setBookingOpen(true); }}
                         className="w-full py-3.5 rounded-xl text-sm font-semibold text-center inline-flex items-center justify-center gap-2 bg-gradient-gold text-primary-foreground hover:opacity-90 hover:shadow-gold transition-all duration-300 cursor-pointer mt-auto"
                       >
                         {t("packages.bookNow")} <ArrowRight className="h-4 w-4" />
@@ -176,6 +179,8 @@ const PackagesSection = () => {
           </button>
         </div>
       </div>
+
+      <BookingDialog open={bookingOpen} onOpenChange={setBookingOpen} packageId={bookingPackageId} />
     </section>
   );
 };
