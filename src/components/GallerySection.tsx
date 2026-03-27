@@ -27,6 +27,8 @@ const defaultItems: GalleryItem[] = [
   { type: "image", src: "/gallery/image-13.jpeg" },
   { type: "image", src: "/gallery/image-14.jpeg" },
   { type: "image", src: "/gallery/image-15.jpeg" },
+  { type: "video", src: "/gallery/video-1.mp4" },
+  { type: "video", src: "/gallery/video-2.mp4" },
 ];
 
 const tabs: { key: TabType; labelBn: string; labelEn: string; icon: typeof ImageIcon }[] = [
