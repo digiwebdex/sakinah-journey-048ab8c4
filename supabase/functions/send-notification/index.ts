@@ -52,7 +52,7 @@ function getEmailTemplate(type: NotificationType, d: any) {
     case "booking_created":
       return {
         subject: `📋 Booking Created — ${d.trackingId}`,
-        html: `${header}<h2 style="color:#b8860b">Booking Created</h2><p>Dear <strong>${d.name}</strong>,</p><p>Your booking for <strong>${d.packageName}</strong> has been created.</p>${table([["Tracking ID", d.trackingId], ["Package", d.packageName], ["Total Amount", `৳${d.totalAmount.toLocaleString()}`], ["Contact", "+880 1601-505050"]])}<p>We'll keep you updated. Thank you!</p>${footer}`,
+        html: `${header}<h2 style="color:#E8860B">Booking Created</h2><p>Dear <strong>${d.name}</strong>,</p><p>Your booking for <strong>${d.packageName}</strong> has been created.</p>${table([["Tracking ID", d.trackingId], ["Package", d.packageName], ["Total Amount", `৳${d.totalAmount.toLocaleString()}`], ["Contact", "+880 1711-993562"]])}<p>We'll keep you updated. Thank you!</p>${footer}`,
       };
     case "booking_confirmed":
       return {
