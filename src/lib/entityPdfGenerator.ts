@@ -244,7 +244,7 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
     });
   }
 
-  addSignatureAndFooter(doc, sig);
+  addSignatureAndFooter(doc, sig, cfg);
   doc.save(`Moallem-${data.name.replace(/\s+/g, "_")}.pdf`);
 }
 
