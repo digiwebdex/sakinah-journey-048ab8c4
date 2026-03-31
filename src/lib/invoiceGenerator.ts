@@ -1173,10 +1173,11 @@ export async function generateCommissionReceipt(
 ) {
   const doc = new jsPDF();
   await registerBengaliFont(doc);
-  const [logoBase64, sig, qrDataUrl] = await Promise.all([
+  const [logoBase64, sig, qrDataUrl, cfg] = await Promise.all([
     loadLogoBase64(),
     getSignatureData(),
     generateTrackingQr(data.bookingTrackingId),
+    getPdfCompanyConfig(),
   ]);
   const pageWidth = doc.internal.pageSize.getWidth();
   let y = addHeader(doc, company, logoBase64);
