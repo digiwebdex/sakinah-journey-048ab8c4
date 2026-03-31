@@ -389,7 +389,7 @@ const TrackBooking = () => {
               )}
 
               <p className="text-center text-xs text-muted-foreground">
-                For any questions, <a href="/#contact" className="text-primary hover:underline">contact us</a> or call +880 1601-505050
+                For any questions, <a href="/#contact" className="text-primary hover:underline">contact us</a> or call +880 1711-993562
               </p>
             </motion.div>
           )}

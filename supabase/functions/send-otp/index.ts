@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const message = `Your RAHE KABA verification code is: ${otpCode}. Valid for 5 minutes.`;
+      const message = `Your Manasik Travel Hub verification code is: ${otpCode}. Valid for 5 minutes.`;
       const smsUrl = `http://bulksmsbd.net/api/smsapi?api_key=${encodeURIComponent(smsApiKey)}&type=text&number=${encodeURIComponent(sanitizedPhone)}&senderid=${encodeURIComponent(smsSenderId || "")}&message=${encodeURIComponent(message)}`;
 
       const smsRes = await fetch(smsUrl);

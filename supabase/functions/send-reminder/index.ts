@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
               <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;background:#f9f9f9">Amount Due</td><td style="padding:8px;border:1px solid #ddd">৳${Number(payment.amount).toLocaleString()}</td></tr>
               <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;background:#f9f9f9">Total Due</td><td style="padding:8px;border:1px solid #ddd">৳${Number(booking.due_amount || 0).toLocaleString()}</td></tr>
             </table>
-            <p style="font-size:12px;color:#999">Rahe Kaba Tours & Travels | +880 1601-505050</p>
+            <p style="font-size:12px;color:#999">Manasik Travel Hub | +880 1711-993562</p>
           </div>`;
 
           const emailRes = await fetch("https://api.resend.com/emails", {

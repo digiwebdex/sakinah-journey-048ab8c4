@@ -63,7 +63,7 @@ function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string, qrDataU
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(DARK.r, DARK.g, DARK.b);
-  doc.text(company.name || "RAHE KABA Tours & Travels", textX, 18);
+  doc.text(company.name || "Manasik Travel Hub", textX, 18);
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
@@ -124,7 +124,7 @@ function addSignatureAndFooter(doc: jsPDF, sig: SignatureData) {
   }
 
   doc.setTextColor(150);
-  doc.text("This is a computer-generated document. For queries: +880 1601-505050 | rahekaba.info@gmail.com", pageWidth / 2, pageHeight - 10, { align: "center" });
+  doc.text("This is a computer-generated document. For queries: +880 1711-993562 | manasiktravelhub@gmail.com", pageWidth / 2, pageHeight - 10, { align: "center" });
   doc.setTextColor(0);
 }
 
@@ -513,9 +513,9 @@ export async function getCompanyInfoForPdf(): Promise<CompanyInfo> {
   const { data: cms } = await supabase.from("site_content" as any).select("content").eq("section_key", "contact").maybeSingle();
   const c = (cms as any)?.content || {};
   return {
-    name: "RAHE KABA Tours & Travels",
-    phone: c.phone || "+880 1601-505050",
-    email: c.email || "rahekaba.info@gmail.com",
-    address: "Dailorbagh Palli Bidyut Adjacent, Sonargaon Thana Road, Narayanganj-Dhaka",
+    name: "Manasik Travel Hub",
+    phone: c.phone || "+880 1711-993562",
+    email: c.email || "manasiktravelhub@gmail.com",
+    address: "595/1, Milk Vita Road, Three-way Intersection, Dewla, Tangail Sadar, Tangail",
   };
 }

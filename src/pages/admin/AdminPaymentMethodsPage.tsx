@@ -212,7 +212,7 @@ export default function AdminPaymentMethodsPage() {
                           <Input
                             value={method.account_name}
                             onChange={(e) => updateMethod(method.id, { account_name: e.target.value })}
-                            placeholder="e.g. Rahe Kaba Travels"
+                            placeholder="e.g. Manasik Travel Hub"
                             className="text-sm h-9"
                           />
                         </div>

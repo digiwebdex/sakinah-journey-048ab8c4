@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     const fmt = (n: number) => n.toLocaleString("en-BD");
 
     const message = [
-      `Rahe Kaba Daily Summary (${today})`,
+      `Manasik Travel Hub Daily Summary (${today})`,
       ``,
       `Today Income: ৳${fmt(todayIncome + todayMoallemIncome)}`,
       `Today Supplier Paid: ৳${fmt(todaySupplierPaid)}`,

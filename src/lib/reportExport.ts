@@ -179,7 +179,7 @@ function addCompanyFooter(doc: jsPDF, sig: SignatureData) {
   doc.setFontSize(7);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(255);
-  doc.text("RAHE KABA Tours & Travels — Hajj & Umrah Services", pageWidth / 2, pageHeight - 10, { align: "center" });
+  doc.text("Manasik Travel Hub — Hajj & Umrah Services", pageWidth / 2, pageHeight - 10, { align: "center" });
 
   doc.setFontSize(5.5);
   doc.setFont("helvetica", "normal");
@@ -370,8 +370,8 @@ export function exportHajjiExcel({ title, customers }: HajjiReportData) {
     rows.push([]);
   });
   rows.push([]);
-  rows.push(["Rahe Kaba Tours & Travels"]);
-  rows.push(["Phone: +880 1601-505050 | Email: rahekaba.info@gmail.com"]);
+  rows.push(["Manasik Travel Hub"]);
+  rows.push(["Phone: +880 1711-993562 | Email: manasiktravelhub@gmail.com"]);
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, title.slice(0, 31));
@@ -385,8 +385,8 @@ export function exportExcel({ title, columns, rows, summary }: ReportData) {
     summary.forEach(line => wsData.push([line]));
   }
   wsData.push([]);
-  wsData.push(["Rahe Kaba Tours & Travels"]);
-  wsData.push(["Phone: +880 1601-505050 | Email: rahekaba.info@gmail.com"]);
+  wsData.push(["Manasik Travel Hub"]);
+  wsData.push(["Phone: +880 1711-993562 | Email: manasiktravelhub@gmail.com"]);
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, title.slice(0, 31));
