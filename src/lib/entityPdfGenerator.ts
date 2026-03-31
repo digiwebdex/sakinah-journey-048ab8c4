@@ -412,7 +412,7 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
     });
   }
 
-  addSignatureAndFooter(doc, sig);
+  addSignatureAndFooter(doc, sig, cfg);
   doc.save(`Supplier-${data.agent_name.replace(/\s+/g, "_")}.pdf`);
 }
 
