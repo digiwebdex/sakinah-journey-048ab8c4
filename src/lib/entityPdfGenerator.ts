@@ -43,7 +43,7 @@ async function generateCompanyQr(): Promise<string> {
   } catch { return ""; }
 }
 
-function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string, qrDataUrl: string): number {
+function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string, qrDataUrl: string, cfg: PdfCompanyConfig): number {
   const pageWidth = doc.internal.pageSize.getWidth();
 
   // Top gold accent bar
@@ -64,11 +64,11 @@ function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string, qrDataU
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(DARK.r, DARK.g, DARK.b);
-  doc.text(company.name || "Manasik Travel Hub", textX, 18);
+  doc.text(company.name || cfg.company_name, textX, 18);
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
-  doc.text("Hajj & Umrah Services", textX, 23);
+  doc.text(cfg.tagline, textX, 23);
   const contactParts: string[] = [];
   if (company.phone) contactParts.push(`Tel: ${company.phone}`);
   if (company.email) contactParts.push(`Email: ${company.email}`);
