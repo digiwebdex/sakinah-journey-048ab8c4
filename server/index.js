@@ -1157,6 +1157,6 @@ app.get('*', (req, res) => {
 // START
 // =============================================
 app.listen(PORT, () => {
-  console.log(`🚀 Rahe Kaba API running on port ${PORT}`);
+  console.log(`🚀 Manasik Travel Hub API running on port ${PORT}`);
   console.log(`📁 Serving frontend from ${frontendPath}`);
 });
