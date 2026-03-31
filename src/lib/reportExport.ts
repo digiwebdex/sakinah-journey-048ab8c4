@@ -95,7 +95,7 @@ async function generateCompanyQr(): Promise<string> {
 }
 
 // ── Company Pad Header (matches invoice format) ──
-function addCompanyHeader(doc: jsPDF, logoBase64: string | null, qrDataUrl: string): number {
+function addCompanyHeader(doc: jsPDF, logoBase64: string | null, qrDataUrl: string, cfg: PdfCompanyConfig): number {
   const pageWidth = doc.internal.pageSize.getWidth();
 
   // Top gold accent bar
@@ -116,14 +116,14 @@ function addCompanyHeader(doc: jsPDF, logoBase64: string | null, qrDataUrl: stri
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(DARK.r, DARK.g, DARK.b);
-  doc.text(COMPANY.name, textX, 18);
+  doc.text(cfg.company_name, textX, 18);
 
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
-  doc.text(COMPANY.tagline, textX, 23);
-  doc.text(`Tel: ${COMPANY.phone}  |  Email: ${COMPANY.email}`, textX, 28);
-  doc.text(COMPANY.address, textX, 33);
+  doc.text(cfg.tagline, textX, 23);
+  doc.text(`Tel: ${cfg.phone}  |  Email: ${cfg.email}`, textX, 28);
+  doc.text(cfg.address, textX, 33);
 
   // Gold accent line
   doc.setDrawColor(GOLD.r, GOLD.g, GOLD.b);
