@@ -5,18 +5,19 @@ import logoImg from "@/assets/logo-nobg.png";
 import QRCode from "qrcode";
 import { getSignatureData, SignatureData } from "./pdfSignature";
 import { registerBengaliFont, bengaliCellHook } from "./pdfFontLoader";
+import { getPdfCompanyConfig, type PdfCompanyConfig } from "./pdfCompanyConfig";
 
 // ── Brand Constants ──
 const GOLD = { r: 245, g: 158, b: 11 };
 const DARK = { r: 35, g: 40, b: 48 };
-const COMPANY_URL = "https://manasiktravelhub.com";
-const COMPANY = {
-  name: "Manasik Travel Hub",
-  tagline: "Hajj & Umrah Services",
-  phone: "+880 1711-993562",
-  email: "manasiktravelhub@gmail.com",
-  address: "595/1, Milk Vita Road, Three-way Intersection, Dewla, Tangail Sadar, Tangail",
-};
+
+// These will be populated dynamically
+let _cfg: PdfCompanyConfig | null = null;
+
+async function ensureConfig(): Promise<PdfCompanyConfig> {
+  if (!_cfg) _cfg = await getPdfCompanyConfig();
+  return _cfg;
+}
 
 // ── Interfaces ──
 interface ReportData {
