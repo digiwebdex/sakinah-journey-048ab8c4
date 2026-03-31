@@ -5,6 +5,7 @@ import { getSignatureData, SignatureData } from "./pdfSignature";
 import { generateTrackingQr, addQrToDoc, addPaymentWatermark, getWatermarkStatus } from "./pdfQrCode";
 import { supabase } from "@/lib/api";
 import { registerBengaliFont, addBengaliText, hasBengali, bengaliCellHook } from "./pdfFontLoader";
+import { getPdfCompanyConfig, type PdfCompanyConfig } from "./pdfCompanyConfig";
 
 export interface CompanyInfo {
   name?: string;
