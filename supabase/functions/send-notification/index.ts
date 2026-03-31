@@ -77,7 +77,7 @@ function getEmailTemplate(type: NotificationType, d: any) {
     case "payment_reminder":
       return {
         subject: `⏰ Payment Reminder — ${d.trackingId}`,
-        html: `${header}<h2 style="color:#d97706">Payment Reminder</h2><p>Dear <strong>${d.name}</strong>,</p><p>Installment <strong>#${d.installmentNumber || 1}</strong> of <strong>৳${(d.amount || 0).toLocaleString()}</strong> for booking <strong>${d.trackingId}</strong> is due on <strong>${d.dueDate}</strong>.</p>${table([["Installment", `#${d.installmentNumber || 1}`], ["Amount Due", `৳${(d.amount || 0).toLocaleString()}`], ["Due Date", d.dueDate]])}<p>Please pay at the earliest. Contact: +880 1601-505050</p>${footer}`,
+        html: `${header}<h2 style="color:#d97706">Payment Reminder</h2><p>Dear <strong>${d.name}</strong>,</p><p>Installment <strong>#${d.installmentNumber || 1}</strong> of <strong>৳${(d.amount || 0).toLocaleString()}</strong> for booking <strong>${d.trackingId}</strong> is due on <strong>${d.dueDate}</strong>.</p>${table([["Installment", `#${d.installmentNumber || 1}`], ["Amount Due", `৳${(d.amount || 0).toLocaleString()}`], ["Due Date", d.dueDate]])}<p>Please pay at the earliest. Contact: +880 1711-993562</p>${footer}`,
       };
     case "supplier_payment_recorded":
       return {
