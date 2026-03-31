@@ -261,7 +261,7 @@ export async function exportPDF({ title, columns, rows, summary }: ReportData) {
     doc.setFont("helvetica", "normal");
   }
 
-  addCompanyFooter(doc, sig);
+  addCompanyFooter(doc, sig, cfg);
   doc.save(buildSafeFileName(title, "pdf"));
 }
 
