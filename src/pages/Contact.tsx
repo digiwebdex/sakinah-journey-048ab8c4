@@ -15,9 +15,9 @@ const Contact = () => {
   const [form, setForm] = useState({ name: "", phone: "", email: "", service: "", message: "" });
   const [loading, setLoading] = useState(false);
 
-  const phone = content?.phone || "+880 1601-505050";
-  const email = content?.email || "rahekaba.info@gmail.com";
-  const location = content?.location || (bn ? "দৈলরবাগ পল্লী বিদ্যুৎ সংলগ্ন, সোনারগাঁও থানা রোড, নারায়ণগঞ্জ-ঢাকা" : "Doilorbag Palli Bidyut, Sonargaon Thana Road, Narayanganj-Dhaka");
+  const phone = content?.phone || "+880 1711-993562";
+  const email = content?.email || "manasiktravelhub@gmail.com";
+  const location = content?.location || (bn ? "৫৯৫/১, মিল্কভিটা রোড, তিন রাস্তার মোড়, দেওলা, টাঙ্গাইল সদর, টাঙ্গাইল" : "595/1, Milk Vita Road, Three-way Intersection, Dewla, Tangail Sadar, Tangail");
   const hours = content?.hours || (bn ? "শনি - বৃহঃ: সকাল ৯টা - রাত ৯টা" : "Sat - Thu: 9AM - 9PM");
 
   const contactItems = [
