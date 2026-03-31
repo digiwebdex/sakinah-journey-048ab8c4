@@ -1087,7 +1087,7 @@ app.post('/api/contact', async (req, res) => {
     }
 
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
-    const CONTACT_EMAIL = 'rahekaba@gmail.com';
+    const CONTACT_EMAIL = 'manasiktravelhub@gmail.com';
 
     if (!RESEND_API_KEY) {
       console.error('RESEND_API_KEY not configured');
