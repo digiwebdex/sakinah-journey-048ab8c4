@@ -51,6 +51,7 @@ export default function AdminSettingsPage() {
           <div className="flex flex-wrap gap-2">
             <a href="#password-settings" className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3 py-2 rounded-md text-sm font-medium">Change Password</a>
             <a href="#section-visibility" className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3 py-2 rounded-md text-sm font-medium">Website Sections</a>
+            <a href="#pdf-settings" className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3 py-2 rounded-md text-sm font-medium">PDF Settings</a>
             <a href="#notification-settings" className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3 py-2 rounded-md text-sm font-medium">SMS/Email Config</a>
             <a href="#backup-restore" className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3 py-2 rounded-md text-sm font-medium">Backup & Restore</a>
           </div>
