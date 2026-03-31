@@ -6,10 +6,10 @@ import { CompanyInfo } from "./invoiceGenerator";
 import { getSignatureData, SignatureData } from "./pdfSignature";
 import { generateTrackingQr, addQrToDoc, addPaymentWatermark, getWatermarkStatus } from "./pdfQrCode";
 import { registerBengaliFont, addBengaliText, hasBengali, bengaliCellHook } from "./pdfFontLoader";
+import { getPdfCompanyConfig, type PdfCompanyConfig } from "./pdfCompanyConfig";
 
 const GOLD = { r: 245, g: 158, b: 11 };
 const DARK = { r: 35, g: 40, b: 48 };
-const COMPANY_URL = "https://manasiktravelhub.com";
 
 const fmt = (n: number) => `BDT ${n.toLocaleString()}`;
 const fmtDate = (d: string | null) =>
