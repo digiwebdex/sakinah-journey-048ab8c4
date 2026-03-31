@@ -234,7 +234,7 @@ export default function AdminCalculatorPage() {
       doc.setFontSize(7);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(140);
-      doc.text("This is an estimate only. Actual costs may vary. | Rahe Kaba Travels & Tours", pageWidth / 2, footerY, { align: "center" });
+      doc.text("This is an estimate only. Actual costs may vary. | Manasik Travel Hub", pageWidth / 2, footerY, { align: "center" });
 
       const safeName = (groupName || "Calculator").replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "-") || "Calculator";
       doc.save(`${safeName}-Cost-Report.pdf`);

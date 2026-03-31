@@ -513,9 +513,9 @@ export async function getCompanyInfoForPdf(): Promise<CompanyInfo> {
   const { data: cms } = await supabase.from("site_content" as any).select("content").eq("section_key", "contact").maybeSingle();
   const c = (cms as any)?.content || {};
   return {
-    name: "RAHE KABA Tours & Travels",
-    phone: c.phone || "+880 1601-505050",
-    email: c.email || "rahekaba.info@gmail.com",
-    address: "Dailorbagh Palli Bidyut Adjacent, Sonargaon Thana Road, Narayanganj-Dhaka",
+    name: "Manasik Travel Hub",
+    phone: c.phone || "+880 1711-993562",
+    email: c.email || "manasiktravelhub@gmail.com",
+    address: "595/1, Milk Vita Road, Three-way Intersection, Dewla, Tangail Sadar, Tangail",
   };
 }

@@ -385,8 +385,8 @@ export function exportExcel({ title, columns, rows, summary }: ReportData) {
     summary.forEach(line => wsData.push([line]));
   }
   wsData.push([]);
-  wsData.push(["Rahe Kaba Tours & Travels"]);
-  wsData.push(["Phone: +880 1601-505050 | Email: rahekaba.info@gmail.com"]);
+  wsData.push(["Manasik Travel Hub"]);
+  wsData.push(["Phone: +880 1711-993562 | Email: manasiktravelhub@gmail.com"]);
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, title.slice(0, 31));

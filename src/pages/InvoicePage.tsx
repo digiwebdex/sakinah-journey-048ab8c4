@@ -20,12 +20,12 @@ export default function InvoicePage() {
   const printRef = useRef<HTMLDivElement>(null);
 
   const company: CompanyInfo = {
-    name: "RAHE KABA Tours & Travels",
-    phone: "+880 1601-505050",
-    email: "rahekaba.info@gmail.com",
-    address: "Dailorbagh Palli Bidyut Adjacent, Sonargaon Thana Road, Narayanganj-Dhaka",
+    name: "Manasik Travel Hub",
+    phone: "+880 1711-993562",
+    email: "manasiktravelhub@gmail.com",
+    address: "595/1, Milk Vita Road, Three-way Intersection, Dewla, Tangail Sadar, Tangail",
   };
-  const companyAddressBn = "দৈলরবাগ পল্লী বিদ্যুৎ সংলগ্ন, সোনারগাঁও থানা রোড, নারায়ণগঞ্জ-ঢাকা";
+  const companyAddressBn = "৫৯৫/১, মিল্কভিটা রোড, তিন রাস্তার মোড়, দেওলা, টাঙ্গাইল সদর, টাঙ্গাইল";
 
   const search = async () => {
     if (!trackingId.trim()) return;

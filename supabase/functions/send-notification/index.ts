@@ -37,14 +37,14 @@ interface NotificationRequest {
 // --- Email templates ---
 function getEmailTemplate(type: NotificationType, d: any) {
   const header = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#ffffff;border:1px solid #e0e0e0;border-radius:8px">
-    <div style="text-align:center;padding:15px 0;border-bottom:2px solid #b8860b;margin-bottom:20px">
-      <h1 style="color:#b8860b;margin:0;font-size:22px">RAHE KABA</h1>
+    <div style="text-align:center;padding:15px 0;border-bottom:2px solid #E8860B;margin-bottom:20px">
+      <h1 style="color:#E8860B;margin:0;font-size:22px">Manasik Travel Hub</h1>
       <p style="color:#888;margin:4px 0 0;font-size:12px">Hajj & Umrah Services</p>
     </div>`;
   const footer = `<hr style="border:none;border-top:1px solid #e0e0e0;margin:20px 0"/>
     <p style="font-size:11px;color:#999;text-align:center">
-      Rahe Kaba Tours & Travels | +880 1601-505050 | rahekaba.info@gmail.com<br/>
-      Dailorbagh Palli Bidyut Adjacent, Sonargaon Thana Road, Narayanganj-Dhaka
+      Manasik Travel Hub | +880 1711-993562 | manasiktravelhub@gmail.com<br/>
+      595/1, Milk Vita Road, Three-way Intersection, Dewla, Tangail Sadar, Tangail
     </p></div>`;
   const table = (rows: [string, string][]) => `<table style="width:100%;border-collapse:collapse;margin:16px 0">${rows.map(([k, v]) => `<tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;width:40%;background:#f9f9f9">${k}</td><td style="padding:8px;border:1px solid #ddd">${v}</td></tr>`).join("")}</table>`;
 
