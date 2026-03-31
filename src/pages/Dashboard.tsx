@@ -235,7 +235,7 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 flex items-center justify-between h-16">
           <a href="/" className="flex items-center gap-2">
             <img src={logo} alt="Logo" className="h-10 w-10 rounded-md object-cover" />
-            <span className="font-heading text-lg font-bold text-primary hidden sm:block">RAHE KABA</span>
+            <span className="font-heading text-lg font-bold text-primary hidden sm:block">Manasik Travel Hub</span>
           </a>
           <div className="flex items-center gap-4">
             <Link to="/track" className="text-muted-foreground hover:text-primary transition-colors" title="Track Booking">

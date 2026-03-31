@@ -59,9 +59,9 @@ const Contact = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Contact Us - যোগাযোগ"
-        description="রাহে কাবা ট্যুরস এর সাথে যোগাযোগ করুন। ফোন, ইমেইল বা অফিসে আসুন। Contact Rahe Kaba Tours."
+        description="মানাসিক ট্রাভেল হাব এর সাথে যোগাযোগ করুন। ফোন, ইমেইল বা অফিসে আসুন। Contact Manasik Travel Hub."
         canonicalUrl="/contact"
-        keywords="যোগাযোগ, contact, Rahe Kaba contact, phone, email"
+        keywords="যোগাযোগ, contact, Manasik Travel Hub contact, phone, email"
         jsonLd={breadcrumbJsonLd([
           { name: "Home", url: "/" },
           { name: "Contact", url: "/contact" },
