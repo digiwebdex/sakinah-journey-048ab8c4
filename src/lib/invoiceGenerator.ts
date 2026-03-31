@@ -1051,9 +1051,9 @@ export async function generateInvoice(
   });
 
   if (hasFamilySignal && invoiceMembers.length > 0) {
-    await generateFamilyInvoice(doc, normalizedBooking, customer, payments, invoiceMembers, logoBase64, sig, qrDataUrl, moallemName);
+    await generateFamilyInvoice(doc, normalizedBooking, customer, payments, invoiceMembers, logoBase64, sig, qrDataUrl, moallemName, cfg);
   } else {
-    await generateIndividualInvoice(doc, normalizedBooking, customer, payments, logoBase64, sig, qrDataUrl, moallemName);
+    await generateIndividualInvoice(doc, normalizedBooking, customer, payments, logoBase64, sig, qrDataUrl, moallemName, cfg);
   }
 
   doc.save(`Invoice-${normalizedBooking.tracking_id}.pdf`);
