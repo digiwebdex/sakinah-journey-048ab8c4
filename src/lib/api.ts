@@ -45,6 +45,11 @@ class TokenManager {
   }
 }
 
+const hasCustomSession = () => {
+  if (typeof window === 'undefined') return false;
+  return Boolean(TokenManager.getAccessToken() && TokenManager.getUser());
+};
+
 // Fetch wrapper with auto-refresh
 async function apiFetch(path: string, options: RequestInit & { skipRedirect?: boolean } = {}): Promise<any> {
   const { skipRedirect, ...fetchOptions } = options;
@@ -97,17 +102,46 @@ async function apiFetch(path: string, options: RequestInit & { skipRedirect?: bo
 // =============================================
 export const auth = {
   async signInWithPassword({ email, password }: { email: string; password: string }) {
-    // Try Supabase auth first (Lovable Cloud)
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const resData = await res.json().catch(() => null);
+      if (res.ok && resData) {
+        const user = { ...resData.user, roles: resData.roles || [] };
+        TokenManager.setTokens(resData.access_token, resData.refresh_token);
+        TokenManager.setUser(user);
+        return {
+          data: {
+            user,
+            session: {
+              user: { id: user.id, email: user.email },
+              access_token: resData.access_token,
+            },
+          },
+          error: null,
+        };
+      }
+
+      if (resData?.error && (!supabaseClient || res.status < 500)) {
+        return { data: null, error: { message: resData.error } };
+      }
+    } catch {
+      // Fall back to Supabase auth when the custom API is unavailable
+    }
+
     if (supabaseClient) {
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
       if (error) return { data: null, error: { message: error.message } };
-      
-      // Fetch roles from user_roles table
+
       const { data: rolesData } = await supabaseClient
         .from('user_roles')
         .select('role')
         .eq('user_id', data.user.id);
-      
+
       const roles = rolesData?.map((r: any) => r.role) || [];
       const user = { id: data.user.id, email: data.user.email, roles, ...data.user.user_metadata };
       TokenManager.setTokens(data.session.access_token, data.session.refresh_token);
@@ -115,16 +149,7 @@ export const auth = {
       return { data: { user, session: data.session }, error: null };
     }
 
-    // Fallback to VPS API
-    const res = await apiFetch('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    const resData = await res.json();
-    if (!res.ok) return { data: null, error: { message: resData.error } };
-    TokenManager.setTokens(resData.access_token, resData.refresh_token);
-    TokenManager.setUser({ ...resData.user, roles: resData.roles || [] });
-    return { data: { user: { id: resData.user.id, email: resData.user.email, ...resData.user, roles: resData.roles || [] }, session: { access_token: resData.access_token } }, error: null };
+    return { data: null, error: { message: 'Login failed. Please try again.' } };
   },
 
   async signUp({ email, password, options }: { email: string; password: string; options?: { data?: any } }) {
@@ -147,16 +172,22 @@ export const auth = {
   },
 
   async signOut() {
-    if (supabaseClient) {
+    if (hasCustomSession()) {
+      try { await apiFetch('/auth/logout', { method: 'POST', skipRedirect: true }); } catch {}
+    } else if (supabaseClient) {
       await supabaseClient.auth.signOut();
-    } else {
-      try { await apiFetch('/auth/logout', { method: 'POST' }); } catch {}
     }
     TokenManager.clear();
     return { error: null };
   },
 
   async getSession() {
+    const token = TokenManager.getAccessToken();
+    const user = TokenManager.getUser();
+    if (token && user) {
+      return { data: { session: { user: { id: user.id, email: user.email }, access_token: token } } };
+    }
+
     if (supabaseClient) {
       const { data } = await supabaseClient.auth.getSession();
       if (data.session) {
@@ -164,13 +195,31 @@ export const auth = {
       }
       return { data: { session: null } };
     }
-    const token = TokenManager.getAccessToken();
-    const user = TokenManager.getUser();
-    if (!token || !user) return { data: { session: null } };
-    return { data: { session: { user: { id: user.id, email: user.email }, access_token: token } } };
+
+    return { data: { session: null } };
   },
 
   async getUser() {
+    const localUser = TokenManager.getUser();
+    const token = TokenManager.getAccessToken();
+
+    if (token || localUser) {
+      try {
+        const res = await apiFetch('/auth/me', { skipRedirect: true });
+        if (res.ok) {
+          const resData = await res.json();
+          const freshUser = { ...(resData?.user || {}), roles: resData?.roles || [] };
+          TokenManager.setUser(freshUser);
+          return { data: { user: freshUser } };
+        }
+      } catch {
+        // Auth check failed silently - fall through to cached user
+      }
+
+      if (!localUser) return { data: { user: null } };
+      return { data: { user: { id: localUser.id, email: localUser.email, ...localUser } } };
+    }
+
     if (supabaseClient) {
       const { data } = await supabaseClient.auth.getUser();
       if (data.user) {
@@ -181,24 +230,7 @@ export const auth = {
       return { data: { user: null } };
     }
 
-    const localUser = TokenManager.getUser();
-    const token = TokenManager.getAccessToken();
-    if (!token && !localUser) return { data: { user: null } };
-
-    try {
-      const res = await apiFetch('/auth/me', { skipRedirect: true });
-      if (res.ok) {
-        const resData = await res.json();
-        const freshUser = { ...(resData?.user || {}), roles: resData?.roles || [] };
-        TokenManager.setUser(freshUser);
-        return { data: { user: freshUser } };
-      }
-    } catch {
-      // Auth check failed silently - fall through to local user
-    }
-
-    if (!localUser) return { data: { user: null } };
-    return { data: { user: { id: localUser.id, email: localUser.email, ...localUser } } };
+    return { data: { user: null } };
   },
 
   async resetPasswordForEmail(email: string, _options?: any) {
@@ -236,6 +268,20 @@ export const auth = {
   },
 
   onAuthStateChange(callback: (event: string, session: any) => void) {
+    if (hasCustomSession()) {
+      const token = TokenManager.getAccessToken();
+      const user = TokenManager.getUser();
+      callback('SIGNED_IN', { user: { id: user.id, email: user.email }, access_token: token });
+      const handler = (e: StorageEvent) => {
+        if (e.key === 'rk_access_token') {
+          if (e.newValue) callback('SIGNED_IN', { user: TokenManager.getUser(), access_token: e.newValue });
+          else callback('SIGNED_OUT', null);
+        }
+      };
+      window.addEventListener('storage', handler);
+      return { data: { subscription: { unsubscribe: () => window.removeEventListener('storage', handler) } } };
+    }
+
     if (supabaseClient) {
       const { data } = supabaseClient.auth.onAuthStateChange((event, session) => {
         if (session) {
