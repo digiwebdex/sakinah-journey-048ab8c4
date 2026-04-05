@@ -41,8 +41,11 @@ const AdminDashboardCharts = ({
   const [showDueCustomers, setShowDueCustomers] = useState(false);
 
   const financials = useMemo(() => {
-    const totalSales = bookings.reduce((s, b) => s + Number(b.total_amount || 0), 0);
-    const totalHajji = bookings.reduce((s, b) => s + Number(b.num_travelers || 0), 0);
+    // CRITICAL: Exclude cancelled bookings from all financial calculations
+    const activeBookings = bookings.filter(b => b.status !== "cancelled");
+    
+    const totalSales = activeBookings.reduce((s, b) => s + Number(b.total_amount || 0), 0);
+    const totalHajji = activeBookings.reduce((s, b) => s + Number(b.num_travelers || 0), 0);
 
     const customerPaymentsIn = payments
       .filter(p => p.status === "completed")
@@ -53,7 +56,7 @@ const AdminDashboardCharts = ({
       .reduce((s, e) => s + Number(e.amount || 0), 0);
     const totalIncomeReceived = customerPaymentsIn + moallemDepositsIn + cashbookIncome;
 
-    const bookingProfit = bookings.reduce((s, b) => {
+    const bookingProfit = activeBookings.reduce((s, b) => {
       const selling = Number(b.total_amount || 0);
       const cost = Number(b.total_cost || 0);
       const commission = Number(b.total_commission || 0);
@@ -63,19 +66,22 @@ const AdminDashboardCharts = ({
     const generalExpenses = expenses
       .filter(e => !e.booking_id)
       .reduce((s, e) => s + Number(e.amount || 0), 0);
-    const netProfit = bookingProfit - generalExpenses;
+    const cashbookExpense = dailyCashbook
+      .filter(e => e.type === "expense")
+      .reduce((s, e) => s + Number(e.amount || 0), 0);
+    const netProfit = bookingProfit - generalExpenses - cashbookExpense;
 
     const walletAccounts = accounts.filter(a => a.type === "asset");
     const cashBalance = walletAccounts.reduce((s, a) => s + Number(a.balance || 0), 0);
 
     const moallemDue = moallems.reduce((s, m) => s + Number(m.total_due || 0), 0);
-    const customerDue = bookings.reduce((s, b) => s + Number(b.due_amount || 0), 0);
+    const customerDue = activeBookings.reduce((s, b) => s + Number(b.due_amount || 0), 0);
     const totalReceivable = moallemDue + customerDue;
 
-    const bookingSupplierDue = bookings.reduce((s, b) => s + Number(b.supplier_due || 0), 0);
+    const bookingSupplierDue = activeBookings.reduce((s, b) => s + Number(b.supplier_due || 0), 0);
     const contractSupplierDue = supplierContracts.reduce((s, c) => s + Number(c.total_due || 0), 0);
     const supplierDue = bookingSupplierDue + contractSupplierDue;
-    const commissionDue = bookings.reduce((s, b) => s + Number(b.commission_due || 0), 0);
+    const commissionDue = activeBookings.reduce((s, b) => s + Number(b.commission_due || 0), 0);
     const totalPayable = supplierDue + commissionDue;
 
     return {
