@@ -22,7 +22,7 @@ const Contact = () => {
   const hours = content?.hours || (bn ? "শনি - বৃহঃ: সকাল ৯টা - রাত ৯টা" : "Sat - Thu: 9AM - 9PM");
 
   const contactItems = [
-    { icon: Phone, label: t("contact.phone"), value: phone, href: `tel:${phone.replace(/[\s-]/g, "")}` },
+    { icon: Phone, label: t("contact.phone"), value: `${phone}, ${phone2}`, href: `tel:${phone.replace(/[\s-]/g, "")}` },
     { icon: Mail, label: t("contact.email"), value: email, href: `mailto:${email}` },
     { icon: MapPin, label: t("contact.location"), value: location, href: "#" },
     { icon: Clock, label: t("contact.hours"), value: hours, href: "#" },
