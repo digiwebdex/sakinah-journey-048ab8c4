@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import logoImg from "@/assets/logo-nobg.png";
+import logoImg from "@/assets/logo-pdf.png";
 import QRCode from "qrcode";
 import { CompanyInfo } from "./invoiceGenerator";
 import { getSignatureData, SignatureData } from "./pdfSignature";
