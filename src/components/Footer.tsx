@@ -13,7 +13,8 @@ const Footer = () => {
   const companyName = content?.company_name || "MANASIK";
   const tagline = lc?.company_tagline || (language === "bn" ? "ট্রাভেল হাব" : content?.company_tagline || "Travel Hub");
   const description = lc?.description || (language === "bn" ? "হজ্ব ও উমরাহ সেবায় আমাদের চলার পথ দের যুগ ছাড়িয়ে এবং এক ধাপ এগিয়ে" : content?.description || "Your trusted companion for Hajj & Umrah. Making sacred journeys easy and comfortable.");
-  const phone = content?.phone || "+880 1711-993562";
+  const phone = content?.phone || "+880 1711-999910";
+  const phone2 = content?.phone2 || "+880 1711-999920";
   const email = content?.email || "manasiktravelhub@gmail.com";
   const address = lc?.address || (language === "bn" ? "৫৯৫/১, মিল্ক ভিটা রোড, তিন রাস্তার মোড়\nদেওলা, টাঙ্গাইল সদর, টাঙ্গাইল" : content?.address || "595/1, Milk Vita Road, Three-way Intersection\nDewla, Tangail Sadar, Tangail");
   const servicesList = lc?.services_list || (language === "bn" ? ["হজ প্যাকেজ", "উমরাহ প্যাকেজ", "ভিসা প্রসেসিং", "এয়ার টিকেট", "হোটেল বুকিং", "জিয়ারা ট্যুর"] : content?.services_list || ["Hajj Packages", "Umrah Packages", "Visa Processing", "Air Tickets", "Hotel Booking", "Ziyara Tours"]);
@@ -150,7 +151,7 @@ const Footer = () => {
           <div>
             <h4 className="font-heading font-semibold mb-5 text-primary text-sm uppercase tracking-wider">{t("footer.contact")}</h4>
             <ul className="space-y-4 text-sm text-white/50">
-              <li className="flex items-center gap-3"><div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0"><Phone className="h-3.5 w-3.5 text-primary" /></div> {phone}</li>
+              <li className="flex items-start gap-3"><div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5"><Phone className="h-3.5 w-3.5 text-primary" /></div> <span>{phone}<br/>{phone2}</span></li>
               <li className="flex items-center gap-3"><div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0"><Mail className="h-3.5 w-3.5 text-primary" /></div> {email}</li>
               <li className="flex items-start gap-3"><div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5"><MapPin className="h-3.5 w-3.5 text-primary" /></div> <span className="whitespace-pre-line">{address}</span></li>
             </ul>

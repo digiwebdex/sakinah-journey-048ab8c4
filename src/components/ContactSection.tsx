@@ -13,13 +13,14 @@ const ContactSection = forwardRef<HTMLElement>(function ContactSection(_, ref) {
   const [loading, setLoading] = useState(false);
 
   const lc = content?.[language];
-  const phone = content?.phone || "+880 1711-993562";
+  const phone = content?.phone || "+880 1711-999910";
+  const phone2 = content?.phone2 || "+880 1711-999920";
   const email = lc?.email || content?.email || "manasiktravelhub@gmail.com";
   const location = lc?.location || (language === "bn" ? "৫৯৫/১, মিল্ক ভিটা রোড, তিন রাস্তার মোড়\nদেওলা, টাঙ্গাইল সদর, টাঙ্গাইল" : content?.location || "595/1, Milk Vita Road, Three-way Intersection\nDewla, Tangail Sadar, Tangail");
   const hours = lc?.hours || (language === "bn" ? "শনি - বৃহঃ: সকাল ৯টা - রাত ৯টা" : content?.hours || "Sat - Thu: 9AM - 9PM");
 
   const contactItems = [
-    { icon: Phone, label: t("contact.phone"), value: phone, href: `tel:${phone.replace(/[\s-]/g, "")}` },
+    { icon: Phone, label: t("contact.phone"), value: `${phone}, ${phone2}`, href: `tel:${phone.replace(/[\s-]/g, "")}` },
     { icon: Mail, label: t("contact.email"), value: email, href: `mailto:${email}` },
     { icon: MapPin, label: t("contact.location"), value: location, href: "#" },
     { icon: Clock, label: t("contact.hours"), value: hours, href: "#" },

@@ -43,7 +43,7 @@ function getEmailTemplate(type: NotificationType, d: any) {
     </div>`;
   const footer = `<hr style="border:none;border-top:1px solid #e0e0e0;margin:20px 0"/>
     <p style="font-size:11px;color:#999;text-align:center">
-      Manasik Travel Hub | +880 1711-993562 | manasiktravelhub@gmail.com<br/>
+      Manasik Travel Hub | +880 1711-999910 | manasiktravelhub@gmail.com<br/>
       595/1, Milk Vita Road, Three-way Intersection, Dewla, Tangail Sadar, Tangail
     </p></div>`;
   const table = (rows: [string, string][]) => `<table style="width:100%;border-collapse:collapse;margin:16px 0">${rows.map(([k, v]) => `<tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;width:40%;background:#f9f9f9">${k}</td><td style="padding:8px;border:1px solid #ddd">${v}</td></tr>`).join("")}</table>`;
@@ -52,7 +52,7 @@ function getEmailTemplate(type: NotificationType, d: any) {
     case "booking_created":
       return {
         subject: `📋 Booking Created — ${d.trackingId}`,
-        html: `${header}<h2 style="color:#E8860B">Booking Created</h2><p>Dear <strong>${d.name}</strong>,</p><p>Your booking for <strong>${d.packageName}</strong> has been created.</p>${table([["Tracking ID", d.trackingId], ["Package", d.packageName], ["Total Amount", `৳${d.totalAmount.toLocaleString()}`], ["Contact", "+880 1711-993562"]])}<p>We'll keep you updated. Thank you!</p>${footer}`,
+        html: `${header}<h2 style="color:#E8860B">Booking Created</h2><p>Dear <strong>${d.name}</strong>,</p><p>Your booking for <strong>${d.packageName}</strong> has been created.</p>${table([["Tracking ID", d.trackingId], ["Package", d.packageName], ["Total Amount", `৳${d.totalAmount.toLocaleString()}`], ["Contact", "+880 1711-999910"]])}<p>We'll keep you updated. Thank you!</p>${footer}`,
       };
     case "booking_confirmed":
       return {
@@ -67,7 +67,7 @@ function getEmailTemplate(type: NotificationType, d: any) {
     case "booking_status_updated":
       return {
         subject: `🔄 Booking Status Updated — ${d.trackingId}`,
-        html: `${header}<h2 style="color:#2563eb">Booking Status Updated</h2><p>Dear <strong>${d.name}</strong>,</p><p>Your booking <strong>${d.trackingId}</strong> status has been updated to <strong>${d.newStatus || "Updated"}</strong>.</p>${table([["Tracking ID", d.trackingId], ["New Status", d.newStatus || "Updated"], ["Total", `৳${d.totalAmount.toLocaleString()}`], ["Due", `৳${d.dueAmount.toLocaleString()}`]])}<p>Contact us for any queries: +880 1711-993562</p>${footer}`,
+        html: `${header}<h2 style="color:#2563eb">Booking Status Updated</h2><p>Dear <strong>${d.name}</strong>,</p><p>Your booking <strong>${d.trackingId}</strong> status has been updated to <strong>${d.newStatus || "Updated"}</strong>.</p>${table([["Tracking ID", d.trackingId], ["New Status", d.newStatus || "Updated"], ["Total", `৳${d.totalAmount.toLocaleString()}`], ["Due", `৳${d.dueAmount.toLocaleString()}`]])}<p>Contact us for any queries: +880 1711-999910</p>${footer}`,
       };
     case "payment_received":
       return {
@@ -77,7 +77,7 @@ function getEmailTemplate(type: NotificationType, d: any) {
     case "payment_reminder":
       return {
         subject: `⏰ Payment Reminder — ${d.trackingId}`,
-        html: `${header}<h2 style="color:#d97706">Payment Reminder</h2><p>Dear <strong>${d.name}</strong>,</p><p>Installment <strong>#${d.installmentNumber || 1}</strong> of <strong>৳${(d.amount || 0).toLocaleString()}</strong> for booking <strong>${d.trackingId}</strong> is due on <strong>${d.dueDate}</strong>.</p>${table([["Installment", `#${d.installmentNumber || 1}`], ["Amount Due", `৳${(d.amount || 0).toLocaleString()}`], ["Due Date", d.dueDate]])}<p>Please pay at the earliest. Contact: +880 1711-993562</p>${footer}`,
+        html: `${header}<h2 style="color:#d97706">Payment Reminder</h2><p>Dear <strong>${d.name}</strong>,</p><p>Installment <strong>#${d.installmentNumber || 1}</strong> of <strong>৳${(d.amount || 0).toLocaleString()}</strong> for booking <strong>${d.trackingId}</strong> is due on <strong>${d.dueDate}</strong>.</p>${table([["Installment", `#${d.installmentNumber || 1}`], ["Amount Due", `৳${(d.amount || 0).toLocaleString()}`], ["Due Date", d.dueDate]])}<p>Please pay at the earliest. Contact: +880 1711-999910</p>${footer}`,
       };
     case "supplier_payment_recorded":
       return {
@@ -101,7 +101,7 @@ function getEmailTemplate(type: NotificationType, d: any) {
 
 // --- SMS templates ---
 function getSmsMessage(type: NotificationType, d: any): string {
-  const contact = "Manasik Travel Hub: 01711-993562";
+  const contact = "Manasik Travel Hub: 01711-999910";
   switch (type) {
     case "booking_created":
       return `Dear ${d.name}, booking ${d.trackingId} for ${d.packageName} created. Total: ৳${d.totalAmount.toLocaleString()}. ${contact}`;

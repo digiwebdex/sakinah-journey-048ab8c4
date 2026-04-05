@@ -21,7 +21,7 @@ export default function InvoicePage() {
 
   const company: CompanyInfo = {
     name: "Manasik Travel Hub",
-    phone: "+880 1711-993562",
+    phone: "+880 1711-999910",
     email: "manasiktravelhub@gmail.com",
     address: "595/1, Milk Vita Road, Three-way Intersection, Dewla, Tangail Sadar, Tangail",
   };
