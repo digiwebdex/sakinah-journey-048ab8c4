@@ -152,7 +152,7 @@ const HeroSection = () => {
             dir="rtl"
             style={{ fontFamily: "'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif" }}
           >
-            وَأَتِمُّوا الْحَجَّ وَالْعُمْرَةَ لِلَّهِ
+            {quranArabic}
           </motion.p>
 
           <motion.p
