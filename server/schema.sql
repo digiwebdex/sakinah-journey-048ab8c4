@@ -1,13 +1,13 @@
 -- =============================================
--- RAHE KABA ERP - Complete PostgreSQL Schema
+-- MANASIK TRAVEL HUB ERP - Complete PostgreSQL Schema
 -- Run this on your VPS PostgreSQL instance
 -- =============================================
 
 -- Create database (run as superuser)
--- CREATE DATABASE rahekaba;
+-- CREATE DATABASE manasik;
 
 -- Connect to the database before running the rest
--- \c rahekaba
+-- \c manasik
 
 -- =============================================
 -- EXTENSIONS
