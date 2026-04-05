@@ -92,7 +92,7 @@ const AdminDashboardCharts = ({
 
   const dueCustomers = useMemo(() => {
     const map: Record<string, { name: string; phone: string; totalDue: number; totalAmount: number; bookingCount: number; bookings: any[] }> = {};
-    bookings.filter(b => Number(b.due_amount || 0) > 0).forEach(b => {
+    bookings.filter(b => b.status !== "cancelled" && Number(b.due_amount || 0) > 0).forEach(b => {
       const key = b.guest_phone || b.guest_name || b.tracking_id;
       if (!map[key]) {
         map[key] = { name: b.guest_name || "N/A", phone: b.guest_phone || "", totalDue: 0, totalAmount: 0, bookingCount: 0, bookings: [] };
