@@ -115,57 +115,6 @@ const HeroSection = () => {
       <div className="relative z-10 container mx-auto px-4 pt-28 sm:pt-32 pb-16 sm:pb-20 text-center">
 
 
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.9 }}
-          className="flex flex-wrap gap-4 justify-center mb-16 sm:mb-20"
-        >
-          <a
-            href="#packages"
-            className="group bg-gradient-gold text-primary-foreground font-semibold px-10 py-4 rounded-xl text-sm hover:shadow-gold hover:scale-[1.02] transition-all duration-300 inline-flex items-center gap-2"
-          >
-            {ctaPrimary}
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </a>
-          <a
-            href="#contact"
-            className="border border-primary/40 text-white font-semibold px-10 py-4 rounded-xl text-sm hover:bg-primary/10 hover:border-primary/60 backdrop-blur-sm transition-all duration-300 inline-flex items-center"
-          >
-            {ctaSecondary}
-          </a>
-        </motion.div>
-
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 1.1 }}
-        >
-          <div className="bg-[hsl(220,25%,10%)]/60 backdrop-blur-2xl border border-primary/15 rounded-2xl p-6 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            {stats.map((stat: any, i: number) => {
-              const IconComp = defaultIcons[i % defaultIcons.length];
-              return (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 1.2 + i * 0.1 }}
-                  className={`flex items-center gap-3 ${i < stats.length - 1 ? "md:border-r md:border-primary/10" : ""} md:pr-4`}
-                >
-                  <div className="w-12 h-12 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center flex-shrink-0">
-                    <IconComp className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-xl sm:text-2xl font-heading font-bold text-white leading-none">{stat.value}</p>
-                    <p className="text-[11px] text-white/50 mt-1">{stat.label}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
       </div>
     </section>
   );
