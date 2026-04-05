@@ -115,7 +115,7 @@ const AdminDashboardCharts = ({
     }
     cards.push(
       { label: "Cash Balance", value: fmt(financials.cashBalance), icon: Wallet, color: financials.cashBalance >= 0 ? "text-primary" : "text-destructive", onClick: () => navigate("/admin/accounting") },
-      { label: "Total Bookings", value: bookings.length, icon: Package, color: "text-foreground", onClick: () => navigate("/admin/bookings") },
+      { label: "Total Bookings", value: bookings.filter(b => b.status !== "cancelled").length, icon: Package, color: "text-foreground", onClick: () => navigate("/admin/bookings") },
       { label: "Total Hajji", value: financials.totalHajji, icon: Users, color: "text-foreground", onClick: () => navigate("/admin/customers") },
       { label: "Customer Due", value: fmt(financials.customerDue), icon: UserCheck, color: financials.customerDue > 0 ? "text-yellow-500" : "text-emerald-500", onClick: () => setShowDueCustomers(true) },
     );
