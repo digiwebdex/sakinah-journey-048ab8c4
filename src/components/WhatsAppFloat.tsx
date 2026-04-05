@@ -7,7 +7,7 @@ const WhatsAppFloat = () => {
   const { language } = useLanguage();
   const lc = content?.[language];
 
-  const phone = content?.phone || "8801711993562";
+  const phone = content?.phone || "8801711999910";
   const defaultMsg = language === "bn"
     ? "আসসালামু আলাইকুম! Manasik Travel Hub এ স্বাগতম। কিভাবে সাহায্য করতে পারি?"
     : "Assalamu Alaikum! Welcome to Manasik Travel Hub. How can we help?";

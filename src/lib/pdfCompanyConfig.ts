@@ -15,12 +15,12 @@ export interface PdfCompanyConfig {
 const DEFAULT_CONFIG: PdfCompanyConfig = {
   company_name: "Manasik Travel Hub",
   tagline: "Hajj & Umrah Services",
-  phone: "+880 1711-993562",
+  phone: "+880 1711-999910",
   email: "manasiktravelhub@gmail.com",
   address: "595/1, Milk Vita Road, Three-way Intersection, Dewla, Tangail Sadar, Tangail",
   website: "https://manasiktravelhub.com",
   footer_text: "Thank you for choosing Manasik Travel Hub!",
-  footer_contact: "This is a computer-generated document. For queries: +880 1711-993562 | manasiktravelhub@gmail.com",
+  footer_contact: "This is a computer-generated document. For queries: +880 1711-999910 | manasiktravelhub@gmail.com",
 };
 
 let cachedConfig: PdfCompanyConfig | null = null;
