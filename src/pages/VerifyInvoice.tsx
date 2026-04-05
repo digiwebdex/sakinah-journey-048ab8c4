@@ -173,7 +173,7 @@ export default function VerifyInvoice() {
                 Manasik Travel Hub — Hajj & Umrah Services
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                +880 1711-999910 | manasiktravelhub@gmail.com
+                +880 1711-999910, +880 1711-999920 | manasiktravelhub@gmail.com
               </p>
             </div>
           </div>
