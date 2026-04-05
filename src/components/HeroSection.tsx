@@ -22,6 +22,18 @@ const HeroSection = () => {
   const badge = lc?.badge || t("hero.badge");
   const ctaPrimary = lc?.cta_primary || t("hero.ctaPrimary");
   const ctaSecondary = lc?.cta_secondary || t("hero.ctaSecondary");
+  
+  // CMS-managed Quranic verse
+  const quranArabic = content?.quran_arabic || "وَأَتِمُّوا الْحَجَّ وَالْعُمْرَةَ لِلَّهِ";
+  const quranTranslation = lc?.quran_translation || (language === "bn" ? "আর তোমরা আল্লাহর সন্তুষ্টির জন্য হজ্জ ও ওমরাহ পূর্ণ কর" : "And complete the Hajj and Umrah for Allah");
+  const quranReference = lc?.quran_reference || (language === "bn" ? "সূরা আল-বাকারা: ১৯৬" : "Surah Al-Baqarah: 196");
+
+  // CMS-managed hero slides
+  const cmsSlides = content?.hero_slides;
+  const activeSlides = cmsSlides && cmsSlides.length > 0
+    ? cmsSlides.map((s: any) => ({ image: s.src || s.image, alt: s.alt || "Hero slide" }))
+    : heroSlides;
+
   const stats = lc?.stats || [
     { value: "15+", label: t("hero.stat.years") },
     { value: "10K+", label: t("hero.stat.pilgrims") },
