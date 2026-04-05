@@ -17,7 +17,7 @@ const Footer = () => {
   const phone = content?.phone || "+880 1711-999910";
   const phone2 = content?.phone2 || "+880 1711-999920";
   const email = content?.email || "manasiktravelhub.info@gmail.com";
-  const address = lc?.address || (language === "bn" ? "৫৯৫/১, মিল্ক ভিটা রোড, তিন রাস্তার মোড়\nদেওলা, টাঙ্গাইল সদর, টাঙ্গাইল" : content?.address || "৫৯৫/১, মিল্ক ভিটা রোড, তিন রাস্তার মোড় সংলগ্ন\nদেওলা, টাঙ্গাইল সদর, টাঙ্গাইল");
+  const address = lc?.address || (language === "bn" ? "৫৯৫/১, মিল্ক ভিটা রোড, তিন রাস্তার মোড় সংলগ্ন,\nদেওলা, টাঙ্গাইল সদর, টাঙ্গাইল" : content?.address || "595/1, Milk Vita Road, Tin Rastar Mor Songlogno,\nDeola, Tangail Sadar, Tangail");
   const servicesList = lc?.services_list || (language === "bn" ? ["হজ প্যাকেজ", "উমরাহ প্যাকেজ", "ভিসা প্রসেসিং", "এয়ার টিকেট", "হোটেল বুকিং", "জিয়ারা ট্যুর"] : content?.services_list || ["Hajj Packages", "Umrah Packages", "Visa Processing", "Air Tickets", "Hotel Booking", "Ziyara Tours"]);
   const devName = content?.developer_name || "DigiWebDex";
   const devUrl = content?.developer_url || "https://digiwebdex.com";
@@ -106,16 +106,14 @@ const Footer = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="md:col-span-1">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="bg-white/95 rounded-xl p-1.5">
-                <img src={language === "bn" ? logoBn : logoEn} alt={`${companyName} Logo`} className="h-12 w-auto object-contain" />
-              </div>
-              <div>
-                <span className="font-heading text-lg font-bold text-white">{companyName}</span>
-                <span className="block text-xs tracking-[0.2em] text-white/60 uppercase">{tagline}</span>
+            <div className="mb-5">
+              <div className="bg-white/95 rounded-xl p-1.5 inline-block">
+                <img src={logoBn} alt="মানাসিক ট্রাভেল হাব Logo" className="h-14 w-auto object-contain" />
               </div>
             </div>
-            <p className="text-sm text-white/50 leading-relaxed mb-5">{description}</p>
+            <p className="text-sm leading-relaxed mb-5">
+              <span className="text-primary font-semibold italic">"হজ্ব ও উমরাহ সেবায় আমাদের চলার পথে দের যুগ ছাড়িয়ে এবং এক ধাপ এগিয়ে"</span>
+            </p>
             <div className="flex items-center gap-3">
               <a href={content?.facebook_url || "https://www.facebook.com/profile.php?id=61585173125908"} target="_blank" rel="noopener noreferrer" className="bg-white/8 hover:bg-primary/80 transition-all p-2.5 rounded-xl border border-white/10 hover:border-primary">
                 <Facebook className="h-4 w-4 text-white" />
