@@ -40,11 +40,7 @@ const HeroSection = () => {
     <section
       id="hero"
       className="relative w-full overflow-hidden
-        h-[50vh] min-h-[280px] max-h-[420px]
-        sm:h-[55vh] sm:min-h-[340px] sm:max-h-[500px]
-        md:h-[60vh] md:min-h-[400px] md:max-h-[600px]
-        lg:h-[70vh] lg:min-h-[480px] lg:max-h-[750px]
-        xl:h-[75vh] xl:max-h-[850px]"
+        min-h-[60vh] sm:min-h-[70vh] md:min-h-[80vh] lg:min-h-[90vh]"
     >
       {/* Background Images with Ken Burns effect */}
       <AnimatePresence mode="wait">
