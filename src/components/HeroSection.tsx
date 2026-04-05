@@ -41,7 +41,6 @@ const HeroSection = () => {
       id="hero"
       className="relative w-full overflow-hidden"
     >
-    >
       {/* Background Images with Ken Burns effect */}
       <AnimatePresence mode="wait">
         <motion.div
