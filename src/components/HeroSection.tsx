@@ -1,16 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Star, MapPin, Shield, Plane, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
-import heroKaaba from "@/assets/hero-kaaba-golden.jpg";
-import heroMedina from "@/assets/hero-medina.jpg";
-import heroHotel from "@/assets/hero-hotel.jpg";
+import heroBanner1 from "@/assets/hero-banner-1.jpg";
 import { useSiteContent } from "@/hooks/useSiteContent";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-const heroSlides = [
-  { image: heroKaaba, alt: "Holy Kaaba at Masjid al-Haram during golden sunset" },
-  { image: heroMedina, alt: "Prophet's Mosque Masjid an-Nabawi in Medina" },
-  { image: heroHotel, alt: "Premium hotel near Haram with luxury amenities" },
+const defaultSlides = [
+  { image: heroBanner1, alt: "Manasik Travel Hub - Hajj & Umrah Services" },
 ];
 
 const HeroSection = () => {
@@ -32,7 +28,7 @@ const HeroSection = () => {
   const cmsSlides = content?.hero_slides;
   const activeSlides = cmsSlides && cmsSlides.length > 0
     ? cmsSlides.map((s: any) => ({ image: s.src || s.image, alt: s.alt || "Hero slide" }))
-    : heroSlides;
+    : defaultSlides;
 
   const stats = lc?.stats || [
     { value: "15+", label: t("hero.stat.years") },
