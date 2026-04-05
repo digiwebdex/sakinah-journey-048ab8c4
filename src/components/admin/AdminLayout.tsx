@@ -42,34 +42,38 @@ export default function AdminLayout() {
 
   useEffect(() => {
     const checkAccess = async () => {
-      const { data: { session } } = await api.getSession();
-      if (!session) { navigate("/auth"); return; }
+      try {
+        const { data: { session } } = await api.getSession();
+        if (!session) { navigate("/auth", { replace: true }); return; }
 
-      const { data: { user } } = await api.getUser();
-      let roles: string[] = user?.roles || [];
+        const { data: { user } } = await api.getUser();
+        let roles: string[] = user?.roles || [];
 
-      // Fallback: if roles are empty, try fetching from localStorage user
-      if (roles.length === 0) {
-        try {
-          const localUser = JSON.parse(localStorage.getItem('rk_user') || 'null');
-          roles = localUser?.roles || [];
-        } catch {}
+        // Fallback: if roles are empty, try fetching from localStorage user
+        if (roles.length === 0) {
+          try {
+            const localUser = JSON.parse(localStorage.getItem('rk_user') || 'null');
+            roles = localUser?.roles || [];
+          } catch {}
+        }
+
+        if (roles.length === 0) {
+          toast.error("Access denied");
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
+        if (roles.includes("admin")) setRole("admin");
+        else if (roles.includes("accountant")) setRole("accountant");
+        else if (roles.includes("booking")) setRole("booking");
+        else if (roles.includes("cms")) setRole("cms");
+        else if (roles.includes("viewer")) setRole("viewer");
+        else { toast.error("Access denied"); navigate("/dashboard", { replace: true }); return; }
+
+        setLoading(false);
+      } catch {
+        navigate("/auth", { replace: true });
       }
-
-      if (roles.length === 0) {
-        toast.error("Access denied");
-        navigate("/dashboard");
-        return;
-      }
-
-      if (roles.includes("admin")) setRole("admin");
-      else if (roles.includes("accountant")) setRole("accountant");
-      else if (roles.includes("booking")) setRole("booking");
-      else if (roles.includes("cms")) setRole("cms");
-      else if (roles.includes("viewer")) setRole("viewer");
-      else { toast.error("Access denied"); navigate("/dashboard"); return; }
-
-      setLoading(false);
     };
     checkAccess();
   }, [navigate]);
