@@ -45,10 +45,10 @@ const HeroSection = () => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      setCurrentSlide((prev) => (prev + 1) % activeSlides.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [activeSlides.length]);
 
   const goTo = useCallback((dir: number) => {
     setCurrentSlide((prev) => (prev + dir + heroSlides.length) % heroSlides.length);
