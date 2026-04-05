@@ -30,6 +30,10 @@ const SECTION_CONFIG: Record<string, { label: string; labelBn: string; icon: any
       { key: "quran_reference", label: "Quran Reference", type: "text", bilingual: true },
       { key: "cta_primary", label: "Primary Button Text", type: "text", bilingual: true },
       { key: "cta_secondary", label: "Secondary Button Text", type: "text", bilingual: true },
+      { key: "hero_slides", label: "Hero Slider Images (src = image URL, alt = description)", type: "array", bilingual: false, arrayFields: [
+        { key: "src", label: "Image URL / Path", type: "text" },
+        { key: "alt", label: "Alt Text", type: "text" },
+      ]},
       { key: "stats", label: "Stats", type: "array", bilingual: true, arrayFields: [
         { key: "value", label: "Value", type: "text" },
         { key: "label", label: "Label", type: "text" },
