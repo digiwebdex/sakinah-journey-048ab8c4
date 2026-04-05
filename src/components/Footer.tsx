@@ -83,13 +83,13 @@ const Footer = () => {
         <div className="absolute inset-0 flex items-center justify-center text-center px-4">
           <div className="animate-fade-in">
             <p className="text-primary font-heading text-sm md:text-base uppercase tracking-[0.3em] mb-2 drop-shadow-lg">
-              {language === "bn" ? "পবিত্র যাত্রার সঙ্গী" : "Your Sacred Journey Partner"}
+              {lc?.journey_subtitle || (language === "bn" ? "পবিত্র যাত্রার সঙ্গী" : "Your Sacred Journey Partner")}
             </p>
             <h3 className="text-white text-2xl md:text-4xl font-heading font-bold mb-3 drop-shadow-lg">
-              {language === "bn" ? "বাংলাদেশ থেকে মক্কা শরীফ" : "Bangladesh to Makkah Sharif"}
+              {lc?.journey_heading || (language === "bn" ? "বাংলাদেশ থেকে মক্কা শরীফ" : "Bangladesh to Makkah Sharif")}
             </h3>
             <p className="text-white/80 text-sm md:text-base max-w-xl mx-auto drop-shadow-md">
-              {language === "bn" ? "বিশ্বস্ততা ও নিষ্ঠার সাথে আপনার পবিত্র যাত্রা সম্পন্ন করি" : "Completing your sacred journey with trust and dedication"}
+              {lc?.journey_description || (language === "bn" ? "বিশ্বস্ততা ও নিষ্ঠার সাথে আপনার পবিত্র যাত্রা সম্পন্ন করি" : "Completing your sacred journey with trust and dedication")}
             </p>
           </div>
         </div>
