@@ -28,7 +28,7 @@ const HeroSection = () => {
   const cmsSlides = content?.hero_slides;
   const activeSlides = cmsSlides && cmsSlides.length > 0
     ? cmsSlides.map((s: any) => ({ image: s.src || s.image, alt: s.alt || "Hero slide" }))
-    : heroSlides;
+    : defaultSlides;
 
   const stats = lc?.stats || [
     { value: "15+", label: t("hero.stat.years") },
