@@ -93,12 +93,16 @@ const ContactSection = forwardRef<HTMLElement>(function ContactSection(_, ref) {
             <input type="email" placeholder={t("contact.emailAddress")} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={`w-full ${inputClass}`} />
             <select value={form.service} onChange={(e) => setForm({ ...form, service: e.target.value })} className={`w-full ${inputClass} text-muted-foreground`}>
               <option value="">{t("contact.selectService")}</option>
-              <option>{t("contact.hajjPackage")}</option>
-              <option>{t("contact.umrahPackage")}</option>
-              <option>{t("contact.visaProcessing")}</option>
-              <option>{t("contact.airTicketService")}</option>
-              <option>{t("contact.hotelBooking")}</option>
-              <option>{t("contact.other")}</option>
+              {(lc?.form_services || content?.form_services || [
+                t("contact.hajjPackage"),
+                t("contact.umrahPackage"),
+                t("contact.visaProcessing"),
+                t("contact.airTicketService"),
+                t("contact.hotelBooking"),
+                t("contact.other"),
+              ]).map((svc: string) => (
+                <option key={svc}>{svc}</option>
+              ))}
             </select>
             <textarea rows={4} placeholder={t("contact.yourMessage")} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className={`w-full ${inputClass} resize-none`} />
             <button type="submit" disabled={loading} className="w-full bg-gradient-gold text-primary-foreground font-semibold py-3.5 rounded-xl text-sm hover:opacity-90 transition-opacity shadow-gold disabled:opacity-50 inline-flex items-center justify-center gap-2">

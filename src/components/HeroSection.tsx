@@ -22,6 +22,18 @@ const HeroSection = () => {
   const badge = lc?.badge || t("hero.badge");
   const ctaPrimary = lc?.cta_primary || t("hero.ctaPrimary");
   const ctaSecondary = lc?.cta_secondary || t("hero.ctaSecondary");
+  
+  // CMS-managed Quranic verse
+  const quranArabic = content?.quran_arabic || "وَأَتِمُّوا الْحَجَّ وَالْعُمْرَةَ لِلَّهِ";
+  const quranTranslation = lc?.quran_translation || (language === "bn" ? "আর তোমরা আল্লাহর সন্তুষ্টির জন্য হজ্জ ও ওমরাহ পূর্ণ কর" : "And complete the Hajj and Umrah for Allah");
+  const quranReference = lc?.quran_reference || (language === "bn" ? "সূরা আল-বাকারা: ১৯৬" : "Surah Al-Baqarah: 196");
+
+  // CMS-managed hero slides
+  const cmsSlides = content?.hero_slides;
+  const activeSlides = cmsSlides && cmsSlides.length > 0
+    ? cmsSlides.map((s: any) => ({ image: s.src || s.image, alt: s.alt || "Hero slide" }))
+    : heroSlides;
+
   const stats = lc?.stats || [
     { value: "15+", label: t("hero.stat.years") },
     { value: "10K+", label: t("hero.stat.pilgrims") },
@@ -33,13 +45,13 @@ const HeroSection = () => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      setCurrentSlide((prev) => (prev + 1) % activeSlides.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [activeSlides.length]);
 
   const goTo = useCallback((dir: number) => {
-    setCurrentSlide((prev) => (prev + dir + heroSlides.length) % heroSlides.length);
+    setCurrentSlide((prev) => (prev + dir + activeSlides.length) % activeSlides.length);
   }, []);
 
   return (
@@ -55,8 +67,8 @@ const HeroSection = () => {
           className="absolute inset-0"
         >
           <img
-            src={heroSlides[currentSlide].image}
-            alt={heroSlides[currentSlide].alt}
+             src={activeSlides[currentSlide]?.image}
+            alt={activeSlides[currentSlide]?.alt}
             className="w-full h-full object-cover"
             loading="eager"
             fetchPriority="high"
@@ -92,7 +104,7 @@ const HeroSection = () => {
 
       {/* Slide Indicators */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-        {heroSlides.map((_, i) => (
+        {activeSlides.map((_: any, i: number) => (
           <button
             key={i}
             onClick={() => setCurrentSlide(i)}
@@ -140,7 +152,7 @@ const HeroSection = () => {
             dir="rtl"
             style={{ fontFamily: "'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif" }}
           >
-            وَأَتِمُّوا الْحَجَّ وَالْعُمْرَةَ لِلَّهِ
+            {quranArabic}
           </motion.p>
 
           <motion.p
@@ -149,7 +161,7 @@ const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="text-xl sm:text-2xl md:text-3xl font-semibold italic text-gradient-gold leading-relaxed"
           >
-            "আর তোমরা আল্লাহর সন্তুষ্টির জন্য হজ্জ ও ওমরাহ পূর্ণ কর"
+            "{quranTranslation}"
           </motion.p>
 
           <motion.p
@@ -158,7 +170,7 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.8 }}
             className="text-sm text-white/50 mt-4 tracking-widest"
           >
-            — সূরা আল-বাকারা: ১৯৬
+            — {quranReference}
           </motion.p>
 
           {/* Decorative divider bottom */}

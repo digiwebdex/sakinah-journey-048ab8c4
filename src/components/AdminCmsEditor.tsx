@@ -30,6 +30,10 @@ const SECTION_CONFIG: Record<string, { label: string; labelBn: string; icon: any
       { key: "quran_reference", label: "Quran Reference", type: "text", bilingual: true },
       { key: "cta_primary", label: "Primary Button Text", type: "text", bilingual: true },
       { key: "cta_secondary", label: "Secondary Button Text", type: "text", bilingual: true },
+      { key: "hero_slides", label: "Hero Slider Images (src = image URL, alt = description)", type: "array", bilingual: false, arrayFields: [
+        { key: "src", label: "Image URL / Path", type: "text" },
+        { key: "alt", label: "Alt Text", type: "text" },
+      ]},
       { key: "stats", label: "Stats", type: "array", bilingual: true, arrayFields: [
         { key: "value", label: "Value", type: "text" },
         { key: "label", label: "Label", type: "text" },
@@ -222,6 +226,11 @@ const SECTION_CONFIG: Record<string, { label: string; labelBn: string; icon: any
       { key: "instagram_url", label: "Instagram URL", type: "text", bilingual: false },
       { key: "tiktok_url", label: "TikTok URL", type: "text", bilingual: false },
       { key: "services_list", label: "Services List (one per line)", type: "string_array", bilingual: true },
+      { key: "journey_subtitle", label: "Journey Banner Subtitle", type: "text", bilingual: true },
+      { key: "journey_heading", label: "Journey Banner Heading", type: "text", bilingual: true },
+      { key: "journey_description", label: "Journey Banner Description", type: "text", bilingual: true },
+      { key: "journey_from", label: "Journey From Label (e.g. 🇧🇩 বাংলাদেশ)", type: "text", bilingual: true },
+      { key: "journey_to", label: "Journey To Label (e.g. 🕋 মক্কা শরীফ)", type: "text", bilingual: true },
       { key: "developer_name", label: "Developer Name", type: "text", bilingual: false },
       { key: "developer_url", label: "Developer URL", type: "text", bilingual: false },
     ],
