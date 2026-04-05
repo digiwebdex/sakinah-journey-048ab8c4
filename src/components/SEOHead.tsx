@@ -108,7 +108,6 @@ export function organizationJsonLd() {
         availableLanguage: ["Bengali", "English"],
       },
     ],
-    },
   };
 }
 
