@@ -1,42 +1,76 @@
 
+## Full CMS Audit Results
 
-## Analysis
+### ✅ Already Dynamic (CMS-Managed via Admin Panel)
+These are ALL editable from admin → CMS page:
 
-Currently, "মোট প্রাপ্ত" and "মোট বকেয়া" are calculated from **booking-level** data (`paid_by_moallem`, `moallem_due`). The user wants these to be based on the **contracted_amount** instead:
+| Section | Status | Admin Control |
+|---------|--------|--------------|
+| Hero Section | ✅ Dynamic | Badge, headings, CTAs, stats (bilingual) |
+| Navbar | ✅ Dynamic | Company name, tagline, phone, nav links |
+| Services | ✅ Dynamic | Label, heading, items with icons (bilingual repeater) |
+| About | ✅ Dynamic | Label, heading, description, reasons (bilingual repeater) |
+| Packages | ✅ Dynamic | Label, heading, description, button texts |
+| Facilities | ✅ Dynamic | Label, heading, items (bilingual repeater) |
+| Gallery | ✅ Dynamic | Label, heading, items (image/video repeater) |
+| Guidelines | ✅ Dynamic | Label, heading, steps, dos/don'ts |
+| Video Guide | ✅ Dynamic | Label, heading, video tutorials repeater |
+| Testimonials | ✅ Dynamic | Label, heading, review items repeater |
+| Contact | ✅ Dynamic | Phone, email, location, hours, form services |
+| WhatsApp | ✅ Dynamic | Phone, message, button text |
+| Footer | ✅ Dynamic | Company name, tagline, description, phone, email, address, social URLs, services list, developer info |
+| Privacy Policy | ✅ Dynamic | Title, sections (heading+body repeater) |
+| Terms & Conditions | ✅ Dynamic | Title, sections repeater |
+| Refund Policy | ✅ Dynamic | Title, sections repeater |
 
-- **মোট বকেয়া** = `contracted_amount` - total payments received from moallem
-- **মোট প্রাপ্ত** = total payments received from moallem (sum of `moallem_payments`)
+### ✅ Already Dynamic (Admin Settings)
+| Feature | Status |
+|---------|--------|
+| Section Show/Hide | ✅ Section Visibility Manager |
+| Menu Show/Hide | ✅ Menu Visibility Manager |
+| PDF/Invoice Branding | ✅ PDF Company Settings |
+| SEO Meta Tags | ✅ SEO Settings Page |
+| Notification Events | ✅ Notification Settings |
+| Packages CRUD | ✅ Admin Packages Page |
+| Hotels CRUD | ✅ Admin Hotels Page |
+| Blog Posts CRUD | ✅ CMS Blog Manager |
+| User Management | ✅ Admin User Manager |
+| Version History | ✅ CMS Version History |
 
-As the moallem pays installments, বকেয়া decreases and প্রাপ্ত increases.
+### 🔴 Remaining Gaps (What's Still Hardcoded)
 
-## Plan
+1. **Hero Slider Images** - 3 images imported from JS assets, not admin-uploadable
+2. **Footer Journey Banner** - Image hardcoded from assets
+3. **Logo** - File-based import, not admin-changeable
+4. **Favicon** - Hardcoded in index.html
+5. **Quranic Verse Arabic Text** - Hardcoded in HeroSection
+6. **Footer Journey Section Text** - Hardcoded Bengali/English text
+7. **Contact Form Service Dropdown** - Uses i18n translations, not CMS
+8. **Hero Slide Images** - No admin upload for slider backgrounds
 
-### 1. Update AdminMoallemsPage.tsx (list page)
+### 📋 Plan to Close Remaining Gaps
 
-Change the stats calculation logic:
-- Instead of using `bookings.paid_by_moallem` and `bookings.moallem_due`, compute:
-  - `received` = `moallem.total_deposit` (already maintained by DB trigger from moallem_payments)
-  - `due` = `moallem.contracted_amount - moallem.total_deposit`
-- Update KPI summary cards and table columns to use this new formula
-- No need to fetch bookings for these stats anymore; the moallems table already has `total_deposit`
+**Phase 1: Make Hero Slider Images Admin-Managed**
+- Add `hero_slides` field to hero CMS section (with image URL + alt text)
+- Frontend reads slide images from CMS, falls back to defaults
 
-### 2. Update AdminMoallemProfilePage.tsx (profile page)
+**Phase 2: Make Footer Journey Banner Admin-Managed**
+- Add journey banner fields to footer CMS (image URL, texts)
+- Frontend reads from CMS
 
-Change KPI computation:
-- `totalPaid` = sum of moallem_payments (already correct)
-- `totalMoallemDue` = `moallem.contracted_amount - totalPaid` (instead of sum of `bookings.moallem_due`)
-- Keep `totalSelling` as `contracted_amount` (the contract value, not booking totals)
+**Phase 3: Make Quranic Verse Fully CMS-Managed**
+- The hero CMS already has `quran_arabic`, `quran_translation`, `quran_reference` fields
+- But the HeroSection component doesn't read them - wire it up
 
-### 3. Update Reports page (moallem tab)
+**Phase 4: Make Contact Form Services CMS-Driven**
+- The contact CMS already has `form_services` field
+- Wire the contact form dropdown to use it
 
-Ensure the moallem report rows use `contracted_amount` as the base for due/received calculations.
+**Phase 5: Logo/Favicon Note**
+- Logo and favicon require file uploads - currently the admin can't upload new logos
+- This would need a file upload UI in admin settings + storage integration
+- Mark as "needs admin file upload feature"
 
-### Technical Details
-
-**Files to modify:**
-- `src/pages/admin/AdminMoallemsPage.tsx` — Change `moallemStats` to use `contracted_amount - total_deposit` for due, `total_deposit` for received directly from moallems table
-- `src/pages/admin/AdminMoallemProfilePage.tsx` — Change `totalMoallemDue` to `contracted_amount - totalPaid`, change `totalSelling` to `contracted_amount`
-- `src/pages/admin/AdminReportsPage.tsx` — Update moallem report rows if they use booking-level stats
-
-No database changes needed — `moallems.total_deposit` and `moallems.contracted_amount` columns already exist and are maintained by triggers.
-
+### Decision Needed
+Should I proceed with closing all remaining gaps (Phases 1-4)?
+Phase 5 (logo/favicon upload) requires more significant infrastructure work.
