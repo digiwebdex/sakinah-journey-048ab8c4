@@ -170,7 +170,7 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.8 }}
             className="text-sm text-white/50 mt-4 tracking-widest"
           >
-            — সূরা আল-বাকারা: ১৯৬
+            — {quranReference}
           </motion.p>
 
           {/* Decorative divider bottom */}
