@@ -332,7 +332,6 @@ function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string): number
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
-  doc.text("Hajj & Umrah Services", textX, 23);
 
   const contactParts: string[] = [];
   if (company.phone) contactParts.push(`Tel: ${company.phone}`);
