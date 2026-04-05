@@ -113,16 +113,6 @@ const HeroSection = () => {
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-gold z-10" />
 
       <div className="relative z-10 container mx-auto px-4 pt-28 sm:pt-32 pb-16 sm:pb-20 text-center">
-        {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 bg-primary/15 backdrop-blur-xl border border-primary/30 rounded-full px-6 py-3 mb-10 overflow-visible"
-        >
-          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <span className="text-primary text-xs font-semibold tracking-[0.25em] uppercase">{badge}</span>
-        </motion.div>
 
         {/* Quranic Verse */}
         <motion.div
