@@ -106,16 +106,14 @@ const Footer = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="md:col-span-1">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="bg-white/95 rounded-xl p-1.5">
-                <img src={language === "bn" ? logoBn : logoEn} alt={`${companyName} Logo`} className="h-12 w-auto object-contain" />
-              </div>
-              <div>
-                <span className="font-heading text-lg font-bold text-white">{companyName}</span>
-                <span className="block text-xs tracking-[0.2em] text-white/60 uppercase">{tagline}</span>
+            <div className="mb-5">
+              <div className="bg-white/95 rounded-xl p-1.5 inline-block">
+                <img src={logoBn} alt="মানাসিক ট্রাভেল হাব Logo" className="h-14 w-auto object-contain" />
               </div>
             </div>
-            <p className="text-sm text-white/50 leading-relaxed mb-5">{description}</p>
+            <p className="text-sm leading-relaxed mb-5">
+              <span className="text-primary font-semibold italic">"হজ্ব ও উমরাহ সেবায় আমাদের চলার পথে দের যুগ ছাড়িয়ে এবং এক ধাপ এগিয়ে"</span>
+            </p>
             <div className="flex items-center gap-3">
               <a href={content?.facebook_url || "https://www.facebook.com/profile.php?id=61585173125908"} target="_blank" rel="noopener noreferrer" className="bg-white/8 hover:bg-primary/80 transition-all p-2.5 rounded-xl border border-white/10 hover:border-primary">
                 <Facebook className="h-4 w-4 text-white" />
