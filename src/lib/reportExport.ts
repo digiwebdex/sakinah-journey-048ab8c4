@@ -121,9 +121,8 @@ function addCompanyHeader(doc: jsPDF, logoBase64: string | null, qrDataUrl: stri
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
-  doc.text(cfg.tagline, textX, 23);
-  doc.text(`Tel: ${cfg.phone}  |  Email: ${cfg.email}`, textX, 28);
-  doc.text(cfg.address, textX, 33);
+  doc.text(`Tel: ${cfg.phone}  |  Email: ${cfg.email}`, textX, 23);
+  doc.text(cfg.address, textX, 28);
 
   // Gold accent line
   doc.setDrawColor(GOLD.r, GOLD.g, GOLD.b);
