@@ -929,7 +929,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "verify.companyFooter": "মানাসিক ট্রাভেল হাব — হজ ও উমরাহ সেবা",
 
     // Invoice Page
-    "invoice.searchPlaceholder": "ট্র্যাকিং আইডি লিখুন (যেমন RK-XXXXXXXX)",
+    "invoice.searchPlaceholder": "ট্র্যাকিং আইডি লিখুন (যেমন MTH-XXXXXXXX)",
     "invoice.searchButton": "খুঁজুন",
     "invoice.loading": "লোড হচ্ছে...",
     "invoice.notFound": "বুকিং পাওয়া যায়নি। ট্র্যাকিং আইডি পরীক্ষা করুন।",
