@@ -533,12 +533,21 @@ const AdminCmsEditor = () => {
                                 {field.arrayFields!.map((af) => (
                                   <div key={af.key}>
                                     <label className="text-[10px] text-muted-foreground">{af.label}</label>
-                                    <input
-                                      className={inputClass}
-                                      value={item[af.key] || ""}
-                                      onChange={(e) => handleArrayItemChange(sectionKey, field, idx, af.key, e.target.value)}
-                                      dir={editLang === "bn" ? "auto" : "ltr"}
-                                    />
+                                    {af.type === "image_upload" ? (
+                                      <BannerImageUpload
+                                        currentUrl={item[af.key] || ""}
+                                        label={af.label}
+                                        sizeHint={af.label}
+                                        onUpload={(url) => handleArrayItemChange(sectionKey, field, idx, af.key, url)}
+                                      />
+                                    ) : (
+                                      <input
+                                        className={inputClass}
+                                        value={item[af.key] || ""}
+                                        onChange={(e) => handleArrayItemChange(sectionKey, field, idx, af.key, e.target.value)}
+                                        dir={editLang === "bn" ? "auto" : "ltr"}
+                                      />
+                                    )}
                                   </div>
                                 ))}
                               </div>
