@@ -33,6 +33,7 @@ export default function PdfSettingsManager() {
           company_name: val.company_name || DEFAULT_CONFIG.company_name,
           tagline: val.tagline || DEFAULT_CONFIG.tagline,
           phone: val.phone || DEFAULT_CONFIG.phone,
+          phone2: val.phone2 || DEFAULT_CONFIG.phone2,
           email: val.email || DEFAULT_CONFIG.email,
           address: val.address || DEFAULT_CONFIG.address,
           website: val.website || DEFAULT_CONFIG.website,
@@ -131,6 +132,15 @@ export default function PdfSettingsManager() {
             value={config.phone}
             onChange={(e) => updateField("phone", e.target.value)}
             placeholder="+880 1711-999910"
+          />
+        </div>
+        <div>
+          <Label className="text-xs font-semibold mb-1.5 block">Phone 2</Label>
+          <Input
+            className={inputClass}
+            value={config.phone2}
+            onChange={(e) => updateField("phone2", e.target.value)}
+            placeholder="+880 1711-999920"
           />
         </div>
         <div>
