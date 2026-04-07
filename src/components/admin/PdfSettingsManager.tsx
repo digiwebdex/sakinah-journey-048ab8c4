@@ -135,6 +135,15 @@ export default function PdfSettingsManager() {
           />
         </div>
         <div>
+          <Label className="text-xs font-semibold mb-1.5 block">Phone 2</Label>
+          <Input
+            className={inputClass}
+            value={config.phone2}
+            onChange={(e) => updateField("phone2", e.target.value)}
+            placeholder="+880 1711-999920"
+          />
+        </div>
+        <div>
           <Label className="text-xs font-semibold mb-1.5 block">Email</Label>
           <Input
             className={inputClass}
