@@ -59,7 +59,7 @@ export default function AdminCustomersPage() {
     setLoading(true);
     const [pRes, bRes, payRes] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-      supabase.from("bookings").select("id, user_id, total_amount, paid_amount, due_amount, num_travelers"),
+      supabase.from("bookings").select("id, user_id, total_amount, paid_amount, due_amount, num_travelers, status"),
       supabase.from("payments").select("id, user_id, amount, status").eq("status", "completed"),
     ]);
     setCustomers(pRes.data || []);
