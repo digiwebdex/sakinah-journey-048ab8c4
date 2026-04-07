@@ -43,7 +43,7 @@ async function generateCompanyQr(): Promise<string> {
   } catch { return ""; }
 }
 
-function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string, qrDataUrl: string, cfg: PdfCompanyConfig): number {
+async function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string, qrDataUrl: string, cfg: PdfCompanyConfig): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
 
   // Top gold accent bar
@@ -72,7 +72,13 @@ function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string, qrDataU
   if (company.phone) contactParts.push(`Tel: ${company.phone}`);
   if (company.email) contactParts.push(`Email: ${company.email}`);
   if (contactParts.length) doc.text(contactParts.join("  |  "), textX, 23);
-  if (company.address) doc.text(company.address, textX, 28);
+  if (company.address) {
+    if (hasBengali(company.address)) {
+      await addBengaliText(doc, company.address, textX, 28, { fontSize: 7, color: "#646464" });
+    } else {
+      doc.text(company.address, textX, 28);
+    }
+  }
 
   // Gold accent line
   doc.setDrawColor(GOLD.r, GOLD.g, GOLD.b);
@@ -152,7 +158,7 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
     generateCompanyQr(),
     getPdfCompanyConfig(),
   ]);
-  let y = addHeader(doc, company, logoBase64, companyQr, cfg);
+  let y = await addHeader(doc, company, logoBase64, companyQr, cfg);
   const pw = doc.internal.pageSize.getWidth();
 
   // Watermark based on moallem summary
@@ -272,7 +278,7 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
     generateCompanyQr(),
     getPdfCompanyConfig(),
   ]);
-  let y = addHeader(doc, company, logoBase64, companyQr, cfg);
+  let y = await addHeader(doc, company, logoBase64, companyQr, cfg);
   const pw = doc.internal.pageSize.getWidth();
 
   // Watermark based on supplier summary
@@ -439,7 +445,7 @@ export async function generateCustomerPdf(data: CustomerPdfData, company: Compan
     generateCompanyQr(),
     getPdfCompanyConfig(),
   ]);
-  let y = addHeader(doc, company, logoBase64, companyQr, cfg);
+  let y = await addHeader(doc, company, logoBase64, companyQr, cfg);
   const pw = doc.internal.pageSize.getWidth();
 
   // Watermark based on customer summary

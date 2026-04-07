@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 import logoImg from "@/assets/logo-pdf.png";
 import QRCode from "qrcode";
 import { getSignatureData, SignatureData } from "./pdfSignature";
-import { registerBengaliFont, bengaliCellHook } from "./pdfFontLoader";
+import { registerBengaliFont, bengaliCellHook, hasBengali, addBengaliText } from "./pdfFontLoader";
 import { getPdfCompanyConfig, type PdfCompanyConfig } from "./pdfCompanyConfig";
 import { formatBDT } from "@/lib/utils";
 
@@ -96,7 +96,7 @@ async function generateCompanyQr(): Promise<string> {
 }
 
 // ── Company Pad Header (matches invoice format) ──
-function addCompanyHeader(doc: jsPDF, logoBase64: string | null, qrDataUrl: string, cfg: PdfCompanyConfig): number {
+async function addCompanyHeader(doc: jsPDF, logoBase64: string | null, qrDataUrl: string, cfg: PdfCompanyConfig): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
 
   // Top gold accent bar
@@ -123,7 +123,11 @@ function addCompanyHeader(doc: jsPDF, logoBase64: string | null, qrDataUrl: stri
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
   doc.text(`Tel: ${cfg.phone}  |  Email: ${cfg.email}`, textX, 23);
-  doc.text(cfg.address, textX, 28);
+  if (hasBengali(cfg.address)) {
+    await addBengaliText(doc, cfg.address, textX, 28, { fontSize: 7, color: "#646464" });
+  } else {
+    doc.text(cfg.address, textX, 28);
+  }
 
   // Gold accent line
   doc.setDrawColor(GOLD.r, GOLD.g, GOLD.b);
@@ -224,7 +228,7 @@ export async function exportPDF({ title, columns, rows, summary }: ReportData) {
   const doc = new jsPDF();
   await registerBengaliFont(doc);
 
-  let y = addCompanyHeader(doc, logoBase64, qrDataUrl, cfg);
+  let y = await addCompanyHeader(doc, logoBase64, qrDataUrl, cfg);
   y = addReportTitle(doc, y, title);
 
   const fmtCell = (val: string | number) =>
@@ -277,7 +281,7 @@ export async function exportHajjiPDF({ title, customers }: HajjiReportData) {
   await registerBengaliFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
 
-  let y = addCompanyHeader(doc, logoBase64, qrDataUrl, cfg);
+  let y = await addCompanyHeader(doc, logoBase64, qrDataUrl, cfg);
   y = addReportTitle(doc, y, title);
 
   

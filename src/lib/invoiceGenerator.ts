@@ -312,7 +312,7 @@ function buildFallbackMembers(booking: InvoiceBooking, customer: InvoiceCustomer
 // SHARED LAYOUT FUNCTIONS
 // ═══════════════════════════════════════════════════════════════
 
-function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string): number {
+async function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
 
   // Top gold accent bar
@@ -338,8 +338,12 @@ function addHeader(doc: jsPDF, company: CompanyInfo, logoBase64: string): number
   if (company.email) contactParts.push(`Email: ${company.email}`);
   if (contactParts.length) doc.text(contactParts.join("  |  "), textX, 23);
   if (company.address) {
-    const addr = company.address.length > 70 ? company.address.substring(0, 70) + "..." : company.address;
-    doc.text(addr, textX, 28);
+    if (hasBengali(company.address)) {
+      await addBengaliText(doc, company.address, textX, 28, { fontSize: 7, color: "#646464" });
+    } else {
+      const addr = company.address.length > 80 ? company.address.substring(0, 80) + "..." : company.address;
+      doc.text(addr, textX, 28);
+    }
   }
 
   // Gold accent line
@@ -738,7 +742,7 @@ async function generateIndividualInvoice(
   qrDataUrl: string, moallemName: string | null, cfg: PdfCompanyConfig
 ) {
   const pageWidth = doc.internal.pageSize.getWidth();
-  let y = addHeader(doc, { name: cfg.company_name, phone: cfg.phone, email: cfg.email, address: cfg.address } as CompanyInfo, logoBase64);
+  let y = await addHeader(doc, { name: cfg.company_name, phone: cfg.phone, email: cfg.email, address: cfg.address } as CompanyInfo, logoBase64);
 
 
   // QR verification stamp (small, right side)
@@ -818,7 +822,7 @@ async function generateFamilyInvoice(
   logoBase64: string, sig: SignatureData, qrDataUrl: string, moallemName: string | null, cfg: PdfCompanyConfig
 ) {
   const pageWidth = doc.internal.pageSize.getWidth();
-  let y = addHeader(doc, { name: cfg.company_name, phone: cfg.phone, email: cfg.email, address: cfg.address } as CompanyInfo, logoBase64);
+  let y = await addHeader(doc, { name: cfg.company_name, phone: cfg.phone, email: cfg.email, address: cfg.address } as CompanyInfo, logoBase64);
 
 
   addQrToDoc(doc, qrDataUrl, { size: 16, trackingId: booking.tracking_id, position: "top" });
@@ -1078,7 +1082,7 @@ export async function generateReceipt(
     getPdfCompanyConfig(),
   ]);
   const pageWidth = doc.internal.pageSize.getWidth();
-  let y = addHeader(doc, company, logoBase64);
+  let y = await addHeader(doc, company, logoBase64);
 
 
   addQrToDoc(doc, qrDataUrl, { size: 16, trackingId: booking.tracking_id, position: "top" });
@@ -1179,7 +1183,7 @@ export async function generateCommissionReceipt(
     getPdfCompanyConfig(),
   ]);
   const pageWidth = doc.internal.pageSize.getWidth();
-  let y = addHeader(doc, company, logoBase64);
+  let y = await addHeader(doc, company, logoBase64);
 
 
   addQrToDoc(doc, qrDataUrl, { size: 16, trackingId: data.bookingTrackingId, position: "top" });
