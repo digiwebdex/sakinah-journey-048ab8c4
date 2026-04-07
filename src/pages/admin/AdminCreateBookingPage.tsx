@@ -509,6 +509,15 @@ export default function AdminCreateBookingPage() {
         <h3 className="font-heading font-semibold text-sm">Additional Information</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
+            <label className="text-xs text-muted-foreground block mb-1">Supplier Agent (Optional)</label>
+            <select className={inputClass} value={form.supplier_agent_id} onChange={(e) => setForm({ ...form, supplier_agent_id: e.target.value })}>
+              <option value="">-- Select Supplier --</option>
+              {suppliers.map((s) => (
+                <option key={s.id} value={s.id}>{s.agent_name} {s.company_name ? `(${s.company_name})` : ""}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="text-xs text-muted-foreground block mb-1">Moallem (Optional)</label>
             <select className={inputClass} value={form.moallem_id} onChange={(e) => setForm({ ...form, moallem_id: e.target.value })}>
               <option value="">-- Select Moallem --</option>
