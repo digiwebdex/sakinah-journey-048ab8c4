@@ -96,7 +96,7 @@ async function generateCompanyQr(): Promise<string> {
 }
 
 // ── Company Pad Header (matches invoice format) ──
-function addCompanyHeader(doc: jsPDF, logoBase64: string | null, qrDataUrl: string, cfg: PdfCompanyConfig): number {
+async function addCompanyHeader(doc: jsPDF, logoBase64: string | null, qrDataUrl: string, cfg: PdfCompanyConfig): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
 
   // Top gold accent bar
@@ -123,7 +123,11 @@ function addCompanyHeader(doc: jsPDF, logoBase64: string | null, qrDataUrl: stri
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
   doc.text(`Tel: ${cfg.phone}  |  Email: ${cfg.email}`, textX, 23);
-  doc.text(cfg.address, textX, 28);
+  if (hasBengali(cfg.address)) {
+    await addBengaliText(doc, cfg.address, textX, 28, { fontSize: 7, color: "#646464" });
+  } else {
+    doc.text(cfg.address, textX, 28);
+  }
 
   // Gold accent line
   doc.setDrawColor(GOLD.r, GOLD.g, GOLD.b);
