@@ -28,7 +28,7 @@ interface Props {
   onMarkPaid: (id: string) => void;
 }
 
-const fmt = (n: number) => `BDT ${n.toLocaleString()}`;
+import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 
 const AdminDashboardCharts = ({
   bookings, payments, expenses = [], accounts = [],

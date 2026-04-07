@@ -20,7 +20,7 @@ import {
 import AdminActionMenu, { ActionItem } from "@/components/admin/AdminActionMenu";
 import { normalizePhone, getPhoneError, handlePhoneChange } from "@/lib/phoneValidation";
 
-const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
+import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 const PAGE_SIZE = 15;
 
 const inputClass =

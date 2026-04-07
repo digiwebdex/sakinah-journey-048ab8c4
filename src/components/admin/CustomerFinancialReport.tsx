@@ -20,7 +20,7 @@ interface CustomerFinancialReportProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
+import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 
 export default function CustomerFinancialReport({ customer, open, onOpenChange }: CustomerFinancialReportProps) {
   const [bookings, setBookings] = useState<any[]>([]);

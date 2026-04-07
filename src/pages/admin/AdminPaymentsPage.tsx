@@ -11,7 +11,7 @@ import AdminActionMenu from "@/components/admin/AdminActionMenu";
 import CustomerSearchSelect from "@/components/admin/CustomerSearchSelect";
 
 const inputClass = "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
-const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
+import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 
 const PAYMENT_METHODS = [
   { value: "cash", label: "Cash" },

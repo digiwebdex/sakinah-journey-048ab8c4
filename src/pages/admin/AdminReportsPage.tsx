@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { exportPDF, exportExcel } from "@/lib/reportExport";
 import { useCanSeeProfit } from "@/components/admin/AdminLayout";
 
-const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
+import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 export default function AdminReportsPage() {

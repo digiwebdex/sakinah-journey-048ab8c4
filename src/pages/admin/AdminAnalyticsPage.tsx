@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import { format, parseISO, getMonth, getYear, startOfMonth, subMonths } from "date-fns";
 
-const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
+import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316"];
 const MONTHS_BN = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
 

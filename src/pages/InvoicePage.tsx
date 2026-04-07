@@ -6,7 +6,7 @@ import { Printer, Download, Search } from "lucide-react";
 import { generateVerificationId } from "@/lib/pdfQrCode";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
+import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
 export default function InvoicePage() {

@@ -144,7 +144,7 @@ const TrackBooking = () => {
   };
 
   const isOwner = user && booking && booking.user_id === user.id;
-  const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
+  import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 
   return (
     <div className="min-h-screen bg-background">

@@ -52,7 +52,7 @@ const TABS = [
   { key: "customer", label: "Customer Profit" },
 ];
 
-const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
+import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 const normalizeDate = (d: string) => (d ? d.substring(0, 10) : "");
 
 export default function AdminAccountingPage() {

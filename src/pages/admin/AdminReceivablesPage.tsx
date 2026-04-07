@@ -11,7 +11,7 @@ import { differenceInDays, format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { exportPDF, exportExcel } from "@/lib/reportExport";
 
-const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
+import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 
 interface BookingReceivable {
   id: string;

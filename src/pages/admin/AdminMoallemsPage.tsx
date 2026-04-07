@@ -21,7 +21,7 @@ import { Plus, Pencil, Trash2, Eye, Search, Users, ChevronLeft, ChevronRight, Fi
 import { exportPDF, exportExcel } from "@/lib/reportExport";
 import { normalizePhone, getPhoneError, handlePhoneChange } from "@/lib/phoneValidation";
 
-const fmt = (n: number) => `BDT ${n.toLocaleString()}`;
+import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 const PAGE_SIZE = 15;
 
 interface Moallem {

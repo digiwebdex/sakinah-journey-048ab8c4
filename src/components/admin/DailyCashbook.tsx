@@ -38,7 +38,7 @@ const PAYMENT_METHODS = [
   { value: "manual", label: "Manual" },
 ];
 
-const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
+import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 
 const EMPTY_FORM = {
   type: "income" as "income" | "expense",

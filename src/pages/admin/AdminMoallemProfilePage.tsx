@@ -21,7 +21,7 @@ import {
 import { format } from "date-fns";
 import { generateMoallemPdf, getCompanyInfoForPdf, MoallemPdfData } from "@/lib/entityPdfGenerator";
 
-const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
+import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 const PAYMENT_METHODS = ["cash", "bkash", "nagad", "bank", "other"];
 const SERVICE_TYPES = [
   { value: "", label: "-- Select Service --" },

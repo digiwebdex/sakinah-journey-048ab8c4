@@ -16,7 +16,7 @@ import { format } from "date-fns";
 import { exportPDF, exportExcel } from "@/lib/reportExport";
 import { FileDown, FileSpreadsheet } from "lucide-react";
 
-const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
+import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 const PAYMENT_METHODS = ["cash", "bkash", "nagad", "bank", "other"];
 
 interface Props {
