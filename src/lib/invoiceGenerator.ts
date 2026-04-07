@@ -742,7 +742,7 @@ async function generateIndividualInvoice(
   qrDataUrl: string, moallemName: string | null, cfg: PdfCompanyConfig
 ) {
   const pageWidth = doc.internal.pageSize.getWidth();
-  let y = addHeader(doc, { name: cfg.company_name, phone: cfg.phone, email: cfg.email, address: cfg.address } as CompanyInfo, logoBase64);
+  let y = await addHeader(doc, { name: cfg.company_name, phone: cfg.phone, email: cfg.email, address: cfg.address } as CompanyInfo, logoBase64);
 
 
   // QR verification stamp (small, right side)
