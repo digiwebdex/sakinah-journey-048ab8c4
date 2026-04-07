@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import AdminActionMenu, { ActionItem } from "@/components/admin/AdminActionMenu";
 import { normalizePhone, getPhoneError, handlePhoneChange } from "@/lib/phoneValidation";
+import { formatBDT } from "@/lib/utils";
 
-import { formatBDT } from "@/lib/utils"; // TEMP_MARKER
 const PAGE_SIZE = 15;
 
 const inputClass =
@@ -224,15 +224,15 @@ export default function AdminCustomersPage() {
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Contract Amount</p>
-          <p className="text-lg font-bold text-foreground">{fmt(totals.totalAmount)}</p>
+          <p className="text-lg font-bold text-foreground">{formatBDT(totals.totalAmount)}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Total Received</p>
-          <p className="text-lg font-bold text-emerald-600">{fmt(totals.totalPaid)}</p>
+          <p className="text-lg font-bold text-emerald-600">{formatBDT(totals.totalPaid)}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Total Due</p>
-          <p className="text-lg font-bold text-destructive">{fmt(totals.totalDue)}</p>
+          <p className="text-lg font-bold text-destructive">{formatBDT(totals.totalDue)}</p>
         </div>
       </div>
 
@@ -272,9 +272,9 @@ export default function AdminCustomersPage() {
                       <TableCell className="font-medium">{c.full_name || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{c.phone || "—"}</TableCell>
                       <TableCell className="text-right font-medium">{stats.travelers}</TableCell>
-                      <TableCell className="text-right font-medium">{fmt(stats.totalAmount)}</TableCell>
-                      <TableCell className="text-right font-medium text-emerald-600">{fmt(stats.totalPaid)}</TableCell>
-                      <TableCell className="text-right font-medium text-destructive">{fmt(stats.totalDue)}</TableCell>
+                      <TableCell className="text-right font-medium">{formatBDT(stats.totalAmount)}</TableCell>
+                      <TableCell className="text-right font-medium text-emerald-600">{formatBDT(stats.totalPaid)}</TableCell>
+                      <TableCell className="text-right font-medium text-destructive">{formatBDT(stats.totalDue)}</TableCell>
                       <TableCell className="text-center" onClick={e => e.stopPropagation()}>
                         <AdminActionMenu actions={getActions(c)} inlineCount={1} />
                       </TableCell>
