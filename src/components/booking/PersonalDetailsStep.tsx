@@ -47,7 +47,8 @@ const PersonalDetailsStep = ({ info, onChange }: Props) => {
             {t("booking.phoneNumber")} <span className="text-destructive">*</span>
           </label>
           <input
-            type="tel"
+            type="text"
+            inputMode="tel"
             required
             maxLength={15}
             placeholder="+880 1XXX-XXXXXX"
