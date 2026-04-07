@@ -233,12 +233,15 @@ export default function AdminCreateBookingPage() {
       if (guestPassport) bookingData.guest_passport = guestPassport;
       if (form.notes.trim()) bookingData.notes = form.notes.trim();
       if (form.moallem_id) bookingData.moallem_id = form.moallem_id;
+      if (form.supplier_agent_id) bookingData.supplier_agent_id = form.supplier_agent_id;
 
       // Numeric fields - only include if non-zero
       if (bookingType === "individual") {
         bookingData.selling_price_per_person = sellingPrice;
         if (discountVal > 0) bookingData.discount = discountVal;
       }
+      if (costPrice > 0) bookingData.cost_price_per_person = costPrice;
+      if (commissionPP > 0) bookingData.commission_per_person = commissionPP;
       if (paidAmount > 0) bookingData.paid_amount = paidAmount;
       bookingData.due_amount = dueAmount;
 
