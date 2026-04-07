@@ -117,16 +117,22 @@ async function addCompanyHeader(doc: jsPDF, logoBase64: string | null, qrDataUrl
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(DARK.r, DARK.g, DARK.b);
-  doc.text(cfg.company_name, textX, 18);
+  doc.text(cfg.company_name, textX, 16);
+
+  // Tagline
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(GOLD.r, GOLD.g, GOLD.b);
+  doc.text(cfg.tagline || "Hajj & Umrah Services", textX, 21);
 
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
-  doc.text(`Tel: ${cfg.phone}  |  Email: ${cfg.email}`, textX, 23);
+  doc.text(`Tel: ${cfg.phone}  |  Email: ${cfg.email}`, textX, 26);
   if (hasBengali(cfg.address)) {
-    await addBengaliText(doc, cfg.address, textX, 28, { fontSize: 7, color: "#646464" });
+    await addBengaliText(doc, cfg.address, textX, 31, { fontSize: 7, color: "#646464" });
   } else {
-    doc.text(cfg.address, textX, 28);
+    doc.text(cfg.address, textX, 31);
   }
 
   // Gold accent line

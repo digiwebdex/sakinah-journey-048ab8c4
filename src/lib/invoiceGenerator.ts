@@ -380,7 +380,7 @@ function addInvoiceTitleBlock(
 
   // Status badge (right side)
   const statusColors: Record<string, { r: number; g: number; b: number }> = {
-    completed: { r: 34, g: 139, b: 34 },
+    completed: { r: GOLD.r, g: GOLD.g, b: GOLD.b },
     pending: { r: 210, g: 140, b: 20 },
     confirmed: { r: 30, g: 100, b: 200 },
   };
