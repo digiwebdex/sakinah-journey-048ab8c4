@@ -74,10 +74,12 @@ export default function AdminCreateBookingPage() {
       supabase.from("packages").select("id, name, type, price, duration_days").eq("is_active", true).order("name"),
       supabase.from("moallems").select("id, name, phone, status").eq("status", "active").order("name"),
       supabase.from("accounts" as any).select("*").eq("type", "asset"),
-    ]).then(([pkgRes, moaRes, walletRes]) => {
+      supabase.from("supplier_agents").select("id, agent_name, company_name, phone, status").eq("status", "active").order("agent_name"),
+    ]).then(([pkgRes, moaRes, walletRes, supRes]) => {
       setPackages(pkgRes.data || []);
       setMoallems(moaRes.data || []);
       setWalletAccounts((walletRes.data as any[]) || []);
+      setSuppliers(supRes.data || []);
     });
   }, []);
 
