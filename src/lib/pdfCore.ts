@@ -79,7 +79,7 @@ export function loadLogoBase64(): Promise<string> {
       canvas.height = img.height;
       const ctx = canvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0);
-      _logoCache = canvas.toDataURL("image/jpeg");
+      _logoCache = canvas.toDataURL("image/png");
       resolve(_logoCache);
     };
     img.onerror = () => resolve("");
