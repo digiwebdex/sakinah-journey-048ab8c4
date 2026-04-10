@@ -84,7 +84,6 @@ const Navbar = () => {
         </div>
 
         <div className="hidden lg:flex items-center gap-3">
-          {/* Language Toggle */}
           <button
             onClick={toggleLang}
             className="flex items-center gap-1.5 text-sm font-medium border border-border px-3 py-2 rounded-md hover:bg-secondary transition-colors"
@@ -98,7 +97,14 @@ const Navbar = () => {
             <Phone className="h-4 w-4" />
             {phone}
           </a>
-        
+
+          <button
+            onClick={() => navigate(user ? "/dashboard" : "/auth")}
+            className="flex items-center gap-1.5 text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+          >
+            <User className="h-4 w-4" />
+            {user ? (language === "bn" ? "ড্যাশবোর্ড" : "Dashboard") : (language === "bn" ? "সাইন ইন" : "Sign In")}
+          </button>
         </div>
 
         {/* Mobile: lang toggle + hamburger */}
