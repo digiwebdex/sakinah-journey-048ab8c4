@@ -790,14 +790,63 @@ export default function AdminBookingsPage() {
             )}
           </div>
         </div>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-muted-foreground">Total Bookings</p>
+            <p className="text-2xl font-heading font-bold">{kpiStats.total}</p>
+          </div>
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center"><Package className="h-5 w-5 text-primary" /></div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between cursor-pointer hover:border-primary/30" onClick={() => setStatusFilter(statusFilter === "pending" ? "all" : "pending")}>
+          <div>
+            <p className="text-xs text-muted-foreground">Pending</p>
+            <p className="text-2xl font-heading font-bold text-yellow-600">{kpiStats.pending}</p>
+          </div>
+          <div className="h-10 w-10 rounded-full bg-yellow-500/10 flex items-center justify-center"><Users className="h-5 w-5 text-yellow-600" /></div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between cursor-pointer hover:border-primary/30" onClick={() => setStatusFilter(statusFilter === "confirmed" ? "all" : "confirmed")}>
+          <div>
+            <p className="text-xs text-muted-foreground">Confirmed</p>
+            <p className="text-2xl font-heading font-bold text-emerald-500">{kpiStats.confirmed}</p>
+          </div>
+          <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center"><TrendingUp className="h-5 w-5 text-emerald-500" /></div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-muted-foreground">Total Revenue</p>
+            <p className="text-2xl font-heading font-bold">{formatBDT(kpiStats.totalRevenue)}</p>
+          </div>
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center"><CreditCard className="h-5 w-5 text-primary" /></div>
+        </div>
+      </div>
+
+      {/* Table Header Bar */}
+      <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <h2 className="font-heading text-xl font-bold">All Bookings ({filtered.length})</h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={() => exportPDF({ title: "Bookings Report", columns: ["Tracking ID", "Customer", "Package", "Travelers", "Total", "Paid", "Due", "Status"], rows: filtered.map(b => [b.tracking_id, b.guest_name || "—", b.packages?.name || "—", b.num_travelers, Number(b.total_amount), Number(b.paid_amount), Number(b.due_amount ?? 0), b.status]) })}><FileDown className="h-4 w-4 mr-1" />CSV</Button>
+            <Button variant="outline" size="sm" onClick={() => exportExcel({ title: "Bookings Report", columns: ["Tracking ID", "Customer", "Package", "Travelers", "Total", "Paid", "Due", "Status"], rows: filtered.map(b => [b.tracking_id, b.guest_name || "—", b.packages?.name || "—", b.num_travelers, Number(b.total_amount), Number(b.paid_amount), Number(b.due_amount ?? 0), b.status]) })}><FileSpreadsheet className="h-4 w-4 mr-1" />Excel</Button>
+            {!isViewer && (
+              <button onClick={() => navigate("/admin/bookings/create")}
+                className="inline-flex items-center gap-1.5 text-sm bg-gradient-gold text-primary-foreground font-semibold px-4 py-2 rounded-md hover:opacity-90 transition-opacity shadow-gold">
+                <Plus className="h-4 w-4" /> New Booking
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Search + Filters Row */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-          <div className="relative flex-1 sm:w-64">
+          <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input className={inputClass + " pl-9"} placeholder="Search bookings..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input className={inputClass + " pl-9"} placeholder="Search by name, email, or booking ID..." value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className={cn("w-[140px] justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
+              <Button variant="outline" size="sm" className={cn("w-[130px] justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
                 <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
                 {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "From date"}
               </Button>
@@ -806,9 +855,10 @@ export default function AdminBookingsPage() {
               <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus className={cn("p-3 pointer-events-auto")} />
             </PopoverContent>
           </Popover>
+          <span className="text-xs text-muted-foreground">to</span>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className={cn("w-[140px] justify-start text-left font-normal", !dateTo && "text-muted-foreground")}>
+              <Button variant="outline" size="sm" className={cn("w-[130px] justify-start text-left font-normal", !dateTo && "text-muted-foreground")}>
                 <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
                 {dateTo ? format(dateTo, "dd/MM/yyyy") : "To date"}
               </Button>
@@ -817,301 +867,198 @@ export default function AdminBookingsPage() {
               <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus className={cn("p-3 pointer-events-auto")} />
             </PopoverContent>
           </Popover>
-          {(dateFrom || dateTo || search) && (
-            <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); setSearch(""); }}>
+          <select className={inputClass + " w-[140px]"} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="all">All Status</option>
+            {STATUSES.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1).replace("_", " ")}</option>)}
+          </select>
+          {(dateFrom || dateTo || search || statusFilter !== "all") && (
+            <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); setSearch(""); setStatusFilter("all"); }}>
               <X className="h-3.5 w-3.5 mr-1" /> Clear
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); setSearch(""); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
-            <ChevronUp className="h-3.5 w-3.5 mr-1" /> Latest Booking
-          </Button>
-          <span className="text-xs text-muted-foreground ml-auto">{filtered.length} bookings</span>
         </div>
-      </div>
 
-      {filtered.map((b: any) => (
-        <div key={b.id} className="bg-card border border-border rounded-lg p-4 cursor-pointer hover:border-primary/30 transition-colors" onClick={() => { if (editingId !== b.id) setViewBooking(b); }}>
-          {editingId === b.id ? (
-            <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
-              <div className="flex justify-between items-center">
-                <p className="font-mono font-bold text-primary text-sm">{b.tracking_id}</p>
-                <div className="flex gap-2">
-                  <button onClick={saveEdit} className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><Save className="h-3 w-3" /> Save</button>
-                  <button onClick={() => { setEditingId(null); setEditMembers([]); }} className="text-xs bg-secondary text-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><X className="h-3 w-3" /> Cancel</button>
-                </div>
-              </div>
+        {/* Data Table */}
+        <div className="overflow-x-auto -mx-4 px-4">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date</th>
+                <th className="text-left py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Booking ID</th>
+                <th className="text-left py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Customer</th>
+                <th className="text-left py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Package</th>
+                <th className="text-center py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pax</th>
+                <th className="text-right py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Amount</th>
+                <th className="text-center py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Payment</th>
+                <th className="text-center py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                <th className="text-left py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tracking</th>
+                <th className="text-center py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {filtered.map((b: any) => {
+                const paymentStatus = Number(b.paid_amount || 0) >= Number(b.total_amount || 0) ? "paid" : Number(b.paid_amount || 0) > 0 ? "partial" : "unpaid";
+                const paymentMethod = b.notes?.match(/Payment Method:\s*([^\n,]+)/i)?.[1]?.trim() || "—";
+                const statusColors: Record<string, string> = {
+                  pending: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/30",
+                  confirmed: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
+                  visa_processing: "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30",
+                  ticket_issued: "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30",
+                  completed: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
+                  cancelled: "bg-destructive/15 text-destructive border-destructive/30",
+                };
+                const paymentColors: Record<string, string> = {
+                  paid: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
+                  partial: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400",
+                  unpaid: "bg-destructive/15 text-destructive",
+                };
+                const trackingLabels: Record<string, string> = {
+                  pending: "Order Submitted",
+                  confirmed: "Confirmed",
+                  visa_processing: "Visa Processing",
+                  ticket_issued: "Ticket Issued",
+                  completed: "Completed",
+                  cancelled: "Cancelled",
+                };
 
-              {/* Customer Search */}
-              <div>
-                <label className="text-xs text-muted-foreground block mb-1">Change Customer</label>
-                <CustomerSearchSelect
-                  selectedId={editForm.user_id}
-                  onSelect={(c) => {
-                    if (c) {
-                      setEditForm((f: any) => ({
-                        ...f, user_id: c.user_id,
-                        guest_name: c.full_name || "", guest_phone: c.phone || "",
-                        guest_email: c.email || "", guest_address: c.address || "",
-                        guest_passport: c.passport_number || "",
-                      }));
-                    } else {
-                      setEditForm((f: any) => ({
-                        ...f, user_id: null,
-                        guest_name: "", guest_phone: "", guest_email: "",
-                        guest_address: "", guest_passport: "",
-                      }));
-                    }
-                  }}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Customer Name</label>
-                  <input className={inputClass} value={editForm.guest_name} onChange={(e) => setEditForm({ ...editForm, guest_name: e.target.value })} placeholder="Name" />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Phone</label>
-                  <input className={inputClass} value={editForm.guest_phone} onChange={(e) => handlePhoneChange(e.target.value, (v) => setEditForm({ ...editForm, guest_phone: v }))} placeholder="01XXXXXXXXX" maxLength={15} />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Passport</label>
-                  <input className={inputClass} value={editForm.guest_passport} onChange={(e) => setEditForm({ ...editForm, guest_passport: e.target.value })} placeholder="Passport" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Selling Price/Person (BDT)</label>
-                  <input className={inputClass} type="number" min={0} value={editForm.selling_price_per_person}
-                    onChange={(e) => setEditForm((f: any) => ({ ...f, selling_price_per_person: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Cost Price/Person (BDT)</label>
-                  <input className={inputClass} type="number" min={0} value={editForm.cost_price_per_person}
-                    onChange={(e) => setEditForm((f: any) => ({ ...f, cost_price_per_person: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Extra Expense (BDT)</label>
-                  <input className={inputClass} type="number" min={0} value={editForm.extra_expense}
-                    onChange={(e) => setEditForm((f: any) => ({ ...f, extra_expense: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Travelers</label>
-                  <input className={inputClass} type="number" min={1} value={editForm.num_travelers} onChange={(e) => setEditForm({ ...editForm, num_travelers: e.target.value })} />
-                </div>
-              </div>
-              {editForm.moallem_id && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-xs text-muted-foreground block mb-1">Commission/Person (BDT)</label>
-                    <input className={inputClass} type="number" min={0} value={editForm.commission_per_person}
-                      onChange={(e) => setEditForm((f: any) => ({ ...f, commission_per_person: e.target.value }))} />
-                  </div>
-                  <div>
-                     <label className="text-xs text-muted-foreground block mb-1">Total Commission (BDT)</label>
-                    <div className={`${inputClass} bg-muted/50 font-bold`}>BDT {editTotalCommission.toLocaleString("en-IN")}</div>
-                  </div>
-                </div>
-              )}
-
-              {/* Family Members Editing Section */}
-              {isEditingFamily && (
-                <div className="border border-primary/30 rounded-lg p-3 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <h4 className="text-sm font-semibold flex items-center gap-1.5">
-                      <User className="h-4 w-4 text-primary" />
-                      Family Members ({editMembers.length})
-                    </h4>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const defaultPrice = toMoney(editForm.selling_price_per_person || b.selling_price_per_person || 0);
-                          const nextCount = editMembers.length + 1;
-                          setEditMembers((prev: any[]) => ([
-                            ...prev,
-                            {
-                              temp_id: `tmp-${crypto.randomUUID()}`,
-                              full_name: "",
-                              passport_number: "",
-                              package_id: b.package_id || null,
-                              selling_price: defaultPrice,
-                              discount: 0,
-                              final_price: defaultPrice,
-                            },
-                          ]));
-                          setEditForm((prev: any) => ({ ...prev, booking_type: "family", num_travelers: Math.max(Number(prev.num_travelers || 1), nextCount) }));
-                        }}
-                        className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-primary text-primary-foreground"
-                      >
-                        <Plus className="h-3 w-3" /> Add Traveler
-                      </button>
-                      <Badge variant="outline" className="text-[10px]">Family Booking</Badge>
-                    </div>
-                  </div>
-                  {editMembers.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">No traveler rows found yet for this family booking.</p>
-                  ) : (
-                    <>
-                      {editMembers.map((m: any, idx: number) => (
-                        <div key={m.id || m.temp_id || `member-${idx}`} className="grid grid-cols-2 sm:grid-cols-6 gap-2 bg-secondary/30 rounded-md p-2">
-                          <div>
-                            <label className="text-[10px] text-muted-foreground block mb-0.5">Name</label>
-                            <input className={inputClass + " text-xs"} value={m.full_name}
-                              onChange={(e) => {
-                                const updated = [...editMembers];
-                                updated[idx] = { ...updated[idx], full_name: e.target.value };
-                                setEditMembers(updated);
-                              }} />
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-muted-foreground block mb-0.5">Passport</label>
-                            <input className={inputClass + " text-xs"} value={m.passport_number || ""}
-                              onChange={(e) => {
-                                const updated = [...editMembers];
-                                updated[idx] = { ...updated[idx], passport_number: e.target.value };
-                                setEditMembers(updated);
-                              }} />
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-muted-foreground block mb-0.5">Package</label>
-                            <div className={`${inputClass} text-xs bg-muted/50`}>{b.packages?.name || "N/A"}</div>
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-muted-foreground block mb-0.5">Selling Price</label>
-                            <input className={inputClass + " text-xs"} type="number" min={0} value={m.selling_price}
-                              onChange={(e) => {
-                                const updated = [...editMembers];
-                                const sp = toMoney(e.target.value);
-                                const discount = Math.min(toMoney(updated[idx].discount), sp);
-                                updated[idx] = { ...updated[idx], selling_price: sp, discount, final_price: Math.max(0, sp - discount) };
-                                setEditMembers(updated);
-                              }} />
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-muted-foreground block mb-0.5">Discount</label>
-                            <input className={inputClass + " text-xs"} type="number" min={0} value={m.discount}
-                              onChange={(e) => {
-                                const updated = [...editMembers];
-                                const selling = toMoney(updated[idx].selling_price);
-                                const d = Math.min(toMoney(e.target.value), selling);
-                                updated[idx] = { ...updated[idx], discount: d, final_price: Math.max(0, selling - d) };
-                                setEditMembers(updated);
-                              }} />
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-muted-foreground block mb-0.5">Final Price</label>
-                            <div className={`${inputClass} bg-muted/50 font-bold text-xs`}>BDT {Number(m.final_price || 0).toLocaleString("en-IN")}</div>
+                return editingId === b.id ? (
+                  <tr key={b.id}>
+                    <td colSpan={10} className="py-4 px-2">
+                      <div className="space-y-3 bg-secondary/30 rounded-lg p-4" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex justify-between items-center">
+                          <p className="font-mono font-bold text-primary text-sm">{b.tracking_id}</p>
+                          <div className="flex gap-2">
+                            <button onClick={saveEdit} className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><Save className="h-3 w-3" /> Save</button>
+                            <button onClick={() => { setEditingId(null); setEditMembers([]); }} className="text-xs bg-secondary text-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><X className="h-3 w-3" /> Cancel</button>
                           </div>
                         </div>
-                      ))}
-                      <div className="text-right text-xs font-bold text-primary">
-                        Members Total: BDT {editMembers.reduce((s: number, m: any) => s + Number(m.final_price || 0), 0).toLocaleString("en-IN")}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
 
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Status</label>
-                  <select className={inputClass} value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
-                    {STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1).replace("_", " ")}</option>)}
-                  </select>
-                </div>
-                <div>
-                   <label className="text-xs text-muted-foreground block mb-1">Total Selling (BDT)</label>
-                  <div className={`${inputClass} bg-muted/50 font-bold`}>BDT {editTotalSelling.toLocaleString("en-IN")}</div>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Paid (BDT)</label>
-                  <input className={inputClass} type="number" min={0} max={editTotalSelling} value={editForm.paid_amount}
-                    onChange={(e) => setEditForm((f: any) => ({ ...f, paid_amount: Math.min(Math.max(0, parseFloat(e.target.value) || 0), editTotalSelling) }))} />
-                </div>
-                <div>
-                   <label className="text-xs text-muted-foreground block mb-1">Due (BDT)</label>
-                  <div className={`${inputClass} bg-muted/50 font-bold ${editDue > 0 ? "text-destructive" : "text-emerald"}`}>
-                    BDT {editDue.toLocaleString("en-IN")}
-                  </div>
-                </div>
-                <div>
-                   <label className="text-xs text-muted-foreground block mb-1">Profit (BDT)</label>
-                  <div className={`${inputClass} bg-muted/50 font-bold ${editProfit >= 0 ? "text-emerald" : "text-destructive"}`}>
-                    BDT {editProfit.toLocaleString("en-IN")}
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Moallem (Optional)</label>
-                  <select className={inputClass} value={editForm.moallem_id || ""} onChange={(e) => setEditForm({ ...editForm, moallem_id: e.target.value })}>
-                    <option value="">-- No Moallem --</option>
-                    {moallems.map((m: any) => (
-                      <option key={m.id} value={m.id}>{m.name} {m.phone ? `(${m.phone})` : ""}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Notes</label>
-                  <input className={inputClass} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} placeholder="Additional info..." />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <p className="font-mono font-bold text-primary text-sm">{b.tracking_id}{isFamilyBooking(b.booking_type) ? <Badge variant="outline" className="ml-2 text-[10px]">Family</Badge> : ""}</p>
-                  <p className="text-sm text-muted-foreground">{b.guest_name || "Unknown"}{b.guest_passport ? ` (${b.guest_passport})` : ""} • {b.packages?.name || "N/A"}{b.moallems?.name ? ` • Moallem: ${b.moallems.name}` : ""}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${b.status === "completed" ? "text-emerald bg-emerald/10" : b.status === "cancelled" ? "text-destructive bg-destructive/10" : "text-primary bg-primary/10"}`}>
-                    {b.status}
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 sm:grid-cols-8 gap-3 text-sm">
-                <div><p className="text-muted-foreground text-xs">Selling</p><p className="font-medium">{formatBDT(Number(b.total_amount))}</p></div>
-                <div><p className="text-muted-foreground text-xs">Cost</p><p className="font-medium text-muted-foreground">{formatBDT(Number(b.total_cost || 0))}</p></div>
-                {b.moallem_id && <div><p className="text-muted-foreground text-xs">Commission</p><p className="font-medium text-yellow-600">{formatBDT(Number(b.total_commission || 0))}</p></div>}
-                <div><p className="text-muted-foreground text-xs">Paid</p><p className="font-medium text-emerald-500">{formatBDT(Number(b.paid_amount))}</p></div>
-                <div><p className="text-muted-foreground text-xs">Due</p><p className="font-medium text-destructive">{formatBDT(Number(b.due_amount || 0))}</p></div>
-                <div><p className="text-muted-foreground text-xs">Supplier Paid</p><p className="font-medium text-emerald-500">{formatBDT(Number(b.paid_to_supplier || 0))}</p></div>
-                <div><p className="text-muted-foreground text-xs">Supplier Due</p><p className="font-medium text-destructive">{formatBDT(Number(b.supplier_due || 0))}</p></div>
-                <div><p className="text-muted-foreground text-xs">Profit</p><p className={`font-medium ${Number(b.profit_amount || 0) >= 0 ? "text-emerald-500" : "text-destructive"}`}>{formatBDT(Number(b.profit_amount || 0))}</p></div>
-              </div>
-              {/* Payment History Chips */}
-              {bookingPayments[b.id] && bookingPayments[b.id].length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide self-center mr-1">Payments:</span>
-                  {bookingPayments[b.id].map((p: any) => (
-                    <span key={p.id} className="inline-flex items-center gap-1 text-[11px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full px-2.5 py-0.5 font-medium">
-                      {new Date(p.paid_at).toLocaleDateString("en-GB")}: {formatBDT(p.amount)}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
-                <button
-                  onClick={() => setExpandedId(expandedId === b.id ? null : b.id)}
-                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-                >
-                  {expandedId === b.id ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                  {expandedId === b.id ? "Hide Details" : "View Details"}
-                </button>
-                <AdminActionMenu actions={getBookingActions(b)} inlineCount={3} />
-              </div>
-              {expandedId === b.id && <BookingDetail bookingId={b.id} />}
-            </>
-          )}
+                        <div>
+                          <label className="text-xs text-muted-foreground block mb-1">Change Customer</label>
+                          <CustomerSearchSelect selectedId={editForm.user_id} onSelect={(c) => {
+                            if (c) { setEditForm((f: any) => ({ ...f, user_id: c.user_id, guest_name: c.full_name || "", guest_phone: c.phone || "", guest_email: c.email || "", guest_address: c.address || "", guest_passport: c.passport_number || "" })); }
+                            else { setEditForm((f: any) => ({ ...f, user_id: null, guest_name: "", guest_phone: "", guest_email: "", guest_address: "", guest_passport: "" })); }
+                          }} />
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          <div><label className="text-xs text-muted-foreground block mb-1">Customer Name</label><input className={inputClass} value={editForm.guest_name} onChange={(e) => setEditForm({ ...editForm, guest_name: e.target.value })} /></div>
+                          <div><label className="text-xs text-muted-foreground block mb-1">Phone</label><input className={inputClass} value={editForm.guest_phone} onChange={(e) => handlePhoneChange(e.target.value, (v) => setEditForm({ ...editForm, guest_phone: v }))} maxLength={15} /></div>
+                          <div><label className="text-xs text-muted-foreground block mb-1">Passport</label><input className={inputClass} value={editForm.guest_passport} onChange={(e) => setEditForm({ ...editForm, guest_passport: e.target.value })} /></div>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div><label className="text-xs text-muted-foreground block mb-1">Selling Price/Person</label><input className={inputClass} type="number" min={0} value={editForm.selling_price_per_person} onChange={(e) => setEditForm((f: any) => ({ ...f, selling_price_per_person: e.target.value }))} /></div>
+                          <div><label className="text-xs text-muted-foreground block mb-1">Cost Price/Person</label><input className={inputClass} type="number" min={0} value={editForm.cost_price_per_person} onChange={(e) => setEditForm((f: any) => ({ ...f, cost_price_per_person: e.target.value }))} /></div>
+                          <div><label className="text-xs text-muted-foreground block mb-1">Extra Expense</label><input className={inputClass} type="number" min={0} value={editForm.extra_expense} onChange={(e) => setEditForm((f: any) => ({ ...f, extra_expense: e.target.value }))} /></div>
+                          <div><label className="text-xs text-muted-foreground block mb-1">Travelers</label><input className={inputClass} type="number" min={1} value={editForm.num_travelers} onChange={(e) => setEditForm({ ...editForm, num_travelers: e.target.value })} /></div>
+                        </div>
+                        {editForm.moallem_id && (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <div><label className="text-xs text-muted-foreground block mb-1">Commission/Person</label><input className={inputClass} type="number" min={0} value={editForm.commission_per_person} onChange={(e) => setEditForm((f: any) => ({ ...f, commission_per_person: e.target.value }))} /></div>
+                            <div><label className="text-xs text-muted-foreground block mb-1">Total Commission</label><div className={`${inputClass} bg-muted/50 font-bold`}>BDT {editTotalCommission.toLocaleString("en-IN")}</div></div>
+                          </div>
+                        )}
+
+                        {isEditingFamily && (
+                          <div className="border border-primary/30 rounded-lg p-3 space-y-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <h4 className="text-sm font-semibold flex items-center gap-1.5"><User className="h-4 w-4 text-primary" />Family Members ({editMembers.length})</h4>
+                              <div className="flex items-center gap-2">
+                                <button type="button" onClick={() => {
+                                  const defaultPrice = toMoney(editForm.selling_price_per_person || b.selling_price_per_person || 0);
+                                  setEditMembers((prev: any[]) => ([...prev, { temp_id: `tmp-${crypto.randomUUID()}`, full_name: "", passport_number: "", package_id: b.package_id || null, selling_price: defaultPrice, discount: 0, final_price: defaultPrice }]));
+                                  setEditForm((prev: any) => ({ ...prev, booking_type: "family", num_travelers: Math.max(Number(prev.num_travelers || 1), editMembers.length + 1) }));
+                                }} className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-primary text-primary-foreground"><Plus className="h-3 w-3" /> Add Traveler</button>
+                                <Badge variant="outline" className="text-[10px]">Family</Badge>
+                              </div>
+                            </div>
+                            {editMembers.map((m: any, idx: number) => (
+                              <div key={m.id || m.temp_id || `member-${idx}`} className="grid grid-cols-2 sm:grid-cols-6 gap-2 bg-secondary/30 rounded-md p-2">
+                                <div><label className="text-[10px] text-muted-foreground block mb-0.5">Name</label><input className={inputClass + " text-xs"} value={m.full_name} onChange={(e) => { const u = [...editMembers]; u[idx] = { ...u[idx], full_name: e.target.value }; setEditMembers(u); }} /></div>
+                                <div><label className="text-[10px] text-muted-foreground block mb-0.5">Passport</label><input className={inputClass + " text-xs"} value={m.passport_number || ""} onChange={(e) => { const u = [...editMembers]; u[idx] = { ...u[idx], passport_number: e.target.value }; setEditMembers(u); }} /></div>
+                                <div><label className="text-[10px] text-muted-foreground block mb-0.5">Package</label><div className={`${inputClass} text-xs bg-muted/50`}>{b.packages?.name || "N/A"}</div></div>
+                                <div><label className="text-[10px] text-muted-foreground block mb-0.5">Selling</label><input className={inputClass + " text-xs"} type="number" min={0} value={m.selling_price} onChange={(e) => { const u = [...editMembers]; const sp = toMoney(e.target.value); const d = Math.min(toMoney(u[idx].discount), sp); u[idx] = { ...u[idx], selling_price: sp, discount: d, final_price: Math.max(0, sp - d) }; setEditMembers(u); }} /></div>
+                                <div><label className="text-[10px] text-muted-foreground block mb-0.5">Discount</label><input className={inputClass + " text-xs"} type="number" min={0} value={m.discount} onChange={(e) => { const u = [...editMembers]; const s = toMoney(u[idx].selling_price); const d = Math.min(toMoney(e.target.value), s); u[idx] = { ...u[idx], discount: d, final_price: Math.max(0, s - d) }; setEditMembers(u); }} /></div>
+                                <div><label className="text-[10px] text-muted-foreground block mb-0.5">Final</label><div className={`${inputClass} bg-muted/50 font-bold text-xs`}>৳{Number(m.final_price || 0).toLocaleString("en-IN")}</div></div>
+                              </div>
+                            ))}
+                            {editMembers.length > 0 && <div className="text-right text-xs font-bold text-primary">Members Total: ৳{editMembers.reduce((s: number, m: any) => s + Number(m.final_price || 0), 0).toLocaleString("en-IN")}</div>}
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                          <div><label className="text-xs text-muted-foreground block mb-1">Status</label><select className={inputClass} value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>{STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1).replace("_", " ")}</option>)}</select></div>
+                          <div><label className="text-xs text-muted-foreground block mb-1">Total Selling</label><div className={`${inputClass} bg-muted/50 font-bold`}>৳{editTotalSelling.toLocaleString("en-IN")}</div></div>
+                          <div><label className="text-xs text-muted-foreground block mb-1">Paid</label><input className={inputClass} type="number" min={0} max={editTotalSelling} value={editForm.paid_amount} onChange={(e) => setEditForm((f: any) => ({ ...f, paid_amount: Math.min(Math.max(0, parseFloat(e.target.value) || 0), editTotalSelling) }))} /></div>
+                          <div><label className="text-xs text-muted-foreground block mb-1">Due</label><div className={`${inputClass} bg-muted/50 font-bold ${editDue > 0 ? "text-destructive" : ""}`}>৳{editDue.toLocaleString("en-IN")}</div></div>
+                          <div><label className="text-xs text-muted-foreground block mb-1">Profit</label><div className={`${inputClass} bg-muted/50 font-bold ${editProfit >= 0 ? "text-emerald-500" : "text-destructive"}`}>৳{editProfit.toLocaleString("en-IN")}</div></div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div><label className="text-xs text-muted-foreground block mb-1">Moallem</label><select className={inputClass} value={editForm.moallem_id || ""} onChange={(e) => setEditForm({ ...editForm, moallem_id: e.target.value })}><option value="">-- No Moallem --</option>{moallems.map((m: any) => <option key={m.id} value={m.id}>{m.name} {m.phone ? `(${m.phone})` : ""}</option>)}</select></div>
+                          <div><label className="text-xs text-muted-foreground block mb-1">Notes</label><input className={inputClass} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} /></div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={b.id} className="hover:bg-secondary/30 transition-colors cursor-pointer group" onClick={() => setViewBooking(b)}>
+                    <td className="py-3 px-2 whitespace-nowrap">
+                      <span className="text-xs text-muted-foreground">{new Date(b.created_at).toLocaleDateString("en-GB", { month: "short", day: "2-digit", year: "numeric" })}</span>
+                    </td>
+                    <td className="py-3 px-2">
+                      <span className="font-mono text-xs font-bold text-primary">{b.tracking_id?.slice(-8) || b.id?.slice(0, 8)}</span>
+                    </td>
+                    <td className="py-3 px-2">
+                      <div className="min-w-[140px]">
+                        <p className="font-semibold text-sm leading-tight">{b.guest_name || "Unknown"}</p>
+                        {b.guest_email && <p className="text-[11px] text-muted-foreground truncate max-w-[180px]">{b.guest_email}</p>}
+                        {b.guest_phone && <p className="text-[11px] text-muted-foreground">{b.guest_phone}</p>}
+                      </div>
+                    </td>
+                    <td className="py-3 px-2">
+                      <div className="min-w-[120px]">
+                        <p className="text-sm font-medium leading-tight">{b.packages?.name || "N/A"}</p>
+                        <p className="text-[11px] text-muted-foreground capitalize">{b.packages?.type || ""}</p>
+                      </div>
+                    </td>
+                    <td className="py-3 px-2 text-center">
+                      <span className="text-sm font-medium">{b.num_travelers}</span>
+                    </td>
+                    <td className="py-3 px-2 text-right">
+                      <span className="text-sm font-bold">৳{Number(b.total_amount || 0).toLocaleString("en-IN")}</span>
+                    </td>
+                    <td className="py-3 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex flex-col items-center gap-1">
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full border ${paymentColors[paymentStatus]}`}>
+                          {paymentStatus === "paid" ? "✅ Paid" : paymentStatus === "partial" ? "⏳ Partial" : "⏳ Pending"}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground capitalize">{paymentMethod}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full border capitalize ${statusColors[b.status] || "bg-secondary text-foreground"}`}>
+                        {b.status === "pending" ? "⏳" : b.status === "confirmed" ? "✅" : b.status === "completed" ? "🎉" : b.status === "cancelled" ? "❌" : "📋"} {b.status?.replace("_", " ")}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2">
+                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">{trackingLabels[b.status] || b.status}</span>
+                    </td>
+                    <td className="py-3 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      <AdminActionMenu actions={getBookingActions(b)} inlineCount={0} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      ))}
-      {bookingsLoading && <p className="text-center text-muted-foreground py-12">Loading bookings...</p>}
-      {!bookingsLoading && filtered.length === 0 && (
-        <p className="text-center text-muted-foreground py-12">{bookingsError ? `Failed to load bookings: ${bookingsError}` : "No bookings found."}</p>
-      )}
+
+        {bookingsLoading && <p className="text-center text-muted-foreground py-12">Loading bookings...</p>}
+        {!bookingsLoading && filtered.length === 0 && (
+          <p className="text-center text-muted-foreground py-12">{bookingsError ? `Failed to load bookings: ${bookingsError}` : "No bookings found."}</p>
+        )}
+      </div>
 
       {/* View Booking Modal */}
       <Dialog open={!!viewBooking} onOpenChange={(o) => { if (!o) setViewBooking(null); }}>
