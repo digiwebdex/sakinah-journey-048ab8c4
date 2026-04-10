@@ -141,6 +141,13 @@ const Navbar = () => {
                   {link.label}
                 </a>
               ))}
+              <button
+                onClick={() => { setOpen(false); navigate(user ? "/dashboard" : "/auth"); }}
+                className="flex items-center gap-2 text-sm font-medium bg-primary text-primary-foreground px-4 py-2.5 rounded-md hover:bg-primary/90 transition-colors w-full justify-center"
+              >
+                <User className="h-4 w-4" />
+                {user ? (language === "bn" ? "ড্যাশবোর্ড" : "Dashboard") : (language === "bn" ? "সাইন ইন" : "Sign In")}
+              </button>
             </div>
           </motion.div>
         )}
