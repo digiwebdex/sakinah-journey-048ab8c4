@@ -19,6 +19,8 @@ const PAYMENT_LOGOS: Record<string, string> = {
   nagad: nagadLogo,
   bank_transfer: bankTransferLogo,
   bank: bankTransferLogo,
+  bank_shahjalal: bankTransferLogo,
+  bank_alarafah: bankTransferLogo,
   sslcommerz: sslcommerzLogo,
   aamarpay: sslcommerzLogo,
 };
