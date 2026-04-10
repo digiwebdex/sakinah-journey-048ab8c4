@@ -6,7 +6,7 @@ import {
   Download, Edit2, Trash2, Save, X, Search, ChevronDown, ChevronUp,
   TrendingUp, TrendingDown, Plus, Eye, Copy, CreditCard, Receipt,
   FileText, RefreshCw, Upload as UploadIcon, User, Users, FileDown, FileSpreadsheet,
-  CalendarIcon, Package
+  CalendarIcon, Package, CheckCircle2, AlertCircle, FileCheck, FileMinus
 } from "lucide-react";
 import { exportPDF, exportExcel } from "@/lib/reportExport";
 import { generateInvoice, CompanyInfo, InvoicePayment } from "@/lib/invoiceGenerator";
@@ -267,6 +267,8 @@ export default function AdminBookingsPage() {
   const [statusChangeVal, setStatusChangeVal] = useState("");
   const [bookingPayments, setBookingPayments] = useState<Record<string, any[]>>({});
   const [editMembers, setEditMembers] = useState<any[]>([]);
+  const [bookingDocs, setBookingDocs] = useState<Record<string, any[]>>({});
+  const [inlineStatusId, setInlineStatusId] = useState<string | null>(null);
 
   const fetchBookings = async () => {
     setBookingsLoading(true);
