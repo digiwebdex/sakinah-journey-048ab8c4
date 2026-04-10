@@ -689,15 +689,22 @@ const storage = {
 const functions = {
   async invoke(name: string, options?: { body?: any }) {
     // Edge functions that have VPS equivalents — try VPS first
-    const vpsRoutes = ['track-booking', 'verify-invoice', 'create-guest-booking', 'send-notification', 'send-reminder', 'booking-notifications'];
+    const vpsRoutes = ['track-booking', 'verify-invoice', 'create-guest-booking', 'send-notification', 'send-reminder', 'booking-notifications', 'send-otp', 'upload-booking-document'];
     const isVpsRoute = name.startsWith('auth/') || vpsRoutes.includes(name);
 
     if (isVpsRoute) {
       try {
         const path = `/${name}`;
-        const res = await apiFetch(path, {
+        const isFormData = options?.body instanceof FormData;
+        const token = TokenManager.getAccessToken();
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        if (!isFormData) headers['Content-Type'] = 'application/json';
+
+        const res = await fetch(`${API_URL}${path}`, {
           method: 'POST',
-          body: options?.body ? JSON.stringify(options.body) : undefined,
+          headers,
+          body: isFormData ? options.body : (options?.body ? JSON.stringify(options.body) : undefined),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({ error: 'Request failed' }));

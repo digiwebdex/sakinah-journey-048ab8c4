@@ -1155,6 +1155,254 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // =============================================
+// SEND OTP (public)
+// =============================================
+app.post('/api/send-otp', async (req, res) => {
+  try {
+    const { phone, action, code } = req.body;
+    if (!phone || typeof phone !== 'string' || phone.length < 10 || phone.length > 15) {
+      return res.status(400).json({ error: 'Invalid phone number' });
+    }
+    const sanitizedPhone = phone.replace(/[^\d+]/g, '');
+
+    if (action === 'send') {
+      // Check if there's a profile or guest booking with this phone
+      const profileCheck = await query('SELECT user_id FROM profiles WHERE phone = $1 LIMIT 1', [sanitizedPhone]);
+      const bookingCheck = await query('SELECT id FROM bookings WHERE guest_phone = $1 LIMIT 1', [sanitizedPhone]);
+
+      if (!profileCheck.rows[0] && !bookingCheck.rows[0]) {
+        return res.status(404).json({ error: 'এই নম্বরে কোনো বুকিং পাওয়া যায়নি। আগে বুকিং করুন।' });
+      }
+
+      // Rate limit: max 3 OTPs per phone in last 5 minutes
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const rateCheck = await query(
+        'SELECT COUNT(*) as cnt FROM otp_codes WHERE phone = $1 AND created_at >= $2',
+        [sanitizedPhone, fiveMinAgo]
+      );
+      if (parseInt(rateCheck.rows[0]?.cnt || '0') >= 3) {
+        return res.status(429).json({ error: 'অনেক বেশি OTP অনুরোধ। ৫ মিনিট অপেক্ষা করুন।' });
+      }
+
+      const otpCode = String(Math.floor(100000 + Math.random() * 900000));
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+
+      await query('INSERT INTO otp_codes (phone, code, expires_at) VALUES ($1, $2, $3)', [sanitizedPhone, otpCode, expiresAt]);
+
+      // Send SMS
+      const smsApiKey = process.env.BULKSMSBD_API_KEY;
+      const smsSenderId = process.env.BULKSMSBD_SENDER_ID || 'MANASIK';
+      if (!smsApiKey) {
+        return res.status(500).json({ error: 'SMS service not configured' });
+      }
+
+      const message = `Your Manasik Travel Hub verification code is: ${otpCode}. Valid for 5 minutes.`;
+      const smsUrl = `http://bulksmsbd.net/api/smsapi?api_key=${encodeURIComponent(smsApiKey)}&type=text&number=${encodeURIComponent(sanitizedPhone)}&senderid=${encodeURIComponent(smsSenderId)}&message=${encodeURIComponent(message)}`;
+      const smsRes = await fetch(smsUrl);
+      console.log('SMS result:', await smsRes.text());
+
+      return res.json({ success: true, message: 'OTP sent successfully' });
+
+    } else if (action === 'verify') {
+      if (!code || typeof code !== 'string' || code.length !== 6) {
+        return res.status(400).json({ error: 'Invalid OTP code' });
+      }
+
+      const otpResult = await query(
+        `SELECT * FROM otp_codes WHERE phone = $1 AND code = $2 AND verified = false AND expires_at >= $3 ORDER BY created_at DESC LIMIT 1`,
+        [sanitizedPhone, code, new Date().toISOString()]
+      );
+
+      if (!otpResult.rows[0]) {
+        return res.status(401).json({ error: 'ভুল বা মেয়াদোত্তীর্ণ OTP' });
+      }
+
+      // Mark as verified
+      await query('UPDATE otp_codes SET verified = true WHERE id = $1', [otpResult.rows[0].id]);
+
+      // Find user by phone in profiles
+      const profileResult = await query('SELECT user_id FROM profiles WHERE phone = $1 LIMIT 1', [sanitizedPhone]);
+      let userId = profileResult.rows[0]?.user_id;
+
+      // If no profile found, auto-create from guest booking
+      if (!userId) {
+        const guestResult = await query(
+          'SELECT id, guest_name, guest_phone, guest_email, guest_address, guest_passport FROM bookings WHERE guest_phone = $1 ORDER BY created_at DESC LIMIT 1',
+          [sanitizedPhone]
+        );
+
+        if (!guestResult.rows[0]) {
+          return res.status(404).json({ error: 'এই নম্বরে কোনো অ্যাকাউন্ট বা বুকিং পাওয়া যায়নি।' });
+        }
+
+        const guestBooking = guestResult.rows[0];
+
+        // Use Supabase admin API to create auth user
+        const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+        const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+          const { createClient } = require('@supabase/supabase-js');
+          const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+          const tempEmail = `${sanitizedPhone.replace(/\+/g, '')}@phone.manasiktravelhub.com`;
+          const tempPassword = require('uuid').v4() + 'Aa1!';
+
+          const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+            email: guestBooking.guest_email || tempEmail,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: { full_name: guestBooking.guest_name || '', phone: sanitizedPhone },
+          });
+
+          if (createError) {
+            if (createError.message?.includes('already') || createError.message?.includes('exists')) {
+              const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+              const existingUser = existingUsers?.users?.find(u => u.email === (guestBooking.guest_email || tempEmail));
+              if (existingUser) {
+                userId = existingUser.id;
+                // Upsert profile
+                const existingProfile = await query('SELECT id FROM profiles WHERE user_id = $1', [userId]);
+                if (existingProfile.rows[0]) {
+                  await query('UPDATE profiles SET phone = $1, full_name = COALESCE(full_name, $2) WHERE user_id = $3', [sanitizedPhone, guestBooking.guest_name || '', userId]);
+                } else {
+                  await query('INSERT INTO profiles (user_id, phone, full_name, email) VALUES ($1, $2, $3, $4)', [userId, sanitizedPhone, guestBooking.guest_name || '', guestBooking.guest_email || null]);
+                }
+              }
+            }
+          } else if (newUser?.user) {
+            userId = newUser.user.id;
+            await query('INSERT INTO profiles (user_id, full_name, phone, email, address, passport_number) VALUES ($1, $2, $3, $4, $5, $6)',
+              [userId, guestBooking.guest_name || '', sanitizedPhone, guestBooking.guest_email || null, guestBooking.guest_address || null, guestBooking.guest_passport || null]);
+            await query('INSERT INTO user_roles (user_id, role) VALUES ($1, $2)', [userId, 'user']);
+          }
+
+          // Link all guest bookings to this user
+          if (userId) {
+            await query('UPDATE bookings SET user_id = $1 WHERE guest_phone = $2 AND user_id IS NULL', [userId, sanitizedPhone]);
+            // Link payments
+            const userBookings = await query('SELECT id FROM bookings WHERE user_id = $1', [userId]);
+            if (userBookings.rows.length) {
+              const bookingIds = userBookings.rows.map(b => b.id);
+              await query(`UPDATE payments SET user_id = $1 WHERE booking_id = ANY($2) AND user_id = '00000000-0000-0000-0000-000000000000'`, [userId, bookingIds]);
+            }
+          }
+
+          if (!userId) {
+            return res.status(500).json({ error: 'অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে।' });
+          }
+
+          // Generate magic link tokens
+          const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+          if (!authUser?.user?.email) {
+            return res.status(500).json({ error: 'User account issue. Please contact support.' });
+          }
+
+          const { data: magicLink, error: magicError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'magiclink',
+            email: authUser.user.email,
+          });
+
+          if (magicError) {
+            return res.status(500).json({ error: 'Authentication failed' });
+          }
+
+          return res.json({
+            success: true,
+            access_token: magicLink.properties?.access_token,
+            refresh_token: magicLink.properties?.refresh_token,
+            user_id: userId,
+          });
+        } else {
+          return res.status(500).json({ error: 'Auth service not configured' });
+        }
+      } else {
+        // Existing user - generate magic link
+        const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+        const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+          return res.status(500).json({ error: 'Auth service not configured' });
+        }
+        const { createClient } = require('@supabase/supabase-js');
+        const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+        if (!authUser?.user?.email) {
+          return res.status(500).json({ error: 'User account issue.' });
+        }
+
+        const { data: magicLink, error: magicError } = await supabaseAdmin.auth.admin.generateLink({
+          type: 'magiclink',
+          email: authUser.user.email,
+        });
+
+        if (magicError) {
+          return res.status(500).json({ error: 'Authentication failed' });
+        }
+
+        return res.json({
+          success: true,
+          access_token: magicLink.properties?.access_token,
+          refresh_token: magicLink.properties?.refresh_token,
+          user_id: userId,
+        });
+      }
+    }
+
+    return res.status(400).json({ error: "Invalid action. Use 'send' or 'verify'." });
+  } catch (err) {
+    console.error('POST /api/send-otp error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =============================================
+// UPLOAD BOOKING DOCUMENT (public)
+// =============================================
+app.post('/api/upload-booking-document', upload.single('file'), async (req, res) => {
+  try {
+    const bookingId = req.body.booking_id;
+    const trackingId = req.body.tracking_id;
+    const documentType = req.body.document_type;
+    const file = req.file;
+
+    if (!bookingId || !trackingId || !documentType || !file) {
+      return res.status(400).json({ error: 'Missing required fields: booking_id, tracking_id, document_type, file' });
+    }
+
+    // Verify booking exists
+    const bookingResult = await query('SELECT id, user_id, guest_name FROM bookings WHERE id = $1 AND tracking_id = $2', [bookingId, trackingId]);
+    if (!bookingResult.rows[0]) {
+      return res.status(404).json({ error: 'Booking not found or tracking ID mismatch' });
+    }
+
+    const booking = bookingResult.rows[0];
+    const userId = booking.user_id || '00000000-0000-0000-0000-000000000000';
+
+    // Move file to proper location
+    const ext = file.originalname.split('.').pop() || 'jpg';
+    const relativePath = `booking-documents/${userId}/${bookingId}/${documentType}_${Date.now()}.${ext}`;
+    const absolutePath = path.join(uploadsRoot, relativePath);
+
+    await fsp.mkdir(path.dirname(absolutePath), { recursive: true });
+    await fsp.rename(file.path, absolutePath);
+
+    const filePath = `/uploads/${relativePath}`;
+
+    // Insert document record
+    await query(
+      'INSERT INTO booking_documents (booking_id, user_id, document_type, file_name, file_path, file_size) VALUES ($1, $2, $3, $4, $5, $6)',
+      [bookingId, userId, documentType, file.originalname, filePath, file.size]
+    );
+
+    res.json({ success: true, file_path: filePath });
+  } catch (err) {
+    console.error('POST /api/upload-booking-document error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =============================================
 // SERVE FRONTEND (production)
 // =============================================
 const frontendPath = path.join(__dirname, '..', 'dist');
