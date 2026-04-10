@@ -689,7 +689,7 @@ const storage = {
 const functions = {
   async invoke(name: string, options?: { body?: any }) {
     // Edge functions that have VPS equivalents — try VPS first
-    const vpsRoutes = ['track-booking', 'verify-invoice', 'create-guest-booking', 'send-notification', 'send-reminder', 'booking-notifications'];
+    const vpsRoutes = ['track-booking', 'verify-invoice', 'create-guest-booking', 'send-notification', 'send-reminder', 'booking-notifications', 'send-otp', 'upload-booking-document'];
     const isVpsRoute = name.startsWith('auth/') || vpsRoutes.includes(name);
 
     if (isVpsRoute) {

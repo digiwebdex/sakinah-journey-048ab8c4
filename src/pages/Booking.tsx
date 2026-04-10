@@ -276,7 +276,7 @@ const Booking = () => {
 
       // Upload documents if any
       if (uploadedDocs.length > 0 && result.booking_id) {
-        const userId = user?.id || result.user_id || "guest";
+        const userId = user?.id || result.user_id || "00000000-0000-0000-0000-000000000000";
         for (const doc of uploadedDocs) {
           const ext = doc.file.name.split(".").pop();
           const filePath = `${userId}/${result.booking_id}/${doc.type}_${Date.now()}.${ext}`;
