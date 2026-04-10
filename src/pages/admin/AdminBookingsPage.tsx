@@ -150,6 +150,76 @@ function BookingDetail({ bookingId }: { bookingId: string }) {
         )}
       </div>
 
+      {/* Members */}
+      {members.length > 0 && (
+        <div>
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Family Members ({members.length})</h4>
+          <div className="space-y-1">
+            {members.map((m: any, i: number) => (
+              <div key={m.id} className="flex items-center justify-between bg-secondary/30 rounded px-3 py-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-muted-foreground">{i + 1}.</span>
+                  <span className="text-xs font-medium">{m.full_name}</span>
+                  {m.passport_number && <span className="text-[10px] text-muted-foreground">({m.passport_number})</span>}
+                </div>
+                <span className="text-xs font-bold">{formatBDT(Number(m.final_price || 0))}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Documents */}
+      <div>
+        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+          Documents ({documents.length})
+          {documents.length > 0 && <span className="ml-2 text-emerald-500">✓</span>}
+        </h4>
+        {documents.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {documents.map((doc: any) => {
+              const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.file_name || doc.file_path || "");
+              const fileUrl = doc.file_path?.startsWith("/") ? doc.file_path : `/uploads/${doc.file_path}`;
+              return (
+                <div key={doc.id} className="bg-secondary/30 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="text-[10px] capitalize">{doc.document_type}</Badge>
+                    <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline">View</a>
+                  </div>
+                  {isImage && (
+                    <img src={fileUrl} alt={doc.document_type} className="w-full h-20 object-cover rounded border border-border" />
+                  )}
+                  <p className="text-[10px] text-muted-foreground truncate">{doc.file_name}</p>
+                  {doc.file_size && <p className="text-[10px] text-muted-foreground">{(doc.file_size / 1024).toFixed(1)} KB</p>}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
+            <p className="text-xs text-destructive font-medium">⚠ No documents uploaded for this booking</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Passport, NID, and photo should be uploaded before processing.</p>
+          </div>
+        )}
+        {/* Document completeness check */}
+        {documents.length > 0 && (() => {
+          const uploaded = documents.map((d: any) => d.document_type);
+          const required = ["passport", "nid", "photo"];
+          const missing = required.filter(r => !uploaded.includes(r));
+          return missing.length > 0 ? (
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2 mt-2">
+              <p className="text-[10px] text-yellow-700 dark:text-yellow-400 font-medium">
+                Missing: {missing.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(", ")}
+              </p>
+            </div>
+          ) : (
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-2 mt-2">
+              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">✓ All required documents uploaded</p>
+            </div>
+          );
+        })()}
+      </div>
+
       <div>
         <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Assigned Expenses ({expenses.length})</h4>
         {expenses.length > 0 ? (
