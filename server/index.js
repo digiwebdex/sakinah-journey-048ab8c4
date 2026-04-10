@@ -369,7 +369,7 @@ app.get('/api/bookings', authenticate, async (req, res) => {
     });
 
     let sql = `SELECT b.*, 
-      json_build_object('name', p.name, 'type', p.type, 'duration_days', p.duration_days, 'price', p.price) as packages,
+      json_build_object('name', p.name, 'type', p.type, 'duration_days', p.duration_days, 'price', p.price, 'start_date', p.start_date) as packages,
       CASE WHEN m.id IS NOT NULL THEN json_build_object('name', m.name, 'phone', m.phone) ELSE NULL END as moallems
       FROM bookings b
       LEFT JOIN packages p ON b.package_id = p.id
