@@ -269,6 +269,7 @@ export default function AdminBookingsPage() {
   const [editMembers, setEditMembers] = useState<any[]>([]);
   const [bookingDocs, setBookingDocs] = useState<Record<string, any[]>>({});
   const [inlineStatusId, setInlineStatusId] = useState<string | null>(null);
+  const [docReviewBooking, setDocReviewBooking] = useState<any>(null);
 
   const fetchBookings = async () => {
     setBookingsLoading(true);
