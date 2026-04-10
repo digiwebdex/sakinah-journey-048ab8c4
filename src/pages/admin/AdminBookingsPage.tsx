@@ -599,6 +599,7 @@ export default function AdminBookingsPage() {
             booking_id: booking.id,
             custom_subject: emailSubject,
             custom_message: emailHtml,
+            sms_message: smsMsg,
             new_status: statusChangeVal,
           },
         });
