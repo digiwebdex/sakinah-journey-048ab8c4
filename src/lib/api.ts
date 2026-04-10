@@ -695,9 +695,16 @@ const functions = {
     if (isVpsRoute) {
       try {
         const path = `/${name}`;
-        const res = await apiFetch(path, {
+        const isFormData = options?.body instanceof FormData;
+        const token = TokenManager.getAccessToken();
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        if (!isFormData) headers['Content-Type'] = 'application/json';
+
+        const res = await fetch(`${API_URL}${path}`, {
           method: 'POST',
-          body: options?.body ? JSON.stringify(options.body) : undefined,
+          headers,
+          body: isFormData ? options.body : (options?.body ? JSON.stringify(options.body) : undefined),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({ error: 'Request failed' }));
