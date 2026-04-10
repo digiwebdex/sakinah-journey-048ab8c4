@@ -527,11 +527,15 @@ export async function addInfoBox(doc: jsPDF, y: number, fields: InfoField[], tit
 
     const labelW = doc.getTextWidth(`${f.label}:`) + 3;
     const val = f.value || "N/A";
+    const truncatedVal = val.length > 35 ? val.substring(0, 35) + "..." : val;
 
     if (hasBengali(val)) {
-      await addBengaliText(doc, val, col + labelW, row, { fontSize: 8 });
+      // Calculate available width to prevent overflow
+      const availableWidth = (i % 2 === 0 ? col2 - col - labelW - 4 : pw - 14 - col - labelW - 4);
+      const displayVal = val.length > 30 ? val.substring(0, 30) + "..." : val;
+      await addBengaliText(doc, displayVal, col + labelW, row, { fontSize: 8, maxWidth: availableWidth });
     } else {
-      doc.text(val.length > 35 ? val.substring(0, 35) + "..." : val, col + labelW, row);
+      doc.text(truncatedVal, col + labelW, row);
     }
   }
 
