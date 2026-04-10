@@ -269,6 +269,7 @@ export default function AdminBookingsPage() {
   const [editMembers, setEditMembers] = useState<any[]>([]);
   const [bookingDocs, setBookingDocs] = useState<Record<string, any[]>>({});
   const [inlineStatusId, setInlineStatusId] = useState<string | null>(null);
+  const [docReviewBooking, setDocReviewBooking] = useState<any>(null);
 
   const fetchBookings = async () => {
     setBookingsLoading(true);
@@ -307,7 +308,7 @@ export default function AdminBookingsPage() {
       });
 
   const fetchBookingDocs = async () => {
-    const { data } = await supabase.from("booking_documents").select("booking_id, document_type");
+    const { data } = await supabase.from("booking_documents").select("id, booking_id, document_type, file_name, file_path, file_size, created_at").order("created_at", { ascending: false });
     const grouped: Record<string, any[]> = {};
     (data || []).forEach((d: any) => {
       if (!grouped[d.booking_id]) grouped[d.booking_id] = [];
@@ -316,7 +317,40 @@ export default function AdminBookingsPage() {
     setBookingDocs(grouped);
   };
 
-  const handleInlineStatusChange = async (bookingId: string, newStatus: string) => {
+  const autoCreateCustomer = async (booking: any) => {
+    try {
+      const guestName = booking.guest_name || "";
+      const guestPhone = booking.guest_phone || "";
+      const guestEmail = booking.guest_email || "";
+      const guestPassport = booking.guest_passport || "";
+      const guestAddress = booking.guest_address || "";
+      const userId = booking.user_id;
+      if (!guestName && !guestPhone) return;
+      let exists = false;
+      if (userId) {
+        const { data: ep } = await supabase.from("profiles").select("id").eq("user_id", userId).limit(1);
+        if (ep && ep.length > 0) exists = true;
+      }
+      if (!exists && guestPhone) {
+        const { data: pp } = await supabase.from("profiles").select("id").eq("phone", guestPhone).limit(1);
+        if (pp && pp.length > 0) exists = true;
+      }
+      if (!exists) {
+        const { error: insertErr } = await supabase.from("profiles").insert({
+          user_id: userId || booking.id,
+          full_name: guestName,
+          phone: guestPhone,
+          email: guestEmail,
+          passport_number: guestPassport,
+          address: guestAddress,
+        });
+        if (!insertErr) toast.success(`Customer "${guestName}" added to Customer Management`);
+        else console.error("Auto-create customer error:", insertErr);
+      }
+    } catch (e) { console.error("Auto-create customer failed:", e); }
+  };
+
+
     setInlineStatusId(null);
     const booking = bookings.find((b) => b.id === bookingId);
     if (!booking || booking.status === newStatus) return;
@@ -331,36 +365,7 @@ export default function AdminBookingsPage() {
 
     // Auto-create customer on confirm
     if (newStatus === "confirmed") {
-      try {
-        const guestName = booking.guest_name || "";
-        const guestPhone = booking.guest_phone || "";
-        const guestEmail = booking.guest_email || "";
-        const guestPassport = booking.guest_passport || "";
-        const guestAddress = booking.guest_address || "";
-        const userId = booking.user_id;
-        if (guestName || guestPhone) {
-          let exists = false;
-          if (userId) {
-            const { data: ep } = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
-            if (ep) exists = true;
-          }
-          if (!exists && guestPhone) {
-            const { data: pp } = await supabase.from("profiles").select("id").eq("phone", guestPhone).maybeSingle();
-            if (pp) exists = true;
-          }
-          if (!exists) {
-            await supabase.from("profiles").insert({
-              user_id: userId || booking.id,
-              full_name: guestName,
-              phone: guestPhone,
-              email: guestEmail,
-              passport_number: guestPassport,
-              address: guestAddress,
-            });
-            toast.success(`Customer "${guestName}" added`);
-          }
-        }
-      } catch (e) { console.error(e); }
+      await autoCreateCustomer(booking);
     }
 
     setStatusChangeId(null);
@@ -632,55 +637,7 @@ export default function AdminBookingsPage() {
 
     // Auto-create customer profile when booking is confirmed
     if (statusChangeVal === "confirmed" && booking) {
-      try {
-        const guestName = booking.guest_name || "";
-        const guestPhone = booking.guest_phone || "";
-        const guestEmail = booking.guest_email || "";
-        const guestPassport = booking.guest_passport || "";
-        const guestAddress = booking.guest_address || "";
-        const userId = booking.user_id;
-
-        if (guestName && userId) {
-          // Check if profile already exists for this user
-          const { data: existingProfile } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("user_id", userId)
-            .limit(1);
-
-          if (!existingProfile || existingProfile.length === 0) {
-            await supabase.from("profiles").insert({
-              user_id: userId,
-              full_name: guestName,
-              phone: guestPhone,
-              email: guestEmail,
-              passport_number: guestPassport,
-              address: guestAddress,
-            });
-            toast.success(`Customer "${guestName}" added to Customer Management`);
-          }
-        } else if (guestName && !userId) {
-          // Guest booking without auth — check by phone to avoid duplicates
-          const { data: existingByPhone } = guestPhone
-            ? await supabase.from("profiles").select("id").eq("phone", guestPhone).limit(1)
-            : { data: [] };
-
-          if (!existingByPhone || existingByPhone.length === 0) {
-            // Create profile with a placeholder user_id (booking id as reference)
-            await supabase.from("profiles").insert({
-              user_id: booking.id, // use booking id as reference for guest profiles
-              full_name: guestName,
-              phone: guestPhone,
-              email: guestEmail,
-              passport_number: guestPassport,
-              address: guestAddress,
-            });
-            toast.success(`Customer "${guestName}" added to Customer Management`);
-          }
-        }
-      } catch (profileErr: any) {
-        console.error("Auto-create customer failed:", profileErr);
-      }
+      await autoCreateCustomer(booking);
     }
 
     // Auto-send notification to customer
@@ -1120,7 +1077,7 @@ export default function AdminBookingsPage() {
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-3 px-2 text-center" onClick={(e) => { e.stopPropagation(); setDocReviewBooking(b); }}>
                       {(() => {
                         const docs = bookingDocs[b.id] || [];
                         const requiredTypes = ["passport", "nid", "photo"];
@@ -1129,7 +1086,7 @@ export default function AdminBookingsPage() {
                         const isComplete = completedCount === requiredTypes.length;
                         const hasAny = completedCount > 0;
                         return (
-                          <div className="flex flex-col items-center gap-0.5">
+                          <div className="flex flex-col items-center gap-0.5 cursor-pointer hover:opacity-80 transition-opacity">
                             <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full ${isComplete ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : hasAny ? "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400" : "bg-secondary text-muted-foreground"}`}>
                               {isComplete ? <FileCheck className="h-3 w-3" /> : hasAny ? <FileMinus className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
                               {completedCount}/{requiredTypes.length}
@@ -1238,6 +1195,96 @@ export default function AdminBookingsPage() {
           </div>
         </div>
       )}
+
+      {/* Document Review Dialog */}
+      <Dialog open={!!docReviewBooking} onOpenChange={(o) => { if (!o) setDocReviewBooking(null); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" /> Document Review
+            </DialogTitle>
+          </DialogHeader>
+          {docReviewBooking && (() => {
+            const docs = bookingDocs[docReviewBooking.id] || [];
+            return (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-semibold">{docReviewBooking.guest_name || "Unknown"}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{docReviewBooking.packages?.name || "N/A"}</p>
+                </div>
+
+                <Badge variant={docs.length > 0 ? "default" : "secondary"} className="text-xs">
+                  {docs.length} Document{docs.length !== 1 ? "s" : ""} Uploaded
+                </Badge>
+
+                {docs.length > 0 ? (
+                  <div className="space-y-3">
+                    {docs.map((doc: any) => {
+                      const fileUrl = doc.file_path?.startsWith("http") ? doc.file_path : doc.file_path?.startsWith("/") ? doc.file_path : `/uploads/${doc.file_path}`;
+                      const fileSizeKB = doc.file_size ? (doc.file_size / 1024).toFixed(1) : null;
+                      const uploadDate = doc.created_at ? new Date(doc.created_at).toLocaleDateString("en-GB", { month: "short", day: "2-digit", year: "numeric" }) : "";
+                      const uploadTime = doc.created_at ? new Date(doc.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
+
+                      return (
+                        <div key={doc.id} className="flex items-center gap-3 border border-border rounded-lg p-3 hover:bg-secondary/30 transition-colors">
+                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                            <FileText className="h-5 w-5 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold capitalize">{doc.document_type?.replace(/_/g, " ")}</p>
+                            <p className="text-xs text-muted-foreground truncate">{doc.file_name || "Unknown file"}</p>
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
+                              {fileSizeKB && <span>{fileSizeKB} KB</span>}
+                              {uploadDate && <><span>•</span><span>{uploadDate} {uploadTime}</span></>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <a href={fileUrl} target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-medium text-primary border border-primary/30 rounded-md px-2.5 py-1.5 hover:bg-primary/10 transition-colors">
+                              <Eye className="h-3.5 w-3.5" /> View
+                            </a>
+                            <a href={fileUrl} download={doc.file_name}
+                              className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-border hover:bg-secondary transition-colors">
+                              <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4 text-center">
+                    <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
+                    <p className="text-sm font-medium text-destructive">No documents uploaded</p>
+                    <p className="text-xs text-muted-foreground mt-1">Passport, NID, and photo should be uploaded before processing.</p>
+                  </div>
+                )}
+
+                {/* Missing documents warning */}
+                {docs.length > 0 && (() => {
+                  const uploaded = docs.map((d: any) => d.document_type);
+                  const required = ["passport", "nid", "photo"];
+                  const missing = required.filter(r => !uploaded.includes(r));
+                  return missing.length > 0 ? (
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <p className="text-xs text-yellow-700 dark:text-yellow-400 font-medium">
+                        ⚠ Missing: {missing.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(", ")}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">✓ All required documents uploaded</p>
+                    </div>
+                  );
+                })()}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
