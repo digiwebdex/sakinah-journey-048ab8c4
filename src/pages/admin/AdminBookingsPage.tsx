@@ -1086,13 +1086,52 @@ export default function AdminBookingsPage() {
                         <span className="text-[10px] text-muted-foreground capitalize">{paymentMethod}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-2 text-center" onClick={(e) => e.stopPropagation()}>
-                      <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full border capitalize ${statusColors[b.status] || "bg-secondary text-foreground"}`}>
+                    <td className="py-3 px-2 text-center relative" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => setInlineStatusId(inlineStatusId === b.id ? null : b.id)}
+                        className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full border capitalize cursor-pointer hover:opacity-80 transition-opacity ${statusColors[b.status] || "bg-secondary text-foreground"}`}
+                      >
                         {b.status === "pending" ? "⏳" : b.status === "confirmed" ? "✅" : b.status === "completed" ? "🎉" : b.status === "cancelled" ? "❌" : "📋"} {b.status?.replace("_", " ")}
-                      </span>
+                        <ChevronDown className="h-3 w-3 ml-0.5" />
+                      </button>
+                      {inlineStatusId === b.id && (
+                        <div className="absolute z-50 top-full mt-1 left-1/2 -translate-x-1/2 bg-card border border-border rounded-lg shadow-lg py-1 min-w-[150px]">
+                          {STATUSES.map((s) => (
+                            <button
+                              key={s}
+                              onClick={() => handleInlineStatusChange(b.id, s)}
+                              className={cn(
+                                "w-full text-left px-3 py-2 text-xs capitalize hover:bg-secondary/50 transition-colors flex items-center gap-2",
+                                b.status === s && "bg-secondary font-bold"
+                              )}
+                            >
+                              <span className={`inline-block w-2 h-2 rounded-full ${s === "pending" ? "bg-yellow-500" : s === "confirmed" ? "bg-emerald-500" : s === "completed" ? "bg-emerald-600" : s === "cancelled" ? "bg-destructive" : "bg-blue-500"}`} />
+                              {s.replace("_", " ")}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </td>
-                    <td className="py-3 px-2">
-                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">{trackingLabels[b.status] || b.status}</span>
+                    <td className="py-3 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      {(() => {
+                        const docs = bookingDocs[b.id] || [];
+                        const requiredTypes = ["passport", "nid", "photo"];
+                        const uploadedTypes = docs.map((d: any) => d.document_type);
+                        const completedCount = requiredTypes.filter(t => uploadedTypes.includes(t)).length;
+                        const isComplete = completedCount === requiredTypes.length;
+                        const hasAny = completedCount > 0;
+                        return (
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full ${isComplete ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : hasAny ? "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400" : "bg-secondary text-muted-foreground"}`}>
+                              {isComplete ? <FileCheck className="h-3 w-3" /> : hasAny ? <FileMinus className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                              {completedCount}/{requiredTypes.length}
+                            </span>
+                            <span className="text-[9px] text-muted-foreground">
+                              {isComplete ? "Complete" : hasAny ? "Partial" : "Missing"}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="py-3 px-2 text-center" onClick={(e) => e.stopPropagation()}>
                       <AdminActionMenu actions={getBookingActions(b)} inlineCount={0} />
