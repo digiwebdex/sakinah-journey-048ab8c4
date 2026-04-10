@@ -141,17 +141,32 @@ const BookingDialog = ({ open, onOpenChange, packageId }: BookingDialogProps) =>
   const nextStep = () => { if (validateStep()) setStep((s) => Math.min(s + 1, STEPS.length - 1)); };
   const prevStep = () => setStep((s) => Math.max(s - 1, 0));
 
+  const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error("ফাইল সাইজ ৫MB এর কম হতে হবে"); return; }
+    setPaymentScreenshot(file);
+    const reader = new FileReader();
+    reader.onload = () => setPaymentScreenshotPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async () => {
     if (!pkg) return;
     setSubmitting(true);
     try {
       const selectedMethod = paymentMethods.find(m => m.id === selectedPaymentMethod);
+      const isBankMethod = selectedMethod?.category === 'bank';
+      const paymentNote = isBankMethod && transferAmount
+        ? `${selectedMethod?.name || selectedPaymentMethod} — ৳${transferAmount} transferred`
+        : undefined;
       const response = await supabase.functions.invoke("create-guest-booking", {
         body: {
           fullName: personalInfo.fullName.trim(), phone: personalInfo.phone.trim(),
           email: email.trim() || null, address: personalInfo.address.trim() || null,
           passportNumber: personalInfo.passportNumber.trim() || null, packageId: pkg.id,
-          numTravelers, notes: notes.trim() || null, installmentPlanId: selectedPlan || null,
+          numTravelers, notes: [notes.trim(), paymentNote].filter(Boolean).join(" | ") || null,
+          installmentPlanId: selectedPlan || null,
           paymentMethod: selectedMethod?.name || selectedPaymentMethod || null,
         },
       });
@@ -159,8 +174,10 @@ const BookingDialog = ({ open, onOpenChange, packageId }: BookingDialogProps) =>
       const result = response.data;
       if (!result?.success) throw new Error(result?.error || "Booking failed");
 
+      const userId = user?.id || result.user_id || "guest";
+
+      // Upload documents
       if (uploadedDocs.length > 0 && result.booking_id) {
-        const userId = user?.id || result.user_id || "guest";
         for (const doc of uploadedDocs) {
           const ext = doc.file.name.split(".").pop();
           const filePath = `${userId}/${result.booking_id}/${doc.type}_${Date.now()}.${ext}`;
@@ -168,6 +185,15 @@ const BookingDialog = ({ open, onOpenChange, packageId }: BookingDialogProps) =>
           await supabase.from("booking_documents").insert({ booking_id: result.booking_id, user_id: userId, document_type: doc.type, file_name: doc.file.name, file_path: filePath, file_size: doc.file.size });
         }
       }
+
+      // Upload payment screenshot
+      if (paymentScreenshot && result.booking_id) {
+        const ext = paymentScreenshot.name.split(".").pop();
+        const filePath = `${userId}/${result.booking_id}/payment_receipt_${Date.now()}.${ext}`;
+        await supabase.storage.from("booking-documents").upload(filePath, paymentScreenshot);
+        await supabase.from("booking_documents").insert({ booking_id: result.booking_id, user_id: userId, document_type: "payment_receipt", file_name: paymentScreenshot.name, file_path: filePath, file_size: paymentScreenshot.size });
+      }
+
       setCreatedBooking({ id: result.booking_id, tracking_id: result.tracking_id });
       toast.success(`Booking created! Tracking ID: ${result.tracking_id}`);
     } catch (err: any) {
