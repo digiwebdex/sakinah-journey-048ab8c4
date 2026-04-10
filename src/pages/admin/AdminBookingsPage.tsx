@@ -308,7 +308,7 @@ export default function AdminBookingsPage() {
       });
 
   const fetchBookingDocs = async () => {
-    const { data } = await supabase.from("booking_documents").select("booking_id, document_type");
+    const { data } = await supabase.from("booking_documents").select("id, booking_id, document_type, file_name, file_path, file_size, created_at").order("created_at", { ascending: false });
     const grouped: Record<string, any[]> = {};
     (data || []).forEach((d: any) => {
       if (!grouped[d.booking_id]) grouped[d.booking_id] = [];
