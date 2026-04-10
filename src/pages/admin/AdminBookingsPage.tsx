@@ -34,20 +34,23 @@ function BookingDetail({ bookingId }: { bookingId: string }) {
   const [payments, setPayments] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const [bkRes, payRes, expRes, memRes] = await Promise.all([
+      const [bkRes, payRes, expRes, memRes, docRes] = await Promise.all([
         supabase.from("bookings").select("total_amount, paid_amount, due_amount, total_cost, total_commission, extra_expense, profit_amount").eq("id", bookingId).single(),
         supabase.from("payments").select("*").eq("booking_id", bookingId).order("installment_number", { ascending: true }),
         supabase.from("expenses").select("*").eq("booking_id", bookingId).order("date", { ascending: false }),
         supabase.from("booking_members").select("*, packages(name)").eq("booking_id", bookingId).order("created_at", { ascending: true }),
+        supabase.from("booking_documents").select("*").eq("booking_id", bookingId).order("created_at", { ascending: false }),
       ]);
       setBooking(bkRes.data || null);
       setPayments(payRes.data || []);
       setExpenses(expRes.data || []);
       setMembers(memRes.data || []);
+      setDocuments(docRes.data || []);
       setLoading(false);
     };
     load();
