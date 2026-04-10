@@ -317,7 +317,40 @@ export default function AdminBookingsPage() {
     setBookingDocs(grouped);
   };
 
-  const handleInlineStatusChange = async (bookingId: string, newStatus: string) => {
+  const autoCreateCustomer = async (booking: any) => {
+    try {
+      const guestName = booking.guest_name || "";
+      const guestPhone = booking.guest_phone || "";
+      const guestEmail = booking.guest_email || "";
+      const guestPassport = booking.guest_passport || "";
+      const guestAddress = booking.guest_address || "";
+      const userId = booking.user_id;
+      if (!guestName && !guestPhone) return;
+      let exists = false;
+      if (userId) {
+        const { data: ep } = await supabase.from("profiles").select("id").eq("user_id", userId).limit(1);
+        if (ep && ep.length > 0) exists = true;
+      }
+      if (!exists && guestPhone) {
+        const { data: pp } = await supabase.from("profiles").select("id").eq("phone", guestPhone).limit(1);
+        if (pp && pp.length > 0) exists = true;
+      }
+      if (!exists) {
+        const { error: insertErr } = await supabase.from("profiles").insert({
+          user_id: userId || booking.id,
+          full_name: guestName,
+          phone: guestPhone,
+          email: guestEmail,
+          passport_number: guestPassport,
+          address: guestAddress,
+        });
+        if (!insertErr) toast.success(`Customer "${guestName}" added to Customer Management`);
+        else console.error("Auto-create customer error:", insertErr);
+      }
+    } catch (e) { console.error("Auto-create customer failed:", e); }
+  };
+
+
     setInlineStatusId(null);
     const booking = bookings.find((b) => b.id === bookingId);
     if (!booking || booking.status === newStatus) return;
