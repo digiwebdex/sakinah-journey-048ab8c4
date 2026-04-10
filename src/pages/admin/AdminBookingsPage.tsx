@@ -1195,6 +1195,96 @@ export default function AdminBookingsPage() {
           </div>
         </div>
       )}
+
+      {/* Document Review Dialog */}
+      <Dialog open={!!docReviewBooking} onOpenChange={(o) => { if (!o) setDocReviewBooking(null); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" /> Document Review
+            </DialogTitle>
+          </DialogHeader>
+          {docReviewBooking && (() => {
+            const docs = bookingDocs[docReviewBooking.id] || [];
+            return (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-semibold">{docReviewBooking.guest_name || "Unknown"}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{docReviewBooking.packages?.name || "N/A"}</p>
+                </div>
+
+                <Badge variant={docs.length > 0 ? "default" : "secondary"} className="text-xs">
+                  {docs.length} Document{docs.length !== 1 ? "s" : ""} Uploaded
+                </Badge>
+
+                {docs.length > 0 ? (
+                  <div className="space-y-3">
+                    {docs.map((doc: any) => {
+                      const fileUrl = doc.file_path?.startsWith("http") ? doc.file_path : doc.file_path?.startsWith("/") ? doc.file_path : `/uploads/${doc.file_path}`;
+                      const fileSizeKB = doc.file_size ? (doc.file_size / 1024).toFixed(1) : null;
+                      const uploadDate = doc.created_at ? new Date(doc.created_at).toLocaleDateString("en-GB", { month: "short", day: "2-digit", year: "numeric" }) : "";
+                      const uploadTime = doc.created_at ? new Date(doc.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
+
+                      return (
+                        <div key={doc.id} className="flex items-center gap-3 border border-border rounded-lg p-3 hover:bg-secondary/30 transition-colors">
+                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                            <FileText className="h-5 w-5 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold capitalize">{doc.document_type?.replace(/_/g, " ")}</p>
+                            <p className="text-xs text-muted-foreground truncate">{doc.file_name || "Unknown file"}</p>
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
+                              {fileSizeKB && <span>{fileSizeKB} KB</span>}
+                              {uploadDate && <><span>•</span><span>{uploadDate} {uploadTime}</span></>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <a href={fileUrl} target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-medium text-primary border border-primary/30 rounded-md px-2.5 py-1.5 hover:bg-primary/10 transition-colors">
+                              <Eye className="h-3.5 w-3.5" /> View
+                            </a>
+                            <a href={fileUrl} download={doc.file_name}
+                              className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-border hover:bg-secondary transition-colors">
+                              <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4 text-center">
+                    <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
+                    <p className="text-sm font-medium text-destructive">No documents uploaded</p>
+                    <p className="text-xs text-muted-foreground mt-1">Passport, NID, and photo should be uploaded before processing.</p>
+                  </div>
+                )}
+
+                {/* Missing documents warning */}
+                {docs.length > 0 && (() => {
+                  const uploaded = docs.map((d: any) => d.document_type);
+                  const required = ["passport", "nid", "photo"];
+                  const missing = required.filter(r => !uploaded.includes(r));
+                  return missing.length > 0 ? (
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <p className="text-xs text-yellow-700 dark:text-yellow-400 font-medium">
+                        ⚠ Missing: {missing.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(", ")}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">✓ All required documents uploaded</p>
+                    </div>
+                  );
+                })()}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
