@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCanSeeProfit } from "@/components/admin/AdminLayout";
 import { format } from "date-fns";
-import { formatBDT } from "@/lib/utils";
+import { formatBDT, formatTrackingId } from "@/lib/utils";
 
 interface Props {
   bookings: any[];
@@ -203,7 +203,7 @@ const AdminDashboardCharts = ({
                 >
                   <div>
                     <p className="text-sm font-semibold">{b.guest_name || "N/A"}</p>
-                    <p className="text-[11px] text-muted-foreground">{b.tracking_id} · {b.packages?.name || ""}</p>
+                    <p className="text-[11px] text-muted-foreground">{formatTrackingId(b.tracking_id)} · {b.packages?.name || ""}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-bold text-primary">{formatBDT(Number(b.total_amount || 0))}</p>
@@ -238,7 +238,7 @@ const AdminDashboardCharts = ({
                   onClick={() => navigate("/admin/payments")}
                 >
                   <div>
-                    <p className="text-sm font-semibold">{p.bookings?.tracking_id || p.id.slice(0, 8)}</p>
+                    <p className="text-sm font-semibold">{formatTrackingId(p.bookings?.tracking_id) || p.id.slice(0, 8)}</p>
                     <p className="text-[11px] text-muted-foreground">#{p.installment_number || 1} · {p.payment_method || "cash"}</p>
                   </div>
                   <div className="text-right">
@@ -285,7 +285,7 @@ const AdminDashboardCharts = ({
                   <div className="space-y-1 mt-2 border-t border-border pt-2">
                     {c.bookings.map((b: any) => (
                       <div key={b.id} className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">{b.tracking_id} · {b.packages?.name || ""}</span>
+                        <span className="text-muted-foreground">{formatTrackingId(b.tracking_id)} · {b.packages?.name || ""}</span>
                         <div className="flex items-center gap-3">
                           <span className="text-muted-foreground">Total: {formatBDT(Number(b.total_amount))}</span>
                           <span className="font-semibold text-destructive">Due: {formatBDT(Number(b.due_amount))}</span>
