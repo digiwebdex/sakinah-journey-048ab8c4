@@ -261,7 +261,7 @@ export default function AdminAccountingPage() {
         await exportPDF({
           title: "Booking Profit Report",
           columns: ["Tracking ID", "Customer", "Package", "Revenue", "Expenses", "Profit"],
-          rows: bookingProfit.map((b: any) => [b.tracking_id || "—", b.guest_name || "—", b.package_name || "—", Number(b.total_payments || 0), Number(b.total_expenses || 0), Number(b.profit_amount || 0)]),
+          rows: bookingProfit.map((b: any) => [formatTrackingId(b.tracking_id) || "—", b.guest_name || "—", b.package_name || "—", Number(b.total_payments || 0), Number(b.total_expenses || 0), Number(b.profit_amount || 0)]),
         });
       } else if (tab === "package") {
         await exportPDF({
