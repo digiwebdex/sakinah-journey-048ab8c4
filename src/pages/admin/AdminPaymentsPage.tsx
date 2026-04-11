@@ -205,6 +205,7 @@ export default function AdminPaymentsPage() {
 
   const handleAddPayment = async () => {
     if (!addForm.amount || parseFloat(addForm.amount) <= 0) { toast.error("Enter a valid amount"); return; }
+    if (!addForm.wallet_account_id) { toast.error("Please select a wallet account"); return; }
     
     // Build combined notes with service type
     const serviceLabel = SERVICE_TYPES.find(s => s.value === addForm.service_type)?.label || "";
