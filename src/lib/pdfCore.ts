@@ -208,7 +208,7 @@ export async function addPdfHeader(
     doc.setFontSize(6);
     doc.setTextColor(MUTED.r, MUTED.g, MUTED.b);
     if (hasBengali(cfg.address)) {
-      await addBengaliText(doc, cfg.address, centerX, textStartY + 18, { fontSize: 5.5, color: "#787878", maxWidth: contactMaxWidth, align: "center" });
+      await addBengaliText(doc, cfg.address, centerX, textStartY + 18, { fontSize: 5.5, color: "#787878", maxWidth: contactMaxWidth });
     } else {
       const addr = cfg.address.length > 100 ? cfg.address.substring(0, 100) + "..." : cfg.address;
       doc.text(addr, centerX, textStartY + 18, { align: "center", maxWidth: contactMaxWidth });
