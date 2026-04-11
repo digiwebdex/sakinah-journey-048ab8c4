@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   TrendingUp, DollarSign, Package,
   Users, Wallet, ArrowUpRight, ArrowDownRight, UserCheck,
-  CalendarDays, CreditCard,
+  CalendarDays, CreditCard, Activity, PieChart,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -29,7 +29,6 @@ interface Props {
   onMarkPaid: (id: string) => void;
 }
 
-
 const AdminDashboardCharts = ({
   bookings, payments, expenses = [], accounts = [],
   moallemPayments = [], supplierPayments = [], commissionPayments = [],
@@ -41,9 +40,7 @@ const AdminDashboardCharts = ({
   const [showDueCustomers, setShowDueCustomers] = useState(false);
 
   const financials = useMemo(() => {
-    // CRITICAL: Exclude cancelled bookings from all financial calculations
     const activeBookings = bookings.filter(b => b.status !== "cancelled");
-    
     const totalSales = activeBookings.reduce((s, b) => s + Number(b.total_amount || 0), 0);
     const totalHajji = activeBookings.reduce((s, b) => s + Number(b.num_travelers || 0), 0);
 
@@ -90,9 +87,24 @@ const AdminDashboardCharts = ({
     const commissionDue = activeBookings.reduce((s, b) => s + Number(b.commission_due || 0), 0);
     const totalPayable = supplierDue + commissionDue;
 
+    // Today's stats
+    const today = format(new Date(), "yyyy-MM-dd");
+    const todayBookings = activeBookings.filter(b => format(new Date(b.created_at), "yyyy-MM-dd") === today).length;
+    const todayPayments = payments.filter(p => p.status === "completed" && p.paid_at && format(new Date(p.paid_at), "yyyy-MM-dd") === today)
+      .reduce((s, p) => s + Number(p.amount || 0), 0);
+
+    // Status breakdown
+    const pendingCount = activeBookings.filter(b => b.status === "pending").length;
+    const confirmedCount = activeBookings.filter(b => b.status === "confirmed").length;
+    const cancelledCount = bookings.filter(b => b.status === "cancelled").length;
+
     return {
-      totalSales, totalHajji, totalIncomeReceived, netProfit, cashBalance, bankBalance, bkashBalance, nagadBalance,
-      moallemDue, customerDue, totalReceivable, supplierDue, commissionDue, totalPayable,
+      totalSales, totalHajji, totalIncomeReceived, netProfit,
+      cashBalance, bankBalance, bkashBalance, nagadBalance,
+      moallemDue, customerDue, totalReceivable,
+      supplierDue, commissionDue, totalPayable,
+      todayBookings, todayPayments,
+      pendingCount, confirmedCount, cancelledCount,
     };
   }, [bookings, payments, expenses, accounts, moallemPayments, supplierPayments, commissionPayments, supplierContractPayments, supplierContracts, moallems, dailyCashbook]);
 
@@ -111,123 +123,146 @@ const AdminDashboardCharts = ({
     return Object.values(map).sort((a, b) => b.totalDue - a.totalDue);
   }, [bookings]);
 
-  const kpiCards = useMemo(() => {
-    const cards: { label: string; value: string | number; icon: any; color: string; onClick: () => void }[] = [
-      { label: "Total Sales", value: formatBDT(financials.totalSales), icon: DollarSign, color: "text-primary", onClick: () => navigate("/admin/bookings") },
-      { label: "Income Received", value: formatBDT(financials.totalIncomeReceived), icon: ArrowUpRight, color: "text-emerald-500", onClick: () => navigate("/admin/payments") },
-    ];
-    if (canSeeProfit) {
-      cards.push({ label: "Net Profit", value: formatBDT(financials.netProfit), icon: TrendingUp, color: financials.netProfit >= 0 ? "text-emerald-500" : "text-destructive", onClick: () => navigate("/admin/accounting") });
-    }
-    cards.push(
-      { label: "Cash", value: formatBDT(financials.cashBalance), icon: Wallet, color: financials.cashBalance >= 0 ? "text-primary" : "text-destructive", onClick: () => navigate("/admin/accounting") },
-      { label: "Bank", value: formatBDT(financials.bankBalance), icon: Wallet, color: financials.bankBalance >= 0 ? "text-primary" : "text-destructive", onClick: () => navigate("/admin/accounting") },
-      { label: "bKash", value: formatBDT(financials.bkashBalance), icon: Wallet, color: financials.bkashBalance >= 0 ? "text-primary" : "text-destructive", onClick: () => navigate("/admin/accounting") },
-      { label: "Nagad", value: formatBDT(financials.nagadBalance), icon: Wallet, color: financials.nagadBalance >= 0 ? "text-primary" : "text-destructive", onClick: () => navigate("/admin/accounting") },
-      { label: "Total Bookings", value: bookings.filter(b => b.status !== "cancelled").length, icon: Package, color: "text-foreground", onClick: () => navigate("/admin/bookings") },
-      { label: "Total Hajji", value: financials.totalHajji, icon: Users, color: "text-foreground", onClick: () => navigate("/admin/customers") },
-      { label: "Customer Due", value: formatBDT(financials.customerDue), icon: UserCheck, color: financials.customerDue > 0 ? "text-yellow-500" : "text-emerald-500", onClick: () => setShowDueCustomers(true) },
-    );
-    return cards;
-  }, [financials, bookings.length, canSeeProfit, navigate]);
+  const totalWallet = financials.cashBalance + financials.bankBalance + financials.bkashBalance + financials.nagadBalance;
+  const recentBookings = bookings.slice(0, 6);
+  const recentPayments = payments.filter(p => p.status === "completed").slice(0, 6);
 
-  const recentBookings = bookings.slice(0, 5);
-  const recentPayments = payments.filter(p => p.status === "completed").slice(0, 5);
+  const walletItems = [
+    { label: "Cash", value: financials.cashBalance, color: "bg-emerald-500" },
+    { label: "Bank", value: financials.bankBalance, color: "bg-blue-500" },
+    { label: "bKash", value: financials.bkashBalance, color: "bg-pink-500" },
+    { label: "Nagad", value: financials.nagadBalance, color: "bg-orange-500" },
+  ];
 
   return (
     <div className="space-y-5">
-      {/* ═══ KPI CARDS ═══ */}
-      <div className={`grid grid-cols-2 sm:grid-cols-4 ${canSeeProfit ? "lg:grid-cols-5 xl:grid-cols-10" : "lg:grid-cols-5 xl:grid-cols-9"} gap-3`}>
-        {kpiCards.map(k => (
-          <div
-            key={k.label}
-            className="bg-card border border-border rounded-xl p-4 cursor-pointer hover:border-primary/50 transition-colors"
-            onClick={k.onClick}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{k.label}</p>
-              <k.icon className={`h-4 w-4 ${k.color}`} />
-            </div>
-            <p className={`text-lg font-body font-bold tabular-nums ${k.color}`}>{k.value}</p>
-          </div>
-        ))}
+      {/* ═══ ROW 1: PRIMARY KPIs ═══ */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <KpiCard
+          label="Total Sales"
+          value={formatBDT(financials.totalSales)}
+          icon={DollarSign}
+          iconBg="bg-primary/10"
+          iconColor="text-primary"
+          sub={`${bookings.filter(b => b.status !== "cancelled").length} bookings`}
+          onClick={() => navigate("/admin/bookings")}
+        />
+        <KpiCard
+          label="Income Received"
+          value={formatBDT(financials.totalIncomeReceived)}
+          icon={ArrowUpRight}
+          iconBg="bg-emerald-500/10"
+          iconColor="text-emerald-500"
+          sub={`Today: ${formatBDT(financials.todayPayments)}`}
+          onClick={() => navigate("/admin/payments")}
+        />
+        {canSeeProfit && (
+          <KpiCard
+            label="Net Profit"
+            value={formatBDT(financials.netProfit)}
+            icon={TrendingUp}
+            iconBg={financials.netProfit >= 0 ? "bg-emerald-500/10" : "bg-destructive/10"}
+            iconColor={financials.netProfit >= 0 ? "text-emerald-500" : "text-destructive"}
+            sub="After all expenses"
+            onClick={() => navigate("/admin/accounting")}
+          />
+        )}
+        <KpiCard
+          label="Customer Due"
+          value={formatBDT(financials.customerDue)}
+          icon={UserCheck}
+          iconBg="bg-yellow-500/10"
+          iconColor="text-yellow-600"
+          sub={`${dueCustomers.length} customers`}
+          onClick={() => setShowDueCustomers(true)}
+        />
       </div>
 
-      {/* ═══ TOTAL WALLET BALANCE ═══ */}
-      <div className="bg-card border border-border rounded-xl p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold flex items-center gap-2">
-            <Wallet className="h-4 w-4 text-primary" /> Total Wallet Balance
-          </h3>
-          <p className={`text-xl font-body font-bold tabular-nums ${(financials.cashBalance + financials.bankBalance + financials.bkashBalance + financials.nagadBalance) >= 0 ? "text-primary" : "text-destructive"}`}>
-            {formatBDT(financials.cashBalance + financials.bankBalance + financials.bkashBalance + financials.nagadBalance)}
-          </p>
-        </div>
-      </div>
-
-      {/* ═══ RECEIVABLE & PAYABLE ═══ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-card border border-border rounded-xl p-4">
-          <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-            <ArrowUpRight className="h-4 w-4 text-primary" /> Receivable
-          </h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between cursor-pointer hover:bg-secondary/30 rounded px-1 -mx-1 py-0.5 transition-colors" onClick={() => navigate("/admin/moallems")}>
-              <span className="text-muted-foreground">Moallem Due</span><span className="font-bold text-yellow-600">{formatBDT(financials.moallemDue)}</span>
-            </div>
-            <div className="flex justify-between cursor-pointer hover:bg-secondary/30 rounded px-1 -mx-1 py-0.5 transition-colors" onClick={() => setShowDueCustomers(true)}>
-              <span className="text-muted-foreground">Customer Due</span><span className="font-bold text-yellow-600">{formatBDT(financials.customerDue)}</span>
-            </div>
-            <div className="border-t border-border pt-2 flex justify-between font-bold"><span>Total</span><span className="text-primary">{formatBDT(financials.totalReceivable)}</span></div>
+      {/* ═══ ROW 2: WALLET + STATS ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Wallet Overview */}
+        <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-primary" /> Wallet Overview
+            </h3>
+            <p className={`text-xl font-bold tabular-nums ${totalWallet >= 0 ? "text-primary" : "text-destructive"}`}>
+              {formatBDT(totalWallet)}
+            </p>
           </div>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-4">
-          <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-            <ArrowDownRight className="h-4 w-4 text-destructive" /> Payable
-          </h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between cursor-pointer hover:bg-secondary/30 rounded px-1 -mx-1 py-0.5 transition-colors" onClick={() => navigate("/admin/supplier-agents")}>
-              <span className="text-muted-foreground">Supplier Due</span><span className="font-bold text-destructive">{formatBDT(financials.supplierDue)}</span>
-            </div>
-            {canSeeProfit && (
-              <div className="flex justify-between cursor-pointer hover:bg-secondary/30 rounded px-1 -mx-1 py-0.5 transition-colors" onClick={() => navigate("/admin/moallems")}>
-                <span className="text-muted-foreground">Commission Due</span><span className="font-bold text-destructive">{formatBDT(financials.commissionDue)}</span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {walletItems.map(w => (
+              <div
+                key={w.label}
+                className="bg-secondary/40 rounded-lg p-3 cursor-pointer hover:bg-secondary/70 transition-colors"
+                onClick={() => navigate("/admin/accounting")}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`w-2.5 h-2.5 rounded-full ${w.color}`} />
+                  <span className="text-xs text-muted-foreground">{w.label}</span>
+                </div>
+                <p className={`text-base font-bold tabular-nums ${w.value >= 0 ? "text-foreground" : "text-destructive"}`}>
+                  {formatBDT(w.value)}
+                </p>
               </div>
-            )}
-            <div className="border-t border-border pt-2 flex justify-between font-bold">
-              <span>Total</span>
-              <span className="text-destructive">{formatBDT(financials.supplierDue + (canSeeProfit ? financials.commissionDue : 0))}</span>
+            ))}
+          </div>
+          {/* Wallet bar visualization */}
+          {totalWallet > 0 && (
+            <div className="mt-4 h-3 rounded-full bg-secondary/50 overflow-hidden flex">
+              {walletItems.filter(w => w.value > 0).map(w => (
+                <div
+                  key={w.label}
+                  className={`${w.color} opacity-80 transition-all`}
+                  style={{ width: `${(w.value / totalWallet) * 100}%` }}
+                  title={`${w.label}: ${formatBDT(w.value)}`}
+                />
+              ))}
             </div>
+          )}
+        </div>
+
+        {/* Quick Stats */}
+        <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Activity className="h-4 w-4 text-primary" /> Quick Stats
+          </h3>
+          <div className="space-y-3">
+            <QuickStat label="Total Hajji" value={financials.totalHajji} color="text-primary" onClick={() => navigate("/admin/customers")} />
+            <QuickStat label="Today's Bookings" value={financials.todayBookings} color="text-emerald-500" onClick={() => navigate("/admin/bookings")} />
+            <QuickStat label="Pending" value={financials.pendingCount} color="text-yellow-600" onClick={() => navigate("/admin/bookings")} />
+            <QuickStat label="Confirmed" value={financials.confirmedCount} color="text-emerald-500" onClick={() => navigate("/admin/bookings")} />
+            <QuickStat label="Cancelled" value={financials.cancelledCount} color="text-destructive" onClick={() => navigate("/admin/bookings")} />
           </div>
         </div>
       </div>
 
-      {/* ═══ RECENT BOOKINGS & PAYMENTS ═══ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* ═══ ROW 3: RECENT BOOKINGS & PAYMENTS ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Recent Bookings */}
-        <div className="bg-card border border-border rounded-xl p-4">
+        <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <CalendarDays className="h-4 w-4 text-primary" /> Recent Bookings
             </h3>
-            <span className="text-xs text-primary cursor-pointer hover:underline" onClick={() => navigate("/admin/bookings")}>View All</span>
+            <span className="text-xs text-primary cursor-pointer hover:underline font-medium" onClick={() => navigate("/admin/bookings")}>View All →</span>
           </div>
           {recentBookings.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {recentBookings.map(b => (
                 <div
                   key={b.id}
-                  className="flex items-center justify-between py-2 border-b border-border last:border-0 cursor-pointer hover:bg-secondary/20 rounded px-1 -mx-1 transition-colors"
+                  className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0 cursor-pointer hover:bg-secondary/20 rounded-lg px-2 -mx-2 transition-colors"
                   onClick={() => navigate("/admin/bookings")}
                 >
-                  <div>
-                    <p className="text-sm font-semibold">{b.guest_name || "N/A"}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate">{b.guest_name || "N/A"}</p>
                     <p className="text-[11px] text-muted-foreground">{formatTrackingId(b.tracking_id)} · {b.packages?.name || ""}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-primary">{formatBDT(Number(b.total_amount || 0))}</p>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                      b.status === "confirmed" ? "bg-emerald-500/10 text-emerald-500" :
+                  <div className="text-right ml-3 shrink-0">
+                    <p className="text-sm font-bold text-primary tabular-nums">{formatBDT(Number(b.total_amount || 0))}</p>
+                    <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      b.status === "confirmed" ? "bg-emerald-500/10 text-emerald-600" :
                       b.status === "cancelled" ? "bg-destructive/10 text-destructive" :
                       "bg-yellow-500/10 text-yellow-600"
                     }`}>{b.status}</span>
@@ -236,39 +271,39 @@ const AdminDashboardCharts = ({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">No bookings yet</p>
+            <p className="text-sm text-muted-foreground text-center py-8">No bookings yet</p>
           )}
         </div>
 
         {/* Recent Payments */}
-        <div className="bg-card border border-border rounded-xl p-4">
+        <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-emerald-500" /> Recent Payments
             </h3>
-            <span className="text-xs text-primary cursor-pointer hover:underline" onClick={() => navigate("/admin/payments")}>View All</span>
+            <span className="text-xs text-primary cursor-pointer hover:underline font-medium" onClick={() => navigate("/admin/payments")}>View All →</span>
           </div>
           {recentPayments.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {recentPayments.map(p => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between py-2 border-b border-border last:border-0 cursor-pointer hover:bg-secondary/20 rounded px-1 -mx-1 transition-colors"
+                  className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0 cursor-pointer hover:bg-secondary/20 rounded-lg px-2 -mx-2 transition-colors"
                   onClick={() => navigate("/admin/payments")}
                 >
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold">{formatTrackingId(p.bookings?.tracking_id) || p.id.slice(0, 8)}</p>
                     <p className="text-[11px] text-muted-foreground">#{p.installment_number || 1} · {p.payment_method || "cash"}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-emerald-500">{formatBDT(Number(p.amount || 0))}</p>
+                  <div className="text-right ml-3 shrink-0">
+                    <p className="text-sm font-bold text-emerald-500 tabular-nums">{formatBDT(Number(p.amount || 0))}</p>
                     <p className="text-[10px] text-muted-foreground">{p.paid_at ? format(new Date(p.paid_at), "dd MMM yy") : ""}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">No payments yet</p>
+            <p className="text-sm text-muted-foreground text-center py-8">No payments yet</p>
           )}
         </div>
       </div>
@@ -323,5 +358,39 @@ const AdminDashboardCharts = ({
     </div>
   );
 };
+
+/* ─── Reusable KPI Card ─── */
+function KpiCard({ label, value, icon: Icon, iconBg, iconColor, sub, onClick }: {
+  label: string; value: string; icon: any; iconBg: string; iconColor: string; sub: string; onClick: () => void;
+}) {
+  return (
+    <div
+      className="bg-card border border-border rounded-xl p-4 cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all group"
+      onClick={onClick}
+    >
+      <div className="flex items-center gap-3 mb-3">
+        <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center`}>
+          <Icon className={`h-4.5 w-4.5 ${iconColor}`} />
+        </div>
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{label}</p>
+      </div>
+      <p className={`text-xl font-bold tabular-nums ${iconColor}`}>{value}</p>
+      <p className="text-[11px] text-muted-foreground mt-1">{sub}</p>
+    </div>
+  );
+}
+
+/* ─── Quick Stat Row ─── */
+function QuickStat({ label, value, color, onClick }: { label: string; value: number; color: string; onClick: () => void }) {
+  return (
+    <div
+      className="flex items-center justify-between py-2 px-2 -mx-2 rounded-lg hover:bg-secondary/30 cursor-pointer transition-colors"
+      onClick={onClick}
+    >
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className={`text-base font-bold tabular-nums ${color}`}>{value}</span>
+    </div>
+  );
+}
 
 export default AdminDashboardCharts;
