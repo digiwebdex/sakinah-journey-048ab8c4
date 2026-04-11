@@ -554,7 +554,12 @@ export default function AdminCreateBookingPage() {
           </div>
           <div>
             <label className="text-xs text-muted-foreground block mb-1">Payment Method</label>
-            <select className={inputClass} value={form.payment_method} onChange={(e) => setForm({ ...form, payment_method: e.target.value })}>
+            <select className={inputClass} value={form.payment_method} onChange={(e) => {
+              const method = e.target.value;
+              const walletMap: Record<string, string> = { cash: "Cash", manual: "Cash", bank: "Bank", bank_transfer: "Bank", bkash: "bKash", nagad: "Nagad" };
+              const matchedWallet = walletAccounts.find((w: any) => w.name === walletMap[method]);
+              setForm({ ...form, payment_method: method, wallet_account_id: matchedWallet?.id || "" });
+            }}>
               <option value="cash">Cash</option>
               <option value="bkash">bKash</option>
               <option value="nagad">Nagad</option>
