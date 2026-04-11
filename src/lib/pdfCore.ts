@@ -133,8 +133,10 @@ export async function addPdfHeader(
 ): Promise<number> {
   const pw = getPageWidth(doc);
   const phone2 = (cfg as any).phone2 || "+880 1711-999920";
-  const logoMaxW = 42;
-  const logoMaxH = 18;
+  const logoBoxX = 14;
+  const logoBoxY = 6;
+  const logoMaxW = 56;
+  const logoMaxH = 32;
   let logoRenderW = logoMaxW;
   let logoRenderH = logoMaxH;
 
@@ -144,8 +146,7 @@ export async function addPdfHeader(
   doc.setFillColor(ORANGE.r, ORANGE.g, ORANGE.b);
   doc.rect(0, 2.5, pw, 1, "F");
 
-  // ── Logo — centered on page ──
-  const logoY = 6;
+  // ── Logo — left side, large ──
   if (logoBase64) {
     try {
       const imageProps = doc.getImageProperties(logoBase64);
@@ -158,21 +159,20 @@ export async function addPdfHeader(
         logoRenderW = logoRenderH * aspectRatio;
       }
 
-      const logoX = (pw - logoRenderW) / 2;
       doc.addImage(
         logoBase64,
         "PNG",
-        logoX,
-        logoY,
+        logoBoxX,
+        logoBoxY + (logoMaxH - logoRenderH) / 2,
         logoRenderW,
         logoRenderH,
       );
     } catch { /* skip */ }
   }
 
-  // ── Company details — centered below logo ──
-  const centerX = pw / 2;
-  const contactMaxWidth = pw - 40;
+  // ── Company details — right of logo, vertically centered ──
+  const textX = logoBoxX + logoMaxW + 6;
+  const contactMaxWidth = pw - textX - (qrDataUrl ? 30 : 16);
   const phoneLine = [cfg.phone, phone2].filter(Boolean).join(" | ");
   const emailLine = cfg.email ? `Email: ${cfg.email}` : "";
 
@@ -180,27 +180,29 @@ export async function addPdfHeader(
     (doc as any).setCharSpace(0);
   }
 
-  // Company name — centered below logo
-  const textStartY = logoY + logoRenderH + 4;
+  const textCenterY = logoBoxY + logoMaxH / 2;
+
+  // Company name
   doc.setFontSize(15);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(DARK.r, DARK.g, DARK.b);
-  doc.text(cfg.company_name, centerX, textStartY, { align: "center" });
+  doc.text(cfg.company_name, textX, textCenterY - 8);
 
   // Tagline
   doc.setFontSize(7.5);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(ORANGE.r, ORANGE.g, ORANGE.b);
-  doc.text(cfg.tagline || "Hajj & Umrah Services", centerX, textStartY + 4.5, { align: "center", maxWidth: contactMaxWidth });
+  doc.text(cfg.tagline || "Hajj & Umrah Services", textX, textCenterY - 3, { maxWidth: contactMaxWidth });
 
-  // Contact lines
+  // Phone
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(MUTED.r, MUTED.g, MUTED.b);
-  doc.text(`Phone: ${phoneLine}`, centerX, textStartY + 10, { align: "center", maxWidth: contactMaxWidth });
+  doc.text(`Phone: ${phoneLine}`, textX, textCenterY + 2, { maxWidth: contactMaxWidth });
 
+  // Email
   if (emailLine) {
-    doc.text(emailLine, centerX, textStartY + 14, { align: "center", maxWidth: contactMaxWidth });
+    doc.text(emailLine, textX, textCenterY + 6, { maxWidth: contactMaxWidth });
   }
 
   // Address
@@ -208,25 +210,25 @@ export async function addPdfHeader(
     doc.setFontSize(6);
     doc.setTextColor(MUTED.r, MUTED.g, MUTED.b);
     if (hasBengali(cfg.address)) {
-      await addBengaliText(doc, cfg.address, centerX, textStartY + 18, { fontSize: 5.5, color: "#787878", maxWidth: contactMaxWidth });
+      await addBengaliText(doc, cfg.address, textX, textCenterY + 10, { fontSize: 5.5, color: "#787878", maxWidth: contactMaxWidth });
     } else {
       const addr = cfg.address.length > 100 ? cfg.address.substring(0, 100) + "..." : cfg.address;
-      doc.text(addr, centerX, textStartY + 18, { align: "center", maxWidth: contactMaxWidth });
+      doc.text(addr, textX, textCenterY + 10, { maxWidth: contactMaxWidth });
     }
   }
 
   // QR code — top right corner
   if (qrDataUrl) {
     try {
-      doc.addImage(qrDataUrl, "PNG", pw - 22, 5, 14, 14);
+      doc.addImage(qrDataUrl, "PNG", pw - 22, logoBoxY + 2, 14, 14);
       doc.setFontSize(4);
       doc.setTextColor(MUTED.r, MUTED.g, MUTED.b);
-      doc.text("Scan to verify", pw - 15, 21, { align: "center" });
+      doc.text("Scan to verify", pw - 15, logoBoxY + 18, { align: "center" });
     } catch { /* skip */ }
   }
 
   // ── Bottom separator ──
-  const lineY = textStartY + 22;
+  const lineY = logoBoxY + logoMaxH + 3;
   doc.setDrawColor(DARK.r, DARK.g, DARK.b);
   doc.setLineWidth(0.6);
   doc.line(14, lineY, pw - 14, lineY);
