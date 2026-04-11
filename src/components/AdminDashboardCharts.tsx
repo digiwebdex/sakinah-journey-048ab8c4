@@ -120,7 +120,10 @@ const AdminDashboardCharts = ({
       cards.push({ label: "Net Profit", value: formatBDT(financials.netProfit), icon: TrendingUp, color: financials.netProfit >= 0 ? "text-emerald-500" : "text-destructive", onClick: () => navigate("/admin/accounting") });
     }
     cards.push(
-      { label: "Cash Balance", value: formatBDT(financials.cashBalance), icon: Wallet, color: financials.cashBalance >= 0 ? "text-primary" : "text-destructive", onClick: () => navigate("/admin/accounting") },
+      { label: "Cash", value: formatBDT(financials.cashBalance), icon: Wallet, color: financials.cashBalance >= 0 ? "text-primary" : "text-destructive", onClick: () => navigate("/admin/accounting") },
+      { label: "Bank", value: formatBDT(financials.bankBalance), icon: Wallet, color: financials.bankBalance >= 0 ? "text-primary" : "text-destructive", onClick: () => navigate("/admin/accounting") },
+      { label: "bKash", value: formatBDT(financials.bkashBalance), icon: Wallet, color: financials.bkashBalance >= 0 ? "text-primary" : "text-destructive", onClick: () => navigate("/admin/accounting") },
+      { label: "Nagad", value: formatBDT(financials.nagadBalance), icon: Wallet, color: financials.nagadBalance >= 0 ? "text-primary" : "text-destructive", onClick: () => navigate("/admin/accounting") },
       { label: "Total Bookings", value: bookings.filter(b => b.status !== "cancelled").length, icon: Package, color: "text-foreground", onClick: () => navigate("/admin/bookings") },
       { label: "Total Hajji", value: financials.totalHajji, icon: Users, color: "text-foreground", onClick: () => navigate("/admin/customers") },
       { label: "Customer Due", value: formatBDT(financials.customerDue), icon: UserCheck, color: financials.customerDue > 0 ? "text-yellow-500" : "text-emerald-500", onClick: () => setShowDueCustomers(true) },
