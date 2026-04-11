@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/api";
+import { supabase as supabaseClient } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, Trash2, Save, Stamp, PenTool } from "lucide-react";
 
@@ -54,7 +55,7 @@ export default function SignatureSettingsManager() {
     const ext = file.name.split(".").pop();
     const path = `${type}/${Date.now()}.${ext}`;
 
-    const { error } = await supabase.storage
+    const { error } = await supabaseClient.storage
       .from("company-assets")
       .upload(path, file, { upsert: true });
 
@@ -64,7 +65,7 @@ export default function SignatureSettingsManager() {
       return;
     }
 
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = supabaseClient.storage
       .from("company-assets")
       .getPublicUrl(path);
 
