@@ -1,8 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/api";
+import { supabase as supabaseClient } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, X, Edit2, Trash2, Save, ToggleLeft, ToggleRight, Upload, Loader2, Eye, Copy } from "lucide-react";
+import { Plus, X, Edit2, Trash2, Save, ToggleLeft, ToggleRight, Upload, Loader2, Eye, Copy, ListChecks } from "lucide-react";
 import { useIsViewer } from "@/components/admin/AdminLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AdminActionMenu from "@/components/admin/AdminActionMenu";
@@ -12,8 +13,8 @@ const TYPES = ["hajj", "umrah", "tour", "visa", "air_ticket", "hotel", "transpor
 
 const EMPTY_FORM = {
   name: "", type: "umrah", description: "", price: "", duration_days: "",
-  image_url: "", start_date: "", expiry_date: "", services: "", is_active: true,
-  status: "active", show_on_website: true,
+  image_url: "", start_date: "", expiry_date: "", services: "", features: "",
+  is_active: true, status: "active", show_on_website: true,
 };
 
 export default function AdminPackagesPage() {
@@ -34,7 +35,6 @@ export default function AdminPackagesPage() {
 
   const [typeFilter, setTypeFilter] = useState(urlType || "all");
 
-  // Sync with URL param changes (sidebar navigation)
   useEffect(() => {
     if (urlType) {
       setTypeFilter(urlType);
@@ -57,23 +57,32 @@ export default function AdminPackagesPage() {
     if (file.size > 5 * 1024 * 1024) { toast.error("File size must be under 5MB"); return; }
     setUploading(true);
     const path = `packages/${Date.now()}-${file.name}`;
-    const { error } = await supabase.storage.from("hotel-images").upload(path, file, { upsert: true });
+    const { error } = await supabaseClient.storage.from("hotel-images").upload(path, file, { upsert: true });
     if (error) { toast.error(error.message); setUploading(false); return; }
-    const { data: { publicUrl } } = supabase.storage.from("hotel-images").getPublicUrl(path);
+    const { data: { publicUrl } } = supabaseClient.storage.from("hotel-images").getPublicUrl(path);
     setForm(f => ({ ...f, image_url: publicUrl }));
     setUploading(false);
   };
 
-  const buildPayload = (f: typeof form) => ({
-    name: f.name.trim(), type: f.type, description: f.description.trim() || null,
-    price: parseFloat(f.price), duration_days: f.duration_days ? parseInt(f.duration_days) : null,
-    image_url: f.image_url || null, start_date: f.start_date || null,
-    expiry_date: f.expiry_date || null,
-    services: f.services ? f.services.split(",").map(s => s.trim()).filter(Boolean) : [],
-    is_active: f.status === "active",
-    status: f.status,
-    show_on_website: f.show_on_website,
-  });
+  const parseFeatures = (text: string): string[] => {
+    return text.split("\n").map(l => l.replace(/^[\s•\-\*►▸▹➤➜→]+/, "").trim()).filter(Boolean);
+  };
+
+  const buildPayload = (f: typeof form) => {
+    const featuresList = parseFeatures(f.features);
+    const servicesList = f.services ? f.services.split(",").map(s => s.trim()).filter(Boolean) : [];
+    return {
+      name: f.name.trim(), type: f.type, description: f.description.trim() || null,
+      price: parseFloat(f.price), duration_days: f.duration_days ? parseInt(f.duration_days) : null,
+      image_url: f.image_url || null, start_date: f.start_date || null,
+      expiry_date: f.expiry_date || null,
+      services: servicesList,
+      features: featuresList,
+      is_active: f.status === "active",
+      status: f.status,
+      show_on_website: f.show_on_website,
+    };
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,10 +97,13 @@ export default function AdminPackagesPage() {
   const openEdit = (p: any) => {
     setEditingId(p.id);
     const svc = Array.isArray(p.services) ? p.services.join(", ") : "";
+    const feat = Array.isArray(p.features) ? p.features.join("\n") : "";
     setForm({
       name: p.name, type: p.type, description: p.description || "", price: String(p.price),
       duration_days: p.duration_days ? String(p.duration_days) : "", image_url: p.image_url || "",
-      start_date: p.start_date || "", expiry_date: p.expiry_date || "", services: svc, is_active: p.is_active,
+      start_date: p.start_date || "", expiry_date: p.expiry_date || "",
+      services: svc, features: feat,
+      is_active: p.is_active,
       status: p.status || (p.is_active ? "active" : "inactive"),
       show_on_website: p.show_on_website !== false,
     });
@@ -121,11 +133,12 @@ export default function AdminPackagesPage() {
 
   const handleDuplicate = async (p: any) => {
     const svc = Array.isArray(p.services) ? p.services : [];
+    const feat = Array.isArray(p.features) ? p.features : [];
     const { error } = await supabase.from("packages").insert({
       name: p.name + " (Copy)", type: p.type, description: p.description,
       price: p.price, duration_days: p.duration_days, image_url: p.image_url,
-      start_date: p.start_date, expiry_date: p.expiry_date, services: svc, is_active: false,
-      status: "inactive", show_on_website: false,
+      start_date: p.start_date, expiry_date: p.expiry_date, services: svc, features: feat,
+      is_active: false, status: "inactive", show_on_website: false,
     } as any);
     if (error) { toast.error(error.message); return; }
     toast.success("Package duplicated");
@@ -182,20 +195,41 @@ export default function AdminPackagesPage() {
           <input className={inputClass} type="date" value={form.expiry_date}
             onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} />
         </div>
-        <div className="sm:col-span-2">
+        <div>
           <label className="text-xs text-muted-foreground block mb-1">Services (comma-separated)</label>
-          <input className={inputClass} placeholder="Visa, Hotel, Transport, Food, Guide"
+          <input className={inputClass} placeholder="Visa, Hotel, Transport, Food"
             value={form.services} onChange={(e) => setForm({ ...form, services: e.target.value })} />
         </div>
+
+        {/* Features / Bullet Points Editor */}
+        <div className="sm:col-span-2">
+          <label className="text-xs text-muted-foreground block mb-1 flex items-center gap-1.5">
+            <ListChecks className="h-3.5 w-3.5 text-primary" />
+            Features / Bullet Points (one per line)
+          </label>
+          <textarea
+            className={`${inputClass} resize-none font-mono text-xs leading-relaxed`}
+            placeholder={"► আরসা ম্ববাদ এয়ার টিকেট (ট্রানজিট ফ্লাইট)\n► ভিসা ও ট্রান্সপোর্ট\n► তিন বেলা দেশীয় খাবার পরিবেশন\n► মুফতি সাহেবের গাইডেন্স"}
+            rows={6}
+            value={form.features}
+            onChange={(e) => setForm({ ...form, features: e.target.value })}
+          />
+          <p className="text-[10px] text-muted-foreground mt-1">
+            প্রতিটি লাইন একটি বুলেট পয়েন্ট হিসেবে দেখাবে। ► বা • চিহ্ন দিতে পারেন অথবা শুধু লিখুন।
+          </p>
+        </div>
+
         <div className="sm:col-span-2">
           <label className="text-xs text-muted-foreground block mb-1">Description</label>
           <textarea className={`${inputClass} resize-none`} placeholder="Package details..." rows={3}
             value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} maxLength={1000} />
         </div>
         <div className="sm:col-span-2">
-          <label className="text-xs text-muted-foreground block mb-1">Image</label>
+          <label className="text-xs text-muted-foreground block mb-1">
+            Banner Image <span className="text-primary">(Recommended: 800×450px, 16:9 ratio)</span>
+          </label>
           {form.image_url ? (
-            <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
+            <div className="relative w-full rounded-lg overflow-hidden border border-border" style={{ aspectRatio: "16/9" }}>
               <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" />
               <button type="button" onClick={() => setForm({ ...form, image_url: "" })}
                 className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1">
@@ -203,9 +237,9 @@ export default function AdminPackagesPage() {
               </button>
             </div>
           ) : (
-            <label className={`${inputClass} flex items-center justify-center gap-2 cursor-pointer h-24 border-dashed`}>
+            <label className={`${inputClass} flex items-center justify-center gap-2 cursor-pointer border-dashed`} style={{ aspectRatio: "16/5" }}>
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              <span>{uploading ? "Uploading..." : "Upload Image"}</span>
+              <span>{uploading ? "Uploading..." : "Upload Image (800×450px recommended)"}</span>
               <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
             </label>
           )}
@@ -295,6 +329,12 @@ export default function AdminPackagesPage() {
                   {p.start_date && ` • Start: ${p.start_date}`}
                   {p.expiry_date && ` • End: ${p.expiry_date}`}
                 </p>
+                {/* Show feature count */}
+                {Array.isArray(p.features) && p.features.length > 0 && (
+                  <p className="text-[10px] text-primary mt-1 flex items-center gap-1">
+                    <ListChecks className="h-3 w-3" /> {p.features.length} bullet points
+                  </p>
+                )}
                 {Array.isArray(p.services) && p.services.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1.5">
                     {p.services.map((s: string, i: number) => (
@@ -334,13 +374,17 @@ export default function AdminPackagesPage() {
 
       {/* View Modal */}
       <Dialog open={!!viewPkg} onOpenChange={(o) => { if (!o) setViewPkg(null); }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-heading">{viewPkg?.name}</DialogTitle>
           </DialogHeader>
           {viewPkg && (
             <div className="space-y-3 text-sm">
-              {viewPkg.image_url && <img src={viewPkg.image_url} alt={viewPkg.name} className="w-full h-48 rounded-lg object-cover" />}
+              {viewPkg.image_url && (
+                <div className="rounded-lg overflow-hidden border border-border" style={{ aspectRatio: "16/9" }}>
+                  <img src={viewPkg.image_url} alt={viewPkg.name} className="w-full h-full object-cover" />
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div><span className="text-muted-foreground text-xs block">Type</span><span className="font-medium capitalize">{viewPkg.type}</span></div>
                 <div><span className="text-muted-foreground text-xs block">Price</span><span className="font-medium text-primary">BDT {Number(viewPkg.price).toLocaleString("en-IN")}</span></div>
@@ -350,6 +394,19 @@ export default function AdminPackagesPage() {
                 <div><span className="text-muted-foreground text-xs block">Website</span><span className={`font-medium ${viewPkg.show_on_website !== false ? "text-blue-600" : "text-amber-600"}`}>{viewPkg.show_on_website !== false ? "Visible" : "Hidden"}</span></div>
               </div>
               {viewPkg.description && <div><span className="text-muted-foreground text-xs block">Description</span><p>{viewPkg.description}</p></div>}
+              {Array.isArray(viewPkg.features) && viewPkg.features.length > 0 && (
+                <div>
+                  <span className="text-muted-foreground text-xs block mb-1.5">Features / Bullet Points</span>
+                  <ul className="space-y-1.5 bg-secondary/50 rounded-lg p-3">
+                    {viewPkg.features.map((f: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <span className="text-primary font-bold mt-0.5">►</span>
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {Array.isArray(viewPkg.services) && viewPkg.services.length > 0 && (
                 <div><span className="text-muted-foreground text-xs block mb-1">Services</span>
                   <div className="flex flex-wrap gap-1">{viewPkg.services.map((s: string, i: number) => <span key={i} className="text-xs bg-secondary px-2 py-0.5 rounded">{s}</span>)}</div>
