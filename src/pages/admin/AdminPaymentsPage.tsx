@@ -901,7 +901,12 @@ export default function AdminPaymentsPage() {
               </div>
               <div>
                 <label className="text-xs text-muted-foreground block mb-1">Method *</label>
-                <select className={inputClass} value={addForm.payment_method} onChange={(e) => setAddForm({ ...addForm, payment_method: e.target.value })}>
+                <select className={inputClass} value={addForm.payment_method} onChange={(e) => {
+                  const method = e.target.value;
+                  const walletMap: Record<string, string> = { cash: "Cash", manual: "Cash", bank: "Bank", bank_transfer: "Bank", bkash: "bKash", nagad: "Nagad" };
+                  const matchedWallet = walletAccounts.find((w: any) => w.name === walletMap[method]);
+                  setAddForm({ ...addForm, payment_method: method, wallet_account_id: matchedWallet?.id || "" });
+                }}>
                   {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
                 </select>
               </div>
