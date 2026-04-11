@@ -21,7 +21,7 @@ import { format } from "date-fns";
 import { generateSupplierPdf, getCompanyInfoForPdf, SupplierPdfData } from "@/lib/entityPdfGenerator";
 import SupplierContractManager from "@/components/admin/SupplierContractManager";
 import SupplierItemsManager from "@/components/admin/SupplierItemsManager";
-import { formatBDT } from "@/lib/utils";
+import { formatBDT, formatTrackingId } from "@/lib/utils";
 
 const PAYMENT_METHODS = ["cash", "bkash", "nagad", "bank", "other"];
 const SERVICE_TYPES = [
@@ -405,7 +405,7 @@ export default function AdminSupplierAgentProfilePage() {
                 <tbody>
                   {bookings.map(b => (
                     <tr key={b.id} className="border-b border-border/30">
-                      <td className="py-2 pr-3 font-mono text-primary text-xs">{b.tracking_id}</td>
+                      <td className="py-2 pr-3 font-mono text-primary text-xs">{formatTrackingId(b.tracking_id)}</td>
                       <td className="py-2 pr-3">{b.guest_name || "—"}</td>
                       <td className="py-2 pr-3 font-medium">{formatBDT(b.total_cost)}</td>
                       <td className="py-2 pr-3 text-emerald-500">{formatBDT(b.paid_to_supplier)}</td>
@@ -442,7 +442,7 @@ export default function AdminSupplierAgentProfilePage() {
             <div><label className="text-xs text-muted-foreground block mb-1">Booking (Optional)</label>
               <select className="w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm" value={paymentForm.booking_id} onChange={(e) => setPaymentForm({ ...paymentForm, booking_id: e.target.value })}>
                 <option value="">-- All Bookings --</option>
-                {bookings.map(b => <option key={b.id} value={b.id}>{b.tracking_id} — Due: {formatBDT(b.supplier_due)}</option>)}
+                {bookings.map(b => <option key={b.id} value={b.id}>{formatTrackingId(b.tracking_id)} — Due: {formatBDT(b.supplier_due)}</option>)}
               </select></div>
             <div><label className="text-xs text-muted-foreground block mb-1">Notes</label>
               <Input value={paymentForm.notes} onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })} placeholder="Notes..." /></div>
