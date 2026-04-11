@@ -95,25 +95,55 @@ export default function CustomerFinancialReport({ customer, open, onOpenChange }
     setLoading(true);
 
     const fetchData = async () => {
-      const bookingIds: string[] = [];
+      // Normalize phone for matching
+      const normalizePhone = (p: string | null | undefined) => p ? p.replace(/[^\d]/g, "").slice(-10) : "";
+      const customerPhone = normalizePhone(customer.phone);
 
-      const [bksRes, pmtsRes, docsRes, hotelRes, directExpRes] = await Promise.all([
-        supabase.from("bookings").select("*, packages(name, type, price, duration_days, start_date)").eq("user_id", customer.user_id),
-        supabase.from("payments").select("*, bookings(tracking_id)").eq("user_id", customer.user_id).order("due_date", { ascending: true }),
+      // Fetch bookings by user_id
+      const { data: byUserId } = await supabase.from("bookings").select("*, packages(name, type, price, duration_days, start_date)").eq("user_id", customer.user_id);
+
+      // Also fetch bookings by guest_phone if customer has a phone
+      let byPhone: any[] = [];
+      if (customerPhone) {
+        const { data: phoneBookings } = await supabase.from("bookings").select("*, packages(name, type, price, duration_days, start_date)").ilike("guest_phone", `%${customerPhone}`);
+        byPhone = phoneBookings || [];
+      }
+
+      // Merge and deduplicate
+      const allBookings = [...(byUserId || [])];
+      byPhone.forEach((b: any) => {
+        if (!allBookings.find((ab: any) => ab.id === b.id)) allBookings.push(b);
+      });
+
+      setBookings(allBookings);
+
+      // Collect all booking IDs for related queries
+      const bIds = allBookings.map((b: any) => b.id);
+
+      // Fetch payments by user_id + by booking_ids
+      const { data: payByUser } = await supabase.from("payments").select("*, bookings(tracking_id)").eq("user_id", customer.user_id).order("due_date", { ascending: true });
+      let payByBooking: any[] = [];
+      if (bIds.length > 0) {
+        const { data: pb } = await supabase.from("payments").select("*, bookings(tracking_id)").in("booking_id", bIds).order("due_date", { ascending: true });
+        payByBooking = pb || [];
+      }
+      const allPayments = [...(payByUser || [])];
+      payByBooking.forEach((p: any) => {
+        if (!allPayments.find((ap: any) => ap.id === p.id)) allPayments.push(p);
+      });
+      setPayments(allPayments);
+
+      // Documents & hotels by user_id (these are user-specific)
+      const [docsRes, hotelRes, directExpRes] = await Promise.all([
         supabase.from("booking_documents").select("*").eq("user_id", customer.user_id).order("created_at", { ascending: false }),
         supabase.from("hotel_bookings").select("*, hotels(name, city, location), hotel_rooms(name, price_per_night)").eq("user_id", customer.user_id).order("created_at", { ascending: false }),
-        // Direct customer expenses
         supabase.from("expenses").select("*").eq("customer_id", customer.user_id).order("date", { ascending: false }),
       ]);
 
-      const bookingsList = bksRes.data || [];
-      setBookings(bookingsList);
-      setPayments(pmtsRes.data || []);
       setDocuments(docsRes.data || []);
       setHotelBookings(hotelRes.data || []);
 
       // Get booking-linked expenses too
-      const bIds = bookingsList.map((b: any) => b.id);
       let bookingExpenses: any[] = [];
       if (bIds.length > 0) {
         const { data: bExp } = await supabase.from("expenses").select("*").in("booking_id", bIds);
@@ -123,9 +153,7 @@ export default function CustomerFinancialReport({ customer, open, onOpenChange }
       // Merge direct customer expenses + booking-linked expenses (deduplicate)
       const allExpenses = [...(directExpRes.data || [])];
       bookingExpenses.forEach((be: any) => {
-        if (!allExpenses.find((e: any) => e.id === be.id)) {
-          allExpenses.push(be);
-        }
+        if (!allExpenses.find((e: any) => e.id === be.id)) allExpenses.push(be);
       });
       setExpenses(allExpenses);
       setLoading(false);
