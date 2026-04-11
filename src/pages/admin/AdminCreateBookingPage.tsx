@@ -79,13 +79,18 @@ export default function AdminCreateBookingPage() {
       setPackages(pkgRes.data || []);
       const moallemsList = moaRes.data || [];
       setMoallems(moallemsList);
-      setWalletAccounts((walletRes.data as any[]) || []);
+      const wallets = (walletRes.data as any[]) || [];
+      setWalletAccounts(wallets);
       setSuppliers(supRes.data || []);
       // Auto-assign default Moallem "Manasik Travel Hub"
       const defaultMoallem = moallemsList.find((m: any) => m.name === "Manasik Travel Hub");
-      if (defaultMoallem) {
-        setForm((prev) => ({ ...prev, moallem_id: defaultMoallem.id }));
-      }
+      // Auto-assign default wallet based on initial payment method (cash)
+      const defaultWallet = wallets.find((w: any) => w.name === "Cash");
+      setForm((prev) => ({
+        ...prev,
+        moallem_id: defaultMoallem?.id || prev.moallem_id,
+        wallet_account_id: defaultWallet?.id || prev.wallet_account_id,
+      }));
     });
   }, []);
 
