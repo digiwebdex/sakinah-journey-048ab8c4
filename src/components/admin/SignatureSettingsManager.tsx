@@ -55,7 +55,7 @@ export default function SignatureSettingsManager() {
     const ext = file.name.split(".").pop();
     const path = `${type}/${Date.now()}.${ext}`;
 
-    const { error } = await supabase.storage
+    const { error } = await supabaseClient.storage
       .from("company-assets")
       .upload(path, file, { upsert: true });
 
@@ -65,7 +65,7 @@ export default function SignatureSettingsManager() {
       return;
     }
 
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = supabaseClient.storage
       .from("company-assets")
       .getPublicUrl(path);
 
