@@ -921,6 +921,7 @@ export default function AdminBookingsPage() {
                 <th className="text-left py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date</th>
                 <th className="text-left py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Booking ID</th>
                 <th className="text-left py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Customer</th>
+                <th className="text-left py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Mobile</th>
                 <th className="text-left py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Package</th>
                 <th className="text-center py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pax</th>
                 <th className="text-right py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Amount</th>
@@ -958,7 +959,7 @@ export default function AdminBookingsPage() {
 
                 return editingId === b.id ? (
                   <tr key={b.id}>
-                    <td colSpan={10} className="py-4 px-2">
+                    <td colSpan={11} className="py-4 px-2">
                       <div className="space-y-3 bg-secondary/30 rounded-lg p-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-between items-center">
                           <p className="font-mono font-bold text-primary text-sm">{b.tracking_id}</p>
@@ -1045,11 +1046,13 @@ export default function AdminBookingsPage() {
                       <span className="font-mono text-xs font-bold text-primary">{b.tracking_id?.slice(-8) || b.id?.slice(0, 8)}</span>
                     </td>
                     <td className="py-3 px-2">
-                      <div className="min-w-[140px]">
+                      <div className="min-w-[120px]">
                         <p className="font-semibold text-sm leading-tight">{b.guest_name || "Unknown"}</p>
                         {b.guest_email && <p className="text-[11px] text-muted-foreground truncate max-w-[180px]">{b.guest_email}</p>}
-                        {b.guest_phone && <p className="text-[11px] text-muted-foreground">{b.guest_phone}</p>}
                       </div>
+                    </td>
+                    <td className="py-3 px-2">
+                      <span className="text-xs text-muted-foreground">{b.guest_phone || "—"}</span>
                     </td>
                     <td className="py-3 px-2">
                       <div className="min-w-[120px]">
