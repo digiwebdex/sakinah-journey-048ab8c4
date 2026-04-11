@@ -579,7 +579,7 @@ export async function generateInvoice(
     await generateIndividualInvoice(doc, normalizedBooking, customer, payments, logoBase64, sig, qrDataUrl, moallemName, cfg);
   }
 
-  doc.save(`Invoice-${normalizedBooking.tracking_id}.pdf`);
+  doc.save(`Invoice-${toPublicTrackingId(normalizedBooking.tracking_id)}.pdf`);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -602,10 +602,11 @@ export async function generateReceipt(
 
   y = addTitleBlock(doc, y, "PAYMENT RECEIPT", "paid");
 
-  const receiptNum = `${booking.tracking_id}-${payment.installment_number || "P"}`;
+  const publicTrackingId = toPublicTrackingId(booking.tracking_id);
+  const receiptNum = `${publicTrackingId}-${payment.installment_number || "P"}`;
   y = addMetaLine(doc, y,
     [`Receipt #: ${receiptNum}`, `Date: ${fmtDateLocal(payment.paid_at || new Date().toISOString())}`],
-    [`Booking ID: ${booking.tracking_id}`]
+    [`Booking ID: ${publicTrackingId}`]
   );
 
   y = await addCustomerSection(doc, y, customer);
@@ -614,7 +615,7 @@ export async function generateReceipt(
     startY: y,
     head: ["Description", "Details"],
     body: [
-      ["Booking ID", booking.tracking_id],
+      ["Booking ID", publicTrackingId],
       ["Package", resolveBookingPackageName(booking as Partial<InvoiceBooking> & Record<string, unknown>, "N/A")],
       ["Installment #", String(payment.installment_number || "—")],
       ["Amount Paid", formatBDT(Number(payment.amount))],
@@ -674,11 +675,13 @@ export async function generateCommissionReceipt(data: CommissionReceiptData, com
     { label: "Phone", value: data.moallemPhone || "N/A" },
   ], "PAID TO (MOALLEM)");
 
+  const publicTrackingId = toPublicTrackingId(data.bookingTrackingId);
+
   y = addRawTable(doc, {
     startY: y,
     head: ["Description", "Details"],
     body: [
-      ["Booking ID", data.bookingTrackingId],
+      ["Booking ID", publicTrackingId],
       ["Package", data.packageName],
       ["Travelers", String(data.numTravelers)],
       ["Commission/Person", formatBDT(data.commissionPerPerson)],
@@ -697,5 +700,5 @@ export async function generateCommissionReceipt(data: CommissionReceiptData, com
   y = addSignatureBlock(doc, sig, y);
   addPdfFooter(doc, cfg);
 
-  doc.save(`Commission_Receipt_${data.bookingTrackingId}.pdf`);
+  doc.save(`Commission_Receipt_${toPublicTrackingId(data.bookingTrackingId)}.pdf`);
 }
