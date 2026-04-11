@@ -306,7 +306,7 @@ Deno.serve(async (req) => {
       }
 
       // Generate magic link tokens
-      const { data: magicLink, error: magicError } = await supabase.auth.admin.generateLink({
+        const { data: magicLink, error: magicError } = await supabase.auth.admin.generateLink({
         type: "magiclink",
         email: authUser.user.email,
       });
@@ -319,10 +319,12 @@ Deno.serve(async (req) => {
         });
       }
 
+      const linkProperties = magicLink.properties as { access_token?: string; refresh_token?: string } | undefined;
+
       return new Response(JSON.stringify({
         success: true,
-        access_token: magicLink.properties?.access_token,
-        refresh_token: magicLink.properties?.refresh_token,
+        access_token: linkProperties?.access_token,
+        refresh_token: linkProperties?.refresh_token,
         user_id: userId,
       }), {
         status: 200,
@@ -336,7 +338,8 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("OTP error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
