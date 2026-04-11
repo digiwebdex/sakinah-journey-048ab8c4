@@ -120,6 +120,11 @@ export default function AdminPaymentsPage() {
 
   useEffect(() => { fetchPayments(); }, []);
 
+  const refreshWallets = async () => {
+    const { data } = await supabase.from("accounts" as any).select("*").eq("type", "asset");
+    setWalletAccounts((data as any[]) || []);
+  };
+
   const openAddModal = async () => {
     setShowAddModal(true);
     setPaymentType("customer");
@@ -132,6 +137,7 @@ export default function AdminPaymentsPage() {
     setMoallems(moallemData || []);
     setSuppliers(supplierData || []);
     setAllBookings(bookingsData || []);
+    await refreshWallets();
   };
 
   const resetAddForm = () => {
