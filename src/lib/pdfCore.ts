@@ -144,7 +144,8 @@ export async function addPdfHeader(
   doc.setFillColor(ORANGE.r, ORANGE.g, ORANGE.b);
   doc.rect(0, 2.5, pw, 1, "F");
 
-  // ── Logo — standard size with preserved aspect ratio ──
+  // ── Logo — centered on page ──
+  const logoY = 6;
   if (logoBase64) {
     try {
       const imageProps = doc.getImageProperties(logoBase64);
@@ -157,20 +158,21 @@ export async function addPdfHeader(
         logoRenderW = logoRenderH * aspectRatio;
       }
 
+      const logoX = (pw - logoRenderW) / 2;
       doc.addImage(
         logoBase64,
         "PNG",
-        logoBoxX,
-        logoBoxY + (logoMaxH - logoRenderH) / 2,
+        logoX,
+        logoY,
         logoRenderW,
         logoRenderH,
       );
     } catch { /* skip */ }
   }
 
-  // ── Company details — right of logo ──
-  const textX = logoBoxX + logoMaxW + 6;
-  const contactMaxWidth = pw - textX - (qrDataUrl ? 30 : 16);
+  // ── Company details — centered below logo ──
+  const centerX = pw / 2;
+  const contactMaxWidth = pw - 40;
   const phoneLine = [cfg.phone, phone2].filter(Boolean).join(" | ");
   const emailLine = cfg.email ? `Email: ${cfg.email}` : "";
 
