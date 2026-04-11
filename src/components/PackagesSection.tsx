@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, ArrowRight, Clock, Star, Plane } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BookingDialog from "@/components/BookingDialog";
-import { supabase } from "@/lib/api";
+import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import heroImage from "@/assets/hero-kaaba-golden.jpg";
 import medinaImage from "@/assets/hero-medina.jpg";
+import { useActivePackages } from "@/hooks/usePackagesData";
 
 const fallbackImages = [heroImage, medinaImage];
 
@@ -25,24 +25,9 @@ const TYPE_LABELS: Record<string, { en: string; bn: string }> = {
 const PackagesSection = () => {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
-  const [packages, setPackages] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: packages = [], isLoading: loading } = useActivePackages();
   const [bookingPackageId, setBookingPackageId] = useState<string | null>(null);
   const [bookingOpen, setBookingOpen] = useState(false);
-
-  useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase
-        .from("packages")
-        .select("*")
-        .eq("is_active", true)
-        .eq("show_on_website", true)
-        .order("price", { ascending: true });
-      setPackages(data || []);
-      setLoading(false);
-    };
-    fetch();
-  }, []);
 
   if (loading || packages.length === 0) return null;
 
