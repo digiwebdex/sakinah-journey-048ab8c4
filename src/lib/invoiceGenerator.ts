@@ -129,13 +129,26 @@ const cleanText = (...values: unknown[]): string => {
   return "";
 };
 
-const toPackageShortLabel = (value: string): string => {
-  const label = cleanText(value, "N/A");
-  if (label === "N/A" || label.length <= 18) return label;
-  const words = label.split(/\s+/).filter(Boolean);
-  const acronym = words.map((word) => word[0]?.toUpperCase()).join("");
-  if (acronym.length >= 2 && acronym.length <= 10) return acronym;
-  return `${label.slice(0, 17)}…`;
+const resolvePackageName = (value: unknown): string => {
+  if (Array.isArray(value)) {
+    return cleanText(value[0]?.name, value[0]?.title, value[0]?.package_name, value[0]?.packageName);
+  }
+
+  if (value && typeof value === "object") {
+    const pkg = value as Record<string, unknown>;
+    return cleanText(pkg.name, pkg.title, pkg.package_name, pkg.packageName);
+  }
+
+  return cleanText(value);
+};
+
+const resolveBookingPackageName = (booking: Partial<InvoiceBooking> & Record<string, unknown>, fallback = ""): string => {
+  return cleanText(
+    resolvePackageName(booking.packages),
+    booking.package_name,
+    booking.packageName,
+    fallback,
+  );
 };
 
 const extractDelimitedValues = (value?: string | null): string[] => {
@@ -205,7 +218,7 @@ function normalizeMembers(members: Partial<BookingMember>[], fallbackPackageName
 function buildFallbackMembers(booking: InvoiceBooking, customer: InvoiceCustomer): BookingMember[] {
   const travelerCount = Math.max(Number(booking.num_travelers || 0), 0);
   if (travelerCount <= 1) return [];
-  const packageName = cleanText(booking.packages?.name, "N/A");
+  const packageName = resolveBookingPackageName(booking as Partial<InvoiceBooking> & Record<string, unknown>, "N/A");
   const unitPriceHint = Math.max(0, Number(booking.selling_price_per_person || 0), Number(booking.packages?.price || 0));
   const roundedTotal = Math.max(0, Math.round(Number(booking.total_amount || 0)));
   const roundedDiscount = Math.max(0, Math.round(Number(booking.discount || 0)));
@@ -372,6 +385,7 @@ async function generateIndividualInvoice(
   qrDataUrl: string, moallemName: string | null, cfg: PdfCompanyConfig
 ) {
   let y = await addPdfHeader(doc, cfg, logoBase64, qrDataUrl);
+  const packageName = resolveBookingPackageName(booking as Partial<InvoiceBooking> & Record<string, unknown>, "N/A");
 
   addPaymentWatermark(doc, getWatermarkStatus(Number(booking.paid_amount), Number(booking.due_amount || 0)));
 
@@ -390,13 +404,14 @@ async function generateIndividualInvoice(
     startY: y,
     head: ["Package", "Qty", "Unit Price (BDT)", "Discount (BDT)", "Total (BDT)"],
     body: [[
-      booking.packages?.name || "N/A",
+      packageName,
       String(booking.num_travelers),
       formatAmount(unitPrice),
       formatAmount(discount),
       formatAmount(Number(booking.total_amount)),
     ]],
     columnStyles: {
+      0: { cellWidth: 72 },
       1: { halign: "center", cellWidth: 15 },
       2: { halign: "right" },
       3: { halign: "right" },
@@ -427,6 +442,7 @@ async function generateFamilyInvoice(
   logoBase64: string, sig: SignatureData, qrDataUrl: string, moallemName: string | null, cfg: PdfCompanyConfig
 ) {
   let y = await addPdfHeader(doc, cfg, logoBase64, qrDataUrl);
+  const packageName = resolveBookingPackageName(booking as Partial<InvoiceBooking> & Record<string, unknown>, "N/A");
 
   addPaymentWatermark(doc, getWatermarkStatus(Number(booking.paid_amount), Number(booking.due_amount || 0)));
 
@@ -445,12 +461,13 @@ async function generateFamilyInvoice(
     body: members.map((m, i) => {
       const name = cleanText(m.full_name, i === 0 ? customer.full_name : "", "—");
       const passport = cleanText(m.passport_number, i === 0 ? customer.passport_number : "", "—");
-      const pkg = toPackageShortLabel(cleanText(m.packages?.name, booking.packages?.name, "N/A"));
+      const pkg = cleanText(m.packages?.name, packageName, "N/A");
       return [String(i + 1), name, passport, pkg, formatAmount(Number(m.selling_price)), formatAmount(Number(m.discount)), formatAmount(Number(m.final_price))];
     }),
     foot: [["", "", "", "TOTAL", formatAmount(totalGross), formatAmount(totalDiscount), formatAmount(totalFinal)]],
     columnStyles: {
       0: { cellWidth: 12, halign: "center" },
+      3: { cellWidth: 34 },
       4: { halign: "right" },
       5: { halign: "right" },
       6: { halign: "right", fontStyle: "bold" },
@@ -491,12 +508,16 @@ export async function generateInvoice(
   let moallemName: string | null = null;
   if (booking.moallem_id) moallemName = await fetchMoallemName(booking.moallem_id);
 
-  let fallbackPackageName = cleanText(booking.packages?.name);
+  let fallbackPackageName = resolveBookingPackageName(booking as Partial<InvoiceBooking> & Record<string, unknown>);
   if (!fallbackPackageName && booking.package_id) {
     const packageMap = await fetchPackageNameMap([booking.package_id]);
     fallbackPackageName = cleanText(packageMap[booking.package_id]);
   }
   fallbackPackageName = cleanText(fallbackPackageName, "N/A");
+
+  const normalizedPackageMeta = (Array.isArray((booking as any).packages)
+    ? (booking as any).packages[0]
+    : booking.packages) as Record<string, unknown> | null | undefined;
 
   const providedMembers = normalizeMembers(options.members || [], fallbackPackageName);
   const dbMembers = providedMembers.length === 0 && booking.id ? await fetchBookingMembers(booking.id, fallbackPackageName) : [];
@@ -505,8 +526,8 @@ export async function generateInvoice(
   const normalizedBooking: InvoiceBooking = {
     ...booking,
     num_travelers: travelerCount,
-    packages: booking.packages
-      ? { ...booking.packages, name: booking.packages.name || fallbackPackageName }
+    packages: normalizedPackageMeta
+      ? { ...normalizedPackageMeta, name: resolveBookingPackageName(booking as Partial<InvoiceBooking> & Record<string, unknown>, fallbackPackageName) }
       : { name: fallbackPackageName },
   };
 
@@ -585,7 +606,7 @@ export async function generateReceipt(
     head: ["Description", "Details"],
     body: [
       ["Booking ID", booking.tracking_id],
-      ["Package", booking.packages?.name || "N/A"],
+      ["Package", resolveBookingPackageName(booking as Partial<InvoiceBooking> & Record<string, unknown>, "N/A")],
       ["Installment #", String(payment.installment_number || "—")],
       ["Amount Paid", formatBDT(Number(payment.amount))],
       ["Payment Date", fmtDateLocal(payment.paid_at)],
