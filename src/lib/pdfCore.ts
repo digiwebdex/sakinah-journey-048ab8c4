@@ -133,6 +133,12 @@ export async function addPdfHeader(
 ): Promise<number> {
   const pw = getPageWidth(doc);
   const phone2 = (cfg as any).phone2 || "+880 1711-999920";
+  const logoBoxX = 14;
+  const logoBoxY = 6;
+  const logoMaxW = 34;
+  const logoMaxH = 10;
+  let logoRenderW = logoMaxW;
+  let logoRenderH = logoMaxH;
 
   // ── Top accent bar — dark with orange accent ──
   doc.setFillColor(DARK.r, DARK.g, DARK.b);
@@ -140,17 +146,39 @@ export async function addPdfHeader(
   doc.setFillColor(ORANGE.r, ORANGE.g, ORANGE.b);
   doc.rect(0, 2.5, pw, 1, "F");
 
-  // ── Logo — left side, wider for horizontal logo ──
-  const logoW = 48;
-  const logoH = 14;
+  // ── Logo — standard size with preserved aspect ratio ──
   if (logoBase64) {
     try {
-      doc.addImage(logoBase64, "PNG", 14, 6, logoW, logoH);
+      const imageProps = doc.getImageProperties(logoBase64);
+      const aspectRatio = imageProps.width / Math.max(imageProps.height, 1);
+      logoRenderW = Math.min(logoMaxW, logoMaxH * aspectRatio);
+      logoRenderH = logoRenderW / Math.max(aspectRatio, 0.01);
+
+      if (logoRenderH > logoMaxH) {
+        logoRenderH = logoMaxH;
+        logoRenderW = logoRenderH * aspectRatio;
+      }
+
+      doc.addImage(
+        logoBase64,
+        "PNG",
+        logoBoxX,
+        logoBoxY + (logoMaxH - logoRenderH) / 2,
+        logoRenderW,
+        logoRenderH,
+      );
     } catch { /* skip */ }
   }
 
   // ── Company details — right of logo ──
-  const textX = 60;
+  const textX = logoBoxX + logoMaxW + 6;
+  const contactMaxWidth = pw - textX - (qrDataUrl ? 30 : 16);
+  const phoneLine = [cfg.phone, phone2].filter(Boolean).join(" | ");
+  const emailLine = cfg.email ? `Email: ${cfg.email}` : "";
+
+  if (typeof (doc as any).setCharSpace === "function") {
+    (doc as any).setCharSpace(0);
+  }
 
   // Company name
   doc.setFontSize(15);
@@ -162,23 +190,27 @@ export async function addPdfHeader(
   doc.setFontSize(7.5);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(ORANGE.r, ORANGE.g, ORANGE.b);
-  doc.text(cfg.tagline || "Hajj & Umrah Services", textX, 18);
+  doc.text(cfg.tagline || "Hajj & Umrah Services", textX, 17.5, { maxWidth: contactMaxWidth });
 
-  // Contact line 1 — phone numbers
-  doc.setFontSize(6.5);
+  // Contact lines — regular spacing
+  doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(MUTED.r, MUTED.g, MUTED.b);
-  doc.text(`\u260E ${cfg.phone} | ${phone2} | \u2709 ${cfg.email}`, textX, 23);
+  doc.text(`Phone: ${phoneLine}`, textX, 22.5, { maxWidth: contactMaxWidth });
+
+  if (emailLine) {
+    doc.text(emailLine, textX, 26.5, { maxWidth: contactMaxWidth });
+  }
 
   // Address
   if (cfg.address) {
     doc.setFontSize(6);
     doc.setTextColor(MUTED.r, MUTED.g, MUTED.b);
     if (hasBengali(cfg.address)) {
-      await addBengaliText(doc, cfg.address, textX, 27.5, { fontSize: 5.5, color: "#787878" });
+      await addBengaliText(doc, cfg.address, textX, 30.5, { fontSize: 5.5, color: "#787878", maxWidth: contactMaxWidth });
     } else {
       const addr = cfg.address.length > 100 ? cfg.address.substring(0, 100) + "..." : cfg.address;
-      doc.text(addr, textX, 27.5);
+      doc.text(addr, textX, 30.5, { maxWidth: contactMaxWidth });
     }
   }
 
@@ -193,7 +225,7 @@ export async function addPdfHeader(
   }
 
   // ── Bottom separator — thin dark + orange accent ──
-  const lineY = 31;
+  const lineY = 34;
   doc.setDrawColor(DARK.r, DARK.g, DARK.b);
   doc.setLineWidth(0.6);
   doc.line(14, lineY, pw - 14, lineY);
@@ -205,7 +237,7 @@ export async function addPdfHeader(
   doc.setTextColor(0);
   doc.setFontSize(10);
 
-  return 36;
+  return 39;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -664,6 +696,34 @@ export interface PdfTableOptions {
   didParseCell?: (data: any) => void;
 }
 
+const getTableCellText = (data: any): string => {
+  if (Array.isArray(data?.cell?.text) && data.cell.text.length > 0) {
+    return data.cell.text.join(" ");
+  }
+
+  if (Array.isArray(data?.cell?.raw)) {
+    return data.cell.raw.join(" ");
+  }
+
+  return String(data?.cell?.raw ?? "");
+};
+
+const buildDidParseCell = (callback?: (data: any) => void) => (data: any) => {
+  const cellText = getTableCellText(data);
+  data.cell.styles.font = hasBengali(cellText) ? "NotoSansBengali" : "helvetica";
+
+  if (data.section === "head") {
+    data.cell.styles.font = "helvetica";
+    data.cell.styles.fontStyle = "bold";
+  }
+
+  if (data.section === "foot") {
+    data.cell.styles.fontStyle = "bold";
+  }
+
+  callback?.(data);
+};
+
 export function addTable(doc: jsPDF, options: PdfTableOptions): number {
   autoTable(doc, {
     startY: options.startY,
@@ -678,24 +738,26 @@ export function addTable(doc: jsPDF, options: PdfTableOptions): number {
     styles: {
       fontSize: options.fontSize || 7.5,
       cellPadding: 2.5,
-      font: "NotoSansBengali",
+      font: "helvetica",
     },
     headStyles: {
       fillColor: [DARK.r, DARK.g, DARK.b],
       textColor: [255, 255, 255],
       fontSize: options.fontSize || 7.5,
+      font: "helvetica",
       fontStyle: "bold",
     },
     footStyles: {
       fillColor: [LIGHT_BG.r, LIGHT_BG.g, LIGHT_BG.b],
       textColor: [DARK.r, DARK.g, DARK.b],
+      font: "helvetica",
       fontStyle: "bold",
       fontSize: 8,
     },
     alternateRowStyles: { fillColor: [LIGHT_BG.r, LIGHT_BG.g, LIGHT_BG.b] },
     columnStyles: options.columnStyles || {},
     margin: { left: options.margin?.left || 14, right: options.margin?.right || 14 },
-    didParseCell: options.didParseCell,
+    didParseCell: buildDidParseCell(options.didParseCell),
     didDrawCell: bengaliCellHook,
   });
 
@@ -715,24 +777,26 @@ export function addRawTable(doc: jsPDF, options: PdfTableOptions): number {
     styles: {
       fontSize: options.fontSize || 7.5,
       cellPadding: 2.5,
-      font: "NotoSansBengali",
+      font: "helvetica",
     },
     headStyles: {
       fillColor: [DARK.r, DARK.g, DARK.b],
       textColor: [255, 255, 255],
       fontSize: options.fontSize || 7.5,
+      font: "helvetica",
       fontStyle: "bold",
     },
     footStyles: {
       fillColor: [LIGHT_BG.r, LIGHT_BG.g, LIGHT_BG.b],
       textColor: [DARK.r, DARK.g, DARK.b],
+      font: "helvetica",
       fontStyle: "bold",
       fontSize: 8,
     },
     alternateRowStyles: { fillColor: [LIGHT_BG.r, LIGHT_BG.g, LIGHT_BG.b] },
     columnStyles: options.columnStyles || {},
     margin: { left: options.margin?.left || 14, right: options.margin?.right || 14 },
-    didParseCell: options.didParseCell,
+    didParseCell: buildDidParseCell(options.didParseCell),
     didDrawCell: bengaliCellHook,
   });
 
