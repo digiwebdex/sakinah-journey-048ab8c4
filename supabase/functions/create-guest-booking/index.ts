@@ -138,6 +138,19 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Auto-assign "Manasik Travel Hub" moallem for online bookings
+    let defaultMoallemId: string | null = null;
+    const { data: defaultMoallem } = await supabase
+      .from("moallems")
+      .select("id")
+      .eq("name", "Manasik Travel Hub")
+      .eq("status", "active")
+      .limit(1)
+      .single();
+    if (defaultMoallem) {
+      defaultMoallemId = defaultMoallem.id;
+    }
+
     // Create the booking
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")
@@ -156,6 +169,8 @@ Deno.serve(async (req) => {
         status: "pending",
         paid_amount: 0,
         due_amount: totalAmount,
+        selling_price_per_person: Number(pkg.price),
+        moallem_id: defaultMoallemId,
       })
       .select("id, tracking_id")
       .single();
