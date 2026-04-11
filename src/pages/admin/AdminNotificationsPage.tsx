@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { formatTrackingId } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/api";
 import { toast } from "sonner";
@@ -175,7 +176,7 @@ export default function AdminNotificationsPage() {
                 <select className={inputClass} value={sendForm.booking_id} onChange={(e) => setSendForm({ ...sendForm, booking_id: e.target.value })}>
                   <option value="">Select booking...</option>
                   {bookings.map((b) => (
-                    <option key={b.id} value={b.id}>{b.tracking_id} — {b.packages?.name || "N/A"}</option>
+                    <option key={b.id} value={b.id}>{formatTrackingId(b.tracking_id)} — {b.packages?.name || "N/A"}</option>
                   ))}
                 </select>
               </div>

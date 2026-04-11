@@ -9,7 +9,7 @@ import { useIsViewer, useCanModifyFinancials } from "@/components/admin/AdminLay
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AdminActionMenu from "@/components/admin/AdminActionMenu";
 import CustomerSearchSelect from "@/components/admin/CustomerSearchSelect";
-import { formatBDT } from "@/lib/utils";
+import { formatBDT, formatTrackingId } from "@/lib/utils";
 
 const inputClass = "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
 
@@ -373,7 +373,7 @@ export default function AdminPaymentsPage() {
       _type: "customer" as PaymentType,
       _sortDate: p.paid_at || p.due_date || p.created_at,
       _displayName: p.profiles?.full_name || p.bookings?.guest_name || "—",
-      _trackingId: p.bookings?.tracking_id || "—",
+      _trackingId: formatTrackingId(p.bookings?.tracking_id) || "—",
       _amount: Number(p.amount),
     }));
     const moallemItems = moallemPayments.map(p => ({
@@ -381,7 +381,7 @@ export default function AdminPaymentsPage() {
       _type: "moallem" as PaymentType,
       _sortDate: p.date || p.created_at,
       _displayName: p.moallems?.name || "—",
-      _trackingId: p.bookings?.tracking_id || "—",
+      _trackingId: formatTrackingId(p.bookings?.tracking_id) || "—",
       _amount: Number(p.amount),
     }));
     const supplierItems = supplierPayments.map(p => ({
@@ -389,7 +389,7 @@ export default function AdminPaymentsPage() {
       _type: "supplier" as PaymentType,
       _sortDate: p.date || p.created_at,
       _displayName: p.supplier_agents?.agent_name || "—",
-      _trackingId: p.bookings?.tracking_id || "—",
+      _trackingId: formatTrackingId(p.bookings?.tracking_id) || "—",
       _amount: Number(p.amount),
     }));
     let combined: any[] = [];
@@ -521,7 +521,7 @@ export default function AdminPaymentsPage() {
                 <div className="flex items-center gap-4">
                   <span className="font-heading font-bold text-primary">{formatBDT(group.totalPaid)}</span>
                   <button
-                    onClick={(e) => { e.stopPropagation(); exportPDF({ title: `Moallem Payment History - ${group.name}`, columns: ["#", "Booking", "Amount", "Method", "Date", "Notes"], rows: group.payments.map((p: any, i: number) => [i + 1, p.bookings?.tracking_id || "—", Number(p.amount), p.payment_method || "—", p.date ? new Date(p.date).toLocaleDateString() : "—", p.notes || "—"]), summary: [`Total Paid: BDT ${group.totalPaid.toLocaleString("en-IN")}`] }); }}
+                    onClick={(e) => { e.stopPropagation(); exportPDF({ title: `Moallem Payment History - ${group.name}`, columns: ["#", "Booking", "Amount", "Method", "Date", "Notes"], rows: group.payments.map((p: any, i: number) => [i + 1, formatTrackingId(p.bookings?.tracking_id) || "—", Number(p.amount), p.payment_method || "—", p.date ? new Date(p.date).toLocaleDateString() : "—", p.notes || "—"]), summary: [`Total Paid: BDT ${group.totalPaid.toLocaleString("en-IN")}`] }); }}
                     className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-md hover:bg-primary/20 transition-colors"
                   >
                     <FileDown className="h-3.5 w-3.5" /> PDF
@@ -550,7 +550,7 @@ export default function AdminPaymentsPage() {
                         return (
                         <tr key={p.id} className="border-b border-border/30 hover:bg-secondary/20">
                           <td className="py-2.5 px-4 text-xs text-muted-foreground">{i + 1}</td>
-                          <td className="py-2.5 px-4 font-mono text-xs">{p.bookings?.tracking_id || "—"}</td>
+                          <td className="py-2.5 px-4 font-mono text-xs">{formatTrackingId(p.bookings?.tracking_id) || "—"}</td>
                           <td className="py-2.5 px-4 font-medium">{formatBDT(p.amount)}</td>
                           <td className="py-2.5 px-4 capitalize text-xs">{p.payment_method || "—"}</td>
                           <td className="py-2.5 px-4 text-xs">{serviceLabel || "—"}</td>
@@ -853,7 +853,7 @@ export default function AdminPaymentsPage() {
                 <option value="">-- Select Booking ({filteredBookings.length}) --</option>
                 {filteredBookings.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.tracking_id} — {b.guest_name || "N/A"} ({paymentType === "supplier" ? `Supplier Due: ${formatBDT(Number(b.supplier_due || 0))}` : paymentType === "moallem" ? `Moallem Due: ${formatBDT(Number(b.moallem_due || 0))}` : `Due: ${formatBDT(Number(b.due_amount || 0))}`})
+                    {formatTrackingId(b.tracking_id)} — {b.guest_name || "N/A"} ({paymentType === "supplier" ? `Supplier Due: ${formatBDT(Number(b.supplier_due || 0))}` : paymentType === "moallem" ? `Moallem Due: ${formatBDT(Number(b.moallem_due || 0))}` : `Due: ${formatBDT(Number(b.due_amount || 0))}`})
                   </option>
                 ))}
               </select>

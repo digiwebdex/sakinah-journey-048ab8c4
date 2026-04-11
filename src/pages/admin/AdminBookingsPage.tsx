@@ -21,20 +21,13 @@ import CustomerSearchSelect from "@/components/admin/CustomerSearchSelect";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { formatBDT, cn } from "@/lib/utils";
+import { formatBDT, cn, formatTrackingId } from "@/lib/utils";
 
 const inputClass = "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
 const STATUSES = ["pending", "confirmed", "visa_processing", "ticket_issued", "completed", "cancelled"];
 const normalizeBookingType = (value?: string | null) => (value || "").trim().toLowerCase();
 const isFamilyBooking = (value?: string | null, memberCount = 0) => normalizeBookingType(value).includes("family") || memberCount > 0;
 const toMoney = (value: any) => Math.max(0, Number(value || 0));
-const formatTrackingId = (value?: string | null) => {
-  const normalized = (value || "").trim().toUpperCase();
-  if (!normalized) return "";
-  if (normalized.startsWith("MTH-")) return normalized;
-  if (normalized.startsWith("RK-")) return `MTH-${normalized.slice(3)}`;
-  return normalized;
-};
 const REQUIRED_DOCUMENT_TYPES = ["passport", "nid", "photo"] as const;
 const DOCUMENT_TYPE_ALIASES: Record<string, (typeof REQUIRED_DOCUMENT_TYPES)[number] | string> = {
   passport: "passport",
