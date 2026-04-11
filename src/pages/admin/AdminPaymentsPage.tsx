@@ -853,7 +853,7 @@ export default function AdminPaymentsPage() {
                 <option value="">-- Select Booking ({filteredBookings.length}) --</option>
                 {filteredBookings.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.tracking_id} — {b.guest_name || "N/A"} ({paymentType === "supplier" ? `Supplier Due: ${formatBDT(Number(b.supplier_due || 0))}` : paymentType === "moallem" ? `Moallem Due: ${formatBDT(Number(b.moallem_due || 0))}` : `Due: ${formatBDT(Number(b.due_amount || 0))}`})
+                    {formatTrackingId(b.tracking_id)} — {b.guest_name || "N/A"} ({paymentType === "supplier" ? `Supplier Due: ${formatBDT(Number(b.supplier_due || 0))}` : paymentType === "moallem" ? `Moallem Due: ${formatBDT(Number(b.moallem_due || 0))}` : `Due: ${formatBDT(Number(b.due_amount || 0))}`})
                   </option>
                 ))}
               </select>
