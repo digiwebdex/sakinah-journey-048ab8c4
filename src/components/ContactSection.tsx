@@ -2,11 +2,11 @@ import { forwardRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, Clock, Send } from "lucide-react";
 import { toast } from "sonner";
-import { useSiteContent } from "@/hooks/useSiteContent";
+import { useBulkSiteContent } from "@/hooks/useSiteContentProvider";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const ContactSection = forwardRef<HTMLElement>(function ContactSection(_, ref) {
-  const { data: content } = useSiteContent("contact");
+  const { data: content } = useBulkSiteContent("contact");
   const { t, language } = useLanguage();
   const bn = language === "bn";
   const [form, setForm] = useState({ name: "", phone: "", email: "", service: "", message: "" });

@@ -1,9 +1,9 @@
 import { MessageCircle } from "lucide-react";
-import { useSiteContent } from "@/hooks/useSiteContent";
+import { useBulkSiteContent } from "@/hooks/useSiteContentProvider";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const WhatsAppFloat = () => {
-  const { data: content } = useSiteContent("whatsapp");
+  const { data: content } = useBulkSiteContent("whatsapp");
   const { language } = useLanguage();
   const lc = content?.[language];
 

@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, X, ChevronLeft, ChevronRight, Image as ImageIcon, Video } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useSiteContent } from "@/hooks/useSiteContent";
+import { useBulkSiteContent } from "@/hooks/useSiteContentProvider";
 
 type GalleryItem = {
   type: "image" | "video";
@@ -39,7 +39,7 @@ const tabs: { key: TabType; labelBn: string; labelEn: string; icon: typeof Image
 
 export default function GallerySection() {
   const { language } = useLanguage();
-  const { data: content } = useSiteContent("gallery");
+  const { data: content } = useBulkSiteContent("gallery");
   const bn = language === "bn";
   const lc = content?.[language];
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
