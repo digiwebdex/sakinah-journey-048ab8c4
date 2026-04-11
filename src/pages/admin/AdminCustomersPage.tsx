@@ -59,8 +59,8 @@ export default function AdminCustomersPage() {
     setLoading(true);
     const [pRes, bRes, payRes] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-      supabase.from("bookings").select("id, user_id, total_amount, paid_amount, due_amount, num_travelers, status"),
-      supabase.from("payments").select("id, user_id, amount, status").eq("status", "completed"),
+      supabase.from("bookings").select("id, user_id, guest_phone, guest_name, total_amount, paid_amount, due_amount, num_travelers, status"),
+      supabase.from("payments").select("id, user_id, amount, status, booking_id").eq("status", "completed"),
     ]);
     setCustomers(pRes.data || []);
     setBookings(bRes.data || []);
@@ -70,22 +70,42 @@ export default function AdminCustomersPage() {
 
   useEffect(() => { fetchData(); }, []);
 
-  // Per-customer stats
+  // Helper: normalize phone for comparison
+  const normalizePhoneForMatch = (phone: string | null | undefined) => {
+    if (!phone) return "";
+    return phone.replace(/[^\d]/g, "").slice(-10);
+  };
+
+  // Per-customer stats — match by user_id OR guest_phone
   const customerStats = useMemo(() => {
-    const map: Record<string, { totalAmount: number; totalPaid: number; totalDue: number; bookingCount: number; travelers: number }> = {};
-    bookings.forEach(b => {
-      if (!b.user_id) return;
-      // Exclude cancelled bookings from financial stats
+    const map: Record<string, { totalAmount: number; totalPaid: number; totalDue: number; bookingCount: number; travelers: number; bookingIds: string[] }> = {};
+
+    // Build phone→user_id lookup from customers
+    const phoneToUserId: Record<string, string> = {};
+    customers.forEach((c: any) => {
+      if (c.phone && c.user_id) {
+        phoneToUserId[normalizePhoneForMatch(c.phone)] = c.user_id;
+      }
+    });
+
+    bookings.forEach((b: any) => {
       if (b.status === "cancelled") return;
-      if (!map[b.user_id]) map[b.user_id] = { totalAmount: 0, totalPaid: 0, totalDue: 0, bookingCount: 0, travelers: 0 };
-      map[b.user_id].totalAmount += Number(b.total_amount || 0);
-      map[b.user_id].totalPaid += Number(b.paid_amount || 0);
-      map[b.user_id].totalDue += Number(b.due_amount || 0);
-      map[b.user_id].bookingCount++;
-      map[b.user_id].travelers += Number(b.num_travelers || 1);
+      // Try to resolve the matching customer user_id
+      let matchUserId = b.user_id;
+      if (!matchUserId && b.guest_phone) {
+        matchUserId = phoneToUserId[normalizePhoneForMatch(b.guest_phone)];
+      }
+      if (!matchUserId) return;
+      if (!map[matchUserId]) map[matchUserId] = { totalAmount: 0, totalPaid: 0, totalDue: 0, bookingCount: 0, travelers: 0, bookingIds: [] };
+      map[matchUserId].totalAmount += Number(b.total_amount || 0);
+      map[matchUserId].totalPaid += Number(b.paid_amount || 0);
+      map[matchUserId].totalDue += Number(b.due_amount || 0);
+      map[matchUserId].bookingCount++;
+      map[matchUserId].travelers += Number(b.num_travelers || 1);
+      map[matchUserId].bookingIds.push(b.id);
     });
     return map;
-  }, [bookings]);
+  }, [bookings, customers]);
 
   // KPI totals
   const totals = useMemo(() => {
