@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Shield, Heart, Award, Clock, Search } from "lucide-react";
-import { useSiteContent } from "@/hooks/useSiteContent";
+import { useBulkSiteContent } from "@/hooks/useSiteContentProvider";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const reasonIcons = [Shield, Heart, Award, Clock];
@@ -10,7 +10,7 @@ const reasonIcons = [Shield, Heart, Award, Clock];
 const AboutSection = () => {
   const navigate = useNavigate();
   const [trackingId, setTrackingId] = useState("");
-  const { data: content } = useSiteContent("about");
+  const { data: content } = useBulkSiteContent("about");
   const { t, language } = useLanguage();
 
   const lc = content?.[language];

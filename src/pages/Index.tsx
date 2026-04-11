@@ -10,12 +10,12 @@ import WhatsAppFloat from "@/components/WhatsAppFloat";
 import BackToTop from "@/components/BackToTop";
 import { useSectionVisibility } from "@/hooks/useSectionVisibility";
 import SEOHead, { organizationJsonLd } from "@/components/SEOHead";
+import { SiteContentProvider } from "@/hooks/useSiteContentProvider";
 
 // Lazy load below-fold sections with retry for stale chunk errors
 const lazyRetry = (importFn: () => Promise<any>) =>
   lazy(() =>
     importFn().catch(() => {
-      // Force reload on stale chunk errors
       window.location.reload();
       return importFn();
     })
@@ -32,65 +32,65 @@ const SectionFallback = () => <div className="py-20" />;
 
 const Index = () => {
   const { visibility, loading } = useSectionVisibility();
-
-  // Don't block render, show everything while loading (defaults are all true)
   const show = (key: string) => loading || visibility[key] !== false;
 
   return (
-    <div className="min-h-screen bg-background">
-      <SEOHead
-        canonicalUrl="/"
-        keywords="হজ্জ, উমরাহ, Hajj, Umrah, Visa, Tour, Bangladesh, মানাসিক ট্রাভেল হাব, Manasik Travel Hub, Tangail"
-        jsonLd={organizationJsonLd()}
-      />
-      <Navbar />
-      {show("hero") && <HeroSection />}
-      {show("services") && <ServicesSection />}
-      {show("facilities") && <FacilitiesSection />}
-      {show("packages") && <PackagesSection />}
-      {show("air_tickets") && (
-        <TypedPackageSection packageType="air_ticket" sectionId="air-tickets" />
-      )}
-      {show("visa_services") && (
-        <TypedPackageSection packageType="visa" sectionId="visa-services" />
-      )}
-      {show("tour_packages") && (
-        <TypedPackageSection packageType="tour" sectionId="tour-packages" />
-      )}
-      {show("guidelines") && (
-        <Suspense fallback={<SectionFallback />}>
-          <GuidelineSection />
-        </Suspense>
-      )}
-      {show("video_guide") && (
-        <Suspense fallback={<SectionFallback />}>
-          <VideoGuideSection />
-        </Suspense>
-      )}
-      {show("gallery") && (
-        <Suspense fallback={<SectionFallback />}>
-          <GallerySection />
-        </Suspense>
-      )}
-      {show("testimonials") && (
-        <Suspense fallback={<SectionFallback />}>
-          <TestimonialsSection />
-        </Suspense>
-      )}
-      {show("about") && (
-        <Suspense fallback={<SectionFallback />}>
-          <AboutSection />
-        </Suspense>
-      )}
-      {show("contact") && (
-        <Suspense fallback={<SectionFallback />}>
-          <ContactSection />
-        </Suspense>
-      )}
-      <Footer />
-      <WhatsAppFloat />
-      <BackToTop />
-    </div>
+    <SiteContentProvider>
+      <div className="min-h-screen bg-background">
+        <SEOHead
+          canonicalUrl="/"
+          keywords="হজ্জ, উমরাহ, Hajj, Umrah, Visa, Tour, Bangladesh, মানাসিক ট্রাভেল হাব, Manasik Travel Hub, Tangail"
+          jsonLd={organizationJsonLd()}
+        />
+        <Navbar />
+        {show("hero") && <HeroSection />}
+        {show("services") && <ServicesSection />}
+        {show("facilities") && <FacilitiesSection />}
+        {show("packages") && <PackagesSection />}
+        {show("air_tickets") && (
+          <TypedPackageSection packageType="air_ticket" sectionId="air-tickets" />
+        )}
+        {show("visa_services") && (
+          <TypedPackageSection packageType="visa" sectionId="visa-services" />
+        )}
+        {show("tour_packages") && (
+          <TypedPackageSection packageType="tour" sectionId="tour-packages" />
+        )}
+        {show("guidelines") && (
+          <Suspense fallback={<SectionFallback />}>
+            <GuidelineSection />
+          </Suspense>
+        )}
+        {show("video_guide") && (
+          <Suspense fallback={<SectionFallback />}>
+            <VideoGuideSection />
+          </Suspense>
+        )}
+        {show("gallery") && (
+          <Suspense fallback={<SectionFallback />}>
+            <GallerySection />
+          </Suspense>
+        )}
+        {show("testimonials") && (
+          <Suspense fallback={<SectionFallback />}>
+            <TestimonialsSection />
+          </Suspense>
+        )}
+        {show("about") && (
+          <Suspense fallback={<SectionFallback />}>
+            <AboutSection />
+          </Suspense>
+        )}
+        {show("contact") && (
+          <Suspense fallback={<SectionFallback />}>
+            <ContactSection />
+          </Suspense>
+        )}
+        <Footer />
+        <WhatsAppFloat />
+        <BackToTop />
+      </div>
+    </SiteContentProvider>
   );
 };
 

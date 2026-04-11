@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
-import { useSiteContent } from "@/hooks/useSiteContent";
+import { useBulkSiteContent } from "@/hooks/useSiteContentProvider";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const defaultTestimonials = [
@@ -29,7 +29,7 @@ const defaultTestimonials = [
 ];
 
 const TestimonialsSection = forwardRef<HTMLElement>(function TestimonialsSection(_, ref) {
-  const { data: content } = useSiteContent("testimonials");
+  const { data: content } = useBulkSiteContent("testimonials");
   const { language } = useLanguage();
   const bn = language === "bn";
   const lc = content?.[language];

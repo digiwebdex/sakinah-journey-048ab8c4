@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Check, ArrowRight, Clock, Star, Plane, FileText, Globe, Map } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/api";
 import { useLanguage } from "@/i18n/LanguageContext";
 import heroImage from "@/assets/hero-kaaba-golden.jpg";
 import medinaImage from "@/assets/hero-medina.jpg";
+import { useActivePackages } from "@/hooks/usePackagesData";
 
 const fallbackImages = [heroImage, medinaImage];
 
@@ -16,52 +16,19 @@ const TYPE_CONFIG: Record<string, {
   gradient: string;
 }> = {
   air_ticket: {
-    en: {
-      label: "Air Travel",
-      heading: "Book Your",
-      highlight: "Air Tickets",
-      description: "Best-price airline tickets with flexible booking options for domestic and international travel",
-    },
-    bn: {
-      label: "বিমান ভ্রমণ",
-      heading: "বুক করুন আপনার",
-      highlight: "এয়ার টিকেট",
-      description: "দেশীয় এবং আন্তর্জাতিক ভ্রমণের জন্য সেরা মূল্যে বিমান টিকেট",
-    },
-    icon: Plane,
-    gradient: "from-blue-500 to-cyan-500",
+    en: { label: "Air Travel", heading: "Book Your", highlight: "Air Tickets", description: "Best-price airline tickets with flexible booking options for domestic and international travel" },
+    bn: { label: "বিমান ভ্রমণ", heading: "বুক করুন আপনার", highlight: "এয়ার টিকেট", description: "দেশীয় এবং আন্তর্জাতিক ভ্রমণের জন্য সেরা মূল্যে বিমান টিকেট" },
+    icon: Plane, gradient: "from-blue-500 to-cyan-500",
   },
   visa: {
-    en: {
-      label: "Visa Services",
-      heading: "Hassle-Free",
-      highlight: "Visa Processing",
-      description: "Expert visa processing services for Saudi Arabia and other destinations worldwide",
-    },
-    bn: {
-      label: "ভিসা সেবা",
-      heading: "ঝামেলামুক্ত",
-      highlight: "ভিসা প্রসেসিং",
-      description: "সৌদি আরব এবং বিশ্বব্যাপী অন্যান্য গন্তব্যের জন্য বিশেষজ্ঞ ভিসা সেবা",
-    },
-    icon: FileText,
-    gradient: "from-emerald-500 to-teal-500",
+    en: { label: "Visa Services", heading: "Hassle-Free", highlight: "Visa Processing", description: "Expert visa processing services for Saudi Arabia and other destinations worldwide" },
+    bn: { label: "ভিসা সেবা", heading: "ঝামেলামুক্ত", highlight: "ভিসা প্রসেসিং", description: "সৌদি আরব এবং বিশ্বব্যাপী অন্যান্য গন্তব্যের জন্য বিশেষজ্ঞ ভিসা সেবা" },
+    icon: FileText, gradient: "from-emerald-500 to-teal-500",
   },
   tour: {
-    en: {
-      label: "Tour Packages",
-      heading: "Explore Amazing",
-      highlight: "Tour Packages",
-      description: "Discover exciting destinations with our carefully curated tour packages",
-    },
-    bn: {
-      label: "ট্যুর প্যাকেজ",
-      heading: "দেখুন আকর্ষণীয়",
-      highlight: "ট্যুর প্যাকেজ",
-      description: "আমাদের যত্নসহকারে তৈরি ট্যুর প্যাকেজ দিয়ে উত্তেজনাপূর্ণ গন্তব্য আবিষ্কার করুন",
-    },
-    icon: Map,
-    gradient: "from-orange-500 to-amber-500",
+    en: { label: "Tour Packages", heading: "Explore Amazing", highlight: "Tour Packages", description: "Discover exciting destinations with our carefully curated tour packages" },
+    bn: { label: "ট্যুর প্যাকেজ", heading: "দেখুন আকর্ষণীয়", highlight: "ট্যুর প্যাকেজ", description: "আমাদের যত্নসহকারে তৈরি ট্যুর প্যাকেজ দিয়ে উত্তেজনাপূর্ণ গন্তব্য আবিষ্কার করুন" },
+    icon: Map, gradient: "from-orange-500 to-amber-500",
   },
 };
 
@@ -73,22 +40,12 @@ interface TypedPackageSectionProps {
 const TypedPackageSection = ({ packageType, sectionId }: TypedPackageSectionProps) => {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
-  const [packages, setPackages] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: allPackages = [], isLoading: loading } = useActivePackages();
 
-  useEffect(() => {
-    supabase
-      .from("packages")
-      .select("*")
-      .eq("is_active", true)
-      .eq("show_on_website", true)
-      .eq("type", packageType)
-      .order("price", { ascending: true })
-      .then(({ data }: any) => {
-        setPackages(data || []);
-        setLoading(false);
-      });
-  }, [packageType]);
+  const packages = useMemo(
+    () => allPackages.filter((p: any) => p.type === packageType),
+    [allPackages, packageType]
+  );
 
   if (loading || packages.length === 0) return null;
 

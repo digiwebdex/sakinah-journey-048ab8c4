@@ -3,11 +3,11 @@ import sslcommerzPayWith from "@/assets/payment/sslcommerz-pay-with.png";
 import logoEn from "@/assets/logo-nobg.png";
 import logoBn from "@/assets/logo-bangla.png";
 import footerJourney from "@/assets/footer-journey.jpg";
-import { useSiteContent } from "@/hooks/useSiteContent";
+import { useBulkSiteContent } from "@/hooks/useSiteContentProvider";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const Footer = () => {
-  const { data: content } = useSiteContent("footer");
+  const { data: content } = useBulkSiteContent("footer");
   const { t, language } = useLanguage();
 
   const lc = content?.[language];
