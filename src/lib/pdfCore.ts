@@ -328,9 +328,9 @@ export function addBillToAndMeta(
   doc.setTextColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
   doc.text("BILL TO :", leftX, y);
 
-  // Bill to fields
-  let fieldY = y + 7;
-  doc.setFontSize(9);
+  // Bill to fields — larger font matching sample (~11pt)
+  let fieldY = y + 8;
+  doc.setFontSize(10.5);
   billToFields.forEach((f) => {
     doc.setFont("helvetica", "normal");
     doc.setTextColor(DARK.r, DARK.g, DARK.b);
@@ -338,19 +338,19 @@ export function addBillToAndMeta(
     doc.text(label, leftX, fieldY);
     const labelW = doc.getTextWidth(label);
     doc.text(`: ${f.value || "N/A"}`, leftX + labelW + 1, fieldY);
-    fieldY += 5.5;
+    fieldY += 6;
   });
 
-  // Metadata on the right (Invoice No, Date, etc.)
-  let metaY = y + 7;
-  doc.setFontSize(9);
+  // Metadata on the right (Invoice No, Date, etc.) — matching sample
+  let metaY = y + 8;
+  doc.setFontSize(9.5);
   metaFields.forEach((f) => {
     doc.setFont("helvetica", "normal");
     doc.setTextColor(DARK.r, DARK.g, DARK.b);
     doc.text(f.label, rightX, metaY);
     doc.setFont("helvetica", "bold");
     doc.text(`: ${f.value}`, rightX + doc.getTextWidth(f.label) + 1, metaY);
-    metaY += 5.5;
+    metaY += 6;
   });
 
   doc.setTextColor(0);
