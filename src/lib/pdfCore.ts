@@ -21,7 +21,8 @@ export const DARK = { r: 51, g: 51, b: 51 };
 export const DARK_BG = { r: 55, g: 55, b: 55 }; // Footer bar
 export const LIGHT_BG = { r: 248, g: 248, b: 248 };
 export const MUTED = { r: 120, g: 120, b: 120 };
-export const TABLE_HEADER = { r: 243, g: 146, b: 55 }; // Orange table header matching sample
+export const TABLE_HEADER = { r: 50, g: 50, b: 50 }; // Dark black table header matching sample
+export const BEIGE_BG = { r: 245, g: 235, b: 220 }; // Beige background for financial summary
 export const WHITE = { r: 255, g: 255, b: 255 };
 
 // Legacy aliases
@@ -180,44 +181,38 @@ export function addPdfFooter(doc: jsPDF, cfg: PdfCompanyConfig, options?: { show
     const barY = ph - FOOTER_HEIGHT;
     const barH = FOOTER_HEIGHT;
 
-    // Dark footer bar
-    doc.setFillColor(DARK_BG.r, DARK_BG.g, DARK_BG.b);
+    // ORANGE footer bar (matching sample design)
+    doc.setFillColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
     doc.rect(0, barY, pw, barH, "F");
 
-    // Phone numbers - left side
-    doc.setFontSize(8);
+    // Phone numbers - left side with white circle icon
+    doc.setFillColor(255, 255, 255);
+    doc.circle(MARGIN + 2, barY + 12, 3, "F");
+    doc.setFontSize(8.5);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(255);
-    const phoneText = `${cfg.phone}\n${phone2}`;
-    doc.text(cfg.phone, MARGIN + 4, barY + 10);
-    doc.text(phone2, MARGIN + 4, barY + 16);
+    doc.text(cfg.phone, MARGIN + 8, barY + 10);
+    doc.text(phone2, MARGIN + 8, barY + 16);
 
-    // Email & website - center
-    const centerX = pw / 2 - 10;
+    // Email & website - center with white circle icons
+    const centerX = pw / 2 - 5;
+    doc.setFillColor(255, 255, 255);
+    doc.circle(centerX - 5, barY + 8.5, 2.5, "F");
+    doc.circle(centerX - 5, barY + 14.5, 2.5, "F");
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
+    doc.setTextColor(255);
     doc.text(cfg.email || "manasiktravelhub.info@gmail.com", centerX, barY + 10);
     doc.text("manasiktravelhub.com", centerX, barY + 16);
 
-    // Thank You — right side
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "italic");
+    // Thank You — right side (script/cursive style)
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bolditalic");
     doc.setTextColor(255);
     doc.text("Thank You", pw - MARGIN - 4, barY + 10, { align: "right" });
     doc.setFontSize(6.5);
     doc.setFont("helvetica", "bold");
-    doc.text("Stay With MANASIK TRAVEL HUB", pw - MARGIN - 4, barY + 16, { align: "right" });
-
-    // Phone icon circles (small decorative circles)
-    doc.setFillColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
-    doc.circle(MARGIN, barY + 12, 2.5, "F");
-    doc.setFontSize(6);
-    doc.setTextColor(255);
-
-    // Email icon circle
-    doc.setFillColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
-    doc.circle(centerX - 5, barY + 8, 2.5, "F");
-    doc.circle(centerX - 5, barY + 14, 2.5, "F");
+    doc.text("Stay With MANASIK TRAVEL HUB", pw - MARGIN - 4, barY + 17, { align: "right" });
 
     // Page numbers
     if (options?.showPageNumbers !== false && totalPages > 1) {
@@ -305,11 +300,11 @@ export function addTitleBlock(
 ): number {
   const pw = getPageWidth(doc);
 
-  // Large bold title on the right side — ORANGE like sample
-  doc.setFontSize(32);
+  // Large bold title on the right side — ORANGE like sample (~40pt)
+  doc.setFontSize(38);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
-  doc.text(title.toUpperCase(), pw - MARGIN, y + 2, { align: "right" });
+  doc.text(title.toUpperCase(), pw - MARGIN, y + 4, { align: "right" });
   doc.setTextColor(0);
 
   return y + 10;
@@ -333,9 +328,9 @@ export function addBillToAndMeta(
   doc.setTextColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
   doc.text("BILL TO :", leftX, y);
 
-  // Bill to fields
-  let fieldY = y + 7;
-  doc.setFontSize(9);
+  // Bill to fields — larger font matching sample (~11pt)
+  let fieldY = y + 8;
+  doc.setFontSize(10.5);
   billToFields.forEach((f) => {
     doc.setFont("helvetica", "normal");
     doc.setTextColor(DARK.r, DARK.g, DARK.b);
@@ -343,19 +338,19 @@ export function addBillToAndMeta(
     doc.text(label, leftX, fieldY);
     const labelW = doc.getTextWidth(label);
     doc.text(`: ${f.value || "N/A"}`, leftX + labelW + 1, fieldY);
-    fieldY += 5.5;
+    fieldY += 6;
   });
 
-  // Metadata on the right (Invoice No, Date, etc.)
-  let metaY = y + 7;
-  doc.setFontSize(9);
+  // Metadata on the right (Invoice No, Date, etc.) — matching sample
+  let metaY = y + 8;
+  doc.setFontSize(9.5);
   metaFields.forEach((f) => {
     doc.setFont("helvetica", "normal");
     doc.setTextColor(DARK.r, DARK.g, DARK.b);
     doc.text(f.label, rightX, metaY);
     doc.setFont("helvetica", "bold");
     doc.text(`: ${f.value}`, rightX + doc.getTextWidth(f.label) + 1, metaY);
-    metaY += 5.5;
+    metaY += 6;
   });
 
   doc.setTextColor(0);
@@ -548,25 +543,30 @@ export function addFinancialBox(
   options?: { width?: number; align?: "left" | "right" }
 ): number {
   const pw = getPageWidth(doc);
-  const boxW = options?.width || 90;
+  const boxW = options?.width || 100;
   const boxX = options?.align === "left" ? MARGIN : pw - MARGIN - boxW;
 
-  y = ensurePageSpace(doc, y, items.length * 7 + 8);
+  y = ensurePageSpace(doc, y, items.length * 7 + 12);
 
-  let iy = y + 2;
-  doc.setFontSize(9);
+  // Beige/tan background box matching sample
+  const boxH = items.length * 7 + 8;
+  doc.setFillColor(245, 235, 220);
+  doc.roundedRect(boxX, y - 2, boxW, boxH, 1.5, 1.5, "F");
+
+  let iy = y + 4;
+  doc.setFontSize(9.5);
 
   items.forEach((item, idx) => {
     doc.setFont("helvetica", item.bold ? "bold" : "normal");
     doc.setTextColor(item.bold ? DARK.r : 80, item.bold ? DARK.g : 80, item.bold ? DARK.b : 80);
-    doc.text(`${item.label} :`, boxX + 4, iy);
-    doc.text(item.value, boxX + boxW - 4, iy, { align: "right" });
+    doc.text(`${item.label} :`, boxX + 6, iy);
+    doc.text(item.value, boxX + boxW - 6, iy, { align: "right" });
 
     // Separator line after Net Total (3rd item typically)
     if (idx === 2 && items.length > 3) {
-      doc.setDrawColor(200);
+      doc.setDrawColor(210, 200, 180);
       doc.setLineWidth(0.3);
-      doc.line(boxX + 4, iy + 2.5, boxX + boxW - 4, iy + 2.5);
+      doc.line(boxX + 6, iy + 3, boxX + boxW - 6, iy + 3);
       doc.setLineWidth(0.2);
       iy += 4;
     }
