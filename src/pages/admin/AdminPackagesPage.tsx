@@ -207,6 +207,18 @@ export default function AdminPackagesPage() {
           <input className={inputClass} placeholder="Visa, Hotel, Transport, Food"
             value={form.services} onChange={(e) => setForm({ ...form, services: e.target.value })} />
         </div>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Rating (0–5)</label>
+          <input className={inputClass} type="number" step="0.1" min="0" max="5" placeholder="4.9"
+            value={form.rating} onChange={(e) => setForm({ ...form, rating: e.target.value })} />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="text-xs text-muted-foreground block mb-1">
+            Highlight Tag <span className="text-muted-foreground/70">(optional — short pill on card, e.g. এখনই, New, Popular)</span>
+          </label>
+          <input className={inputClass} placeholder="এখনই / New / Popular" maxLength={20}
+            value={form.highlight_tag} onChange={(e) => setForm({ ...form, highlight_tag: e.target.value })} />
+        </div>
 
         {/* Features / Bullet Points Editor */}
         <div className="sm:col-span-2">
