@@ -212,20 +212,62 @@ export function addPdfFooter(doc: jsPDF, cfg: PdfCompanyConfig, options?: { show
     doc.setFillColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
     doc.rect(0, barY, pw, barH, "F");
 
-    // Phone numbers - left side with white circle icon
-    doc.setFillColor(255, 255, 255);
-    doc.circle(MARGIN + 2, barY + 12, 3, "F");
+    // ── Helper: draw a small glyph (phone/envelope/globe) inside a white circle ──
+    const drawIconCircle = (
+      cx: number, cy: number, r: number,
+      glyph: "phone" | "email" | "web"
+    ) => {
+      // White circle background
+      doc.setFillColor(255, 255, 255);
+      doc.circle(cx, cy, r, "F");
+
+      // Orange glyph on top
+      doc.setDrawColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
+      doc.setFillColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
+      doc.setLineWidth(0.35);
+
+      if (glyph === "phone") {
+        // Stylized phone handset (rounded rectangle tilted)
+        const w = r * 0.9, h = r * 1.4;
+        doc.roundedRect(cx - w / 2, cy - h / 2, w, h, 0.5, 0.5, "F");
+        // Speaker dot at top (white)
+        doc.setFillColor(255, 255, 255);
+        doc.circle(cx, cy - h / 2 + 0.5, 0.25, "F");
+        doc.setFillColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
+      } else if (glyph === "email") {
+        // Envelope: rectangle outline + diagonal flap
+        const w = r * 1.6, h = r * 1.1;
+        doc.setLineWidth(0.4);
+        doc.rect(cx - w / 2, cy - h / 2, w, h, "S");
+        // Flap (V shape from top corners to center)
+        doc.line(cx - w / 2, cy - h / 2, cx, cy + h / 6);
+        doc.line(cx + w / 2, cy - h / 2, cx, cy + h / 6);
+      } else if (glyph === "web") {
+        // Globe: circle outline + meridian + horizontal latitude
+        doc.setLineWidth(0.35);
+        doc.circle(cx, cy, r * 0.75, "S");
+        // Vertical meridian (ellipse-like with line)
+        doc.line(cx, cy - r * 0.75, cx, cy + r * 0.75);
+        // Horizontal equator
+        doc.line(cx - r * 0.75, cy, cx + r * 0.75, cy);
+        // Curved meridian (approximated)
+        doc.ellipse(cx, cy, r * 0.35, r * 0.75, "S");
+      }
+      doc.setLineWidth(0.2);
+    };
+
+    // Phone numbers - left side with phone icon
+    drawIconCircle(MARGIN + 3, barY + 12, 2.5, "phone");
     doc.setFontSize(8.5);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(255);
-    doc.text(cfg.phone, MARGIN + 8, barY + 10);
-    doc.text(phone2, MARGIN + 8, barY + 16);
+    doc.text(cfg.phone, MARGIN + 9, barY + 10);
+    doc.text(phone2, MARGIN + 9, barY + 16);
 
-    // Email & website - center with white circle icons
+    // Email & website - center with envelope + globe icons
     const centerX = pw / 2 - 5;
-    doc.setFillColor(255, 255, 255);
-    doc.circle(centerX - 5, barY + 8.5, 2.5, "F");
-    doc.circle(centerX - 5, barY + 14.5, 2.5, "F");
+    drawIconCircle(centerX - 5, barY + 8.5, 2, "email");
+    drawIconCircle(centerX - 5, barY + 14.5, 2, "web");
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(255);
