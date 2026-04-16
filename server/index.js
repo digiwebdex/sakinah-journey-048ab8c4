@@ -166,6 +166,16 @@ const createCrudRoutes = (tableName, options = {}) => {
     }
   });
 
+  // Serialize arrays/plain objects to JSON strings so Postgres receives valid JSON for jsonb columns.
+  const serializeJsonValues = (value) => {
+    if (value === null || value === undefined) return value;
+    if (Array.isArray(value)) return JSON.stringify(value);
+    if (typeof value === 'object' && !(value instanceof Date) && !Buffer.isBuffer(value)) {
+      return JSON.stringify(value);
+    }
+    return value;
+  };
+
   // Create (supports single object or array of objects)
   router.post('/', writeAuth ? authenticate : optionalAuth, adminOnly ? requireRole('admin') : (req, res, next) => next(), async (req, res) => {
     try {
@@ -185,7 +195,7 @@ const createCrudRoutes = (tableName, options = {}) => {
         }
 
         const keys = entries.map(([key]) => key);
-        const values = entries.map(([, value]) => value);
+        const values = entries.map(([, value]) => serializeJsonValues(value));
         const placeholders = keys.map((_, i) => `$${i + 1}`);
         const sql = `INSERT INTO "${tableName}" (${keys.map(quote).join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING *`;
         console.log(`INSERT into ${tableName}:`, { sql, values, keys });
