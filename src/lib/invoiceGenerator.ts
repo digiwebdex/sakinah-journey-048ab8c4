@@ -387,9 +387,7 @@ async function generateIndividualInvoice(
     ...(booking.notes ? [{ label: "Notes", value: booking.notes.length > 50 ? booking.notes.substring(0, 50) + "..." : booking.notes }] : []),
   ];
 
-  // Large INVOICE title
-  y = addTitleBlock(doc, y, "INVOICE");
-
+  // Large INVOICE title is drawn inside addBillToAndMeta (right column)
   const metaFields = [
     { label: "Invoice No", value: publicTrackingId },
     { label: "Invoice Date", value: fmtDateLocal(new Date().toISOString()) },
@@ -397,7 +395,7 @@ async function generateIndividualInvoice(
     ...(booking.packages?.start_date ? [{ label: "Travel Date", value: fmtDateLocal(booking.packages.start_date) }] : []),
   ];
 
-  y = addBillToAndMeta(doc, y, billToFields, metaFields);
+  y = addBillToAndMeta(doc, y, billToFields, metaFields, { title: "INVOICE" });
 
   // SERVICE DETAILS
   y = addSectionTitle(doc, y, "SERVICE DETAILS");
