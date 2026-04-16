@@ -244,7 +244,8 @@ function buildFallbackMembers(booking: InvoiceBooking, customer: InvoiceCustomer
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FINANCIAL SUMMARY — right-aligned matching sample
+// FINANCIAL SUMMARY — two stacked cards (light gray + beige)
+// matching the uploaded sample design exactly
 // ═══════════════════════════════════════════════════════════════
 
 function addFinancialSummary(
@@ -253,43 +254,57 @@ function addFinancialSummary(
   paidAmount: number, dueAmount: number
 ): number {
   const pw = doc.internal.pageSize.getWidth();
-  const labelX = pw / 2 + 10;
-  const valueX = pw - MARGIN;
+  // Right-aligned compact box (~half page wide)
+  const boxW = 95;
+  const boxX = pw - 16 - boxW;
 
-  doc.setFontSize(9);
-  let iy = y;
+  // ── Card 1 (light gray): Gross / Discount / Net Total ──
+  const card1H = 26;
+  doc.setFillColor(238, 238, 238); // very light gray
+  doc.rect(boxX, y, boxW, card1H, "F");
+
+  const labelX = boxX + 6;
+  const valueX = boxX + boxW - 6;
+  let iy = y + 7;
+
+  doc.setFontSize(9.5);
+  doc.setTextColor(DARK.r, DARK.g, DARK.b);
 
   // Gross Amount
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(DARK.r, DARK.g, DARK.b);
   doc.text("Gross Amount :", labelX, iy);
   doc.text(`BDT ${formatAmount(grossAmount)}`, valueX, iy, { align: "right" });
-  iy += 6;
+  iy += 7;
 
   // Discount
-  doc.text("Discount :", labelX, iy);
+  doc.text("Discount        :", labelX, iy);
   doc.text(`BDT ${formatAmount(discount)}`, valueX, iy, { align: "right" });
-  iy += 6;
+  iy += 7;
 
   // Net Total (bold)
   doc.setFont("helvetica", "bold");
-  doc.text("Net Total :", labelX, iy);
+  doc.text("Net Total       :", labelX, iy);
   doc.text(formatAmount(netTotal), valueX, iy, { align: "right" });
-  iy += 9;
 
-  // Paid Amount
+  // ── Card 2 (beige/tan): Paid / Due ──
+  const gap = 3;
+  const card2Y = y + card1H + gap;
+  const card2H = 19;
+  doc.setFillColor(245, 235, 220); // beige
+  doc.rect(boxX, card2Y, boxW, card2H, "F");
+
+  let jy = card2Y + 7;
   doc.setFont("helvetica", "normal");
-  doc.text("Paid Amount :", labelX, iy);
-  doc.text(`BDT ${formatAmount(paidAmount)}`, valueX, iy, { align: "right" });
-  iy += 6;
+  doc.text("Paid Amount  :", labelX, jy);
+  doc.text(`BDT ${formatAmount(paidAmount)}`, valueX, jy, { align: "right" });
+  jy += 7;
 
-  // Due Amount (bold)
   doc.setFont("helvetica", "bold");
-  doc.text("Due Amount :", labelX, iy);
-  doc.text(formatAmount(dueAmount), valueX, iy, { align: "right" });
+  doc.text("Due Amount  :", labelX, jy);
+  doc.text(formatAmount(dueAmount), valueX, jy, { align: "right" });
 
   doc.setTextColor(0);
-  return iy + 10;
+  return card2Y + card2H + 6;
 }
 
 function addPaymentHistoryTable(doc: jsPDF, y: number, payments: InvoicePayment[]): number {
@@ -372,9 +387,7 @@ async function generateIndividualInvoice(
     ...(booking.notes ? [{ label: "Notes", value: booking.notes.length > 50 ? booking.notes.substring(0, 50) + "..." : booking.notes }] : []),
   ];
 
-  // Large INVOICE title
-  y = addTitleBlock(doc, y, "INVOICE");
-
+  // Large INVOICE title is drawn inside addBillToAndMeta (right column)
   const metaFields = [
     { label: "Invoice No", value: publicTrackingId },
     { label: "Invoice Date", value: fmtDateLocal(new Date().toISOString()) },
@@ -382,7 +395,7 @@ async function generateIndividualInvoice(
     ...(booking.packages?.start_date ? [{ label: "Travel Date", value: fmtDateLocal(booking.packages.start_date) }] : []),
   ];
 
-  y = addBillToAndMeta(doc, y, billToFields, metaFields);
+  y = addBillToAndMeta(doc, y, billToFields, metaFields, { title: "INVOICE" });
 
   // SERVICE DETAILS
   y = addSectionTitle(doc, y, "SERVICE DETAILS");
@@ -443,9 +456,7 @@ async function generateFamilyInvoice(
 
   addPaymentWatermark(doc, getWatermarkStatus(Number(booking.paid_amount), Number(booking.due_amount || 0)));
 
-  // BILL TO + FAMILY INVOICE title
-  y = addTitleBlock(doc, y, "FAMILY INVOICE");
-
+  // FAMILY INVOICE title is drawn inside addBillToAndMeta (right column)
   const billToFields = [
     { label: "Name", value: customer.full_name || "N/A" },
     { label: "Passport", value: customer.passport_number || "N/A" },
@@ -461,7 +472,7 @@ async function generateFamilyInvoice(
     ...(booking.packages?.start_date ? [{ label: "Travel Date", value: fmtDateLocal(booking.packages.start_date) }] : []),
   ];
 
-  y = addBillToAndMeta(doc, y, billToFields, metaFields);
+  y = addBillToAndMeta(doc, y, billToFields, metaFields, { title: "INVOICE" });
 
   y = addSectionTitle(doc, y, "FAMILY MEMBERS");
 

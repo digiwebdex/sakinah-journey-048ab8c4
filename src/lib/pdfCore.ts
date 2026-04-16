@@ -133,7 +133,8 @@ export async function initPdf(options?: { orientation?: "portrait" | "landscape"
 }
 
 // ═══════════════════════════════════════════════════════════════
-// HEADER — Clean logo-only design matching sample
+// HEADER — Logo (top-left) + Orange rounded QR tab (top-right)
+// Matches sample design: tab hangs from top edge with rounded bottom
 // ═══════════════════════════════════════════════════════════════
 export async function addPdfHeader(
   doc: jsPDF, cfg: PdfCompanyConfig, logoBase64: string, qrDataUrl?: string
@@ -145,25 +146,51 @@ export async function addPdfHeader(
     try {
       const imageProps = doc.getImageProperties(logoBase64);
       const aspectRatio = imageProps.width / Math.max(imageProps.height, 1);
-      // Target: ~70mm wide logo matching sample design
       const logoW = Math.min(72, 50 * aspectRatio);
       const logoH = logoW / Math.max(aspectRatio, 0.01);
       doc.addImage(logoBase64, "PNG", MARGIN, 8, logoW, logoH);
     } catch { /* skip */ }
   }
 
-  // ── QR code — top right ──
+  // ── Orange QR tab — top right, hanging from top edge ──
+  // Width ~30mm, height ~42mm, rounded only on bottom (approximated with full rounded rect from y=-6)
+  const tabW = 32;
+  const tabH = 44;
+  const tabX = pw - MARGIN - tabW - 10;
+  const tabY = -8; // extends above page edge so only bottom shows rounded
+  doc.setFillColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
+  doc.roundedRect(tabX, tabY, tabW, tabH, 6, 6, "F");
+
+  // QR code or "QR Code" text inside the tab
   if (qrDataUrl) {
     try {
       const qrSize = 22;
-      doc.addImage(qrDataUrl, "PNG", pw - MARGIN - qrSize, 8, qrSize, qrSize);
-    } catch { /* skip */ }
+      const qrX = tabX + (tabW - qrSize) / 2;
+      const qrY = tabY + tabH - qrSize - 4;
+      // White background behind QR for contrast
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(qrX - 1, qrY - 1, qrSize + 2, qrSize + 2, 1, 1, "F");
+      doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
+    } catch {
+      // Fallback: render "QR Code" text centered
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("QR", tabX + tabW / 2, tabY + tabH - 16, { align: "center" });
+      doc.text("Code", tabX + tabW / 2, tabY + tabH - 8, { align: "center" });
+    }
+  } else {
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("QR", tabX + tabW / 2, tabY + tabH - 16, { align: "center" });
+    doc.text("Code", tabX + tabW / 2, tabY + tabH - 8, { align: "center" });
   }
 
   doc.setTextColor(0);
   doc.setFontSize(10);
 
-  return 48; // Content starts after larger logo
+  return 50; // Content starts below header
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -298,10 +325,12 @@ const STATUS_COLORS: Record<string, { r: number; g: number; b: number }> = {
 export function addTitleBlock(
   doc: jsPDF, y: number, title: string, status?: string | null
 ): number {
+  // Kept for backwards compatibility (used by reports/profile PDFs).
+  // For invoice-style docs, prefer passing { title } to addBillToAndMeta which
+  // renders the title on the right column matching the sample design.
   const pw = getPageWidth(doc);
   const upperTitle = title.toUpperCase();
 
-  // Auto-scale: short titles (like "INVOICE") get 38pt, longer titles scale down
   let fontSize = 38;
   if (upperTitle.length > 10) fontSize = 28;
   if (upperTitle.length > 18) fontSize = 22;
@@ -312,7 +341,6 @@ export function addTitleBlock(
   doc.setTextColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
   doc.text(upperTitle, pw - MARGIN, y + 4, { align: "right" });
 
-  // Status badge below title if provided
   if (status) {
     const statusKey = status.toLowerCase() as StatusType;
     const sc = STATUS_COLORS[statusKey] || MUTED;
@@ -327,46 +355,74 @@ export function addTitleBlock(
 }
 
 // ═══════════════════════════════════════════════════════════════
-// BILL TO + INVOICE METADATA (side-by-side layout from sample)
+// BILL TO + INVOICE TITLE + METADATA — pixel-perfect sample layout
+// Left column: orange "BILL TO :" header + stacked label/value pairs
+// Right column: huge orange "INVOICE" title + metadata block underneath
 // ═══════════════════════════════════════════════════════════════
 export function addBillToAndMeta(
   doc: jsPDF, y: number,
   billToFields: { label: string; value: string }[],
-  metaFields: { label: string; value: string }[]
+  metaFields: { label: string; value: string }[],
+  options?: { title?: string }
 ): number {
   const pw = getPageWidth(doc);
   const leftX = MARGIN;
-  const rightX = pw / 2 + 15;
+  const rightColX = pw / 2 + 8;
+  const title = (options?.title || "INVOICE").toUpperCase();
 
-  // BILL TO header — orange bold
+  // ── RIGHT: Large orange title (top of right column) ──
+  doc.setFontSize(38);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
+  doc.text(title, pw - MARGIN, y + 6, { align: "right" });
+
+  // ── LEFT: BILL TO heading ──
   doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(BRAND_ORANGE.r, BRAND_ORANGE.g, BRAND_ORANGE.b);
-  doc.text("BILL TO :", leftX, y);
+  doc.text("BILL TO :", leftX, y + 6);
 
-  // Bill to fields — larger font matching sample (~11pt)
-  let fieldY = y + 8;
+  // ── LEFT: Bill-to fields (label : value) ──
+  let fieldY = y + 14;
   doc.setFontSize(10.5);
+  doc.setTextColor(DARK.r, DARK.g, DARK.b);
+  doc.setFont("helvetica", "normal");
+
+  // Column-align the colon position
+  let maxLabelW = 0;
+  billToFields.forEach((f) => {
+    const w = doc.getTextWidth(f.label);
+    if (w > maxLabelW) maxLabelW = w;
+  });
+  const colonX = leftX + maxLabelW + 3;
+
   billToFields.forEach((f) => {
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(DARK.r, DARK.g, DARK.b);
-    const label = `${f.label}`;
-    doc.text(label, leftX, fieldY);
-    const labelW = doc.getTextWidth(label);
-    doc.text(`: ${f.value || "N/A"}`, leftX + labelW + 1, fieldY);
-    fieldY += 6;
+    doc.text(f.label, leftX, fieldY);
+    doc.text(":", colonX, fieldY);
+    doc.text(f.value || "N/A", colonX + 3, fieldY);
+    fieldY += 6.2;
   });
 
-  // Metadata on the right (Invoice No, Date, etc.) — matching sample
-  let metaY = y + 8;
-  doc.setFontSize(9.5);
+  // ── RIGHT: Metadata block, sits below the title ──
+  let metaY = y + 18;
+  doc.setFontSize(10);
+  doc.setTextColor(DARK.r, DARK.g, DARK.b);
+
+  let maxMetaLabelW = 0;
   metaFields.forEach((f) => {
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(DARK.r, DARK.g, DARK.b);
-    doc.text(f.label, rightX, metaY);
-    doc.setFont("helvetica", "bold");
-    doc.text(`: ${f.value}`, rightX + doc.getTextWidth(f.label) + 1, metaY);
-    metaY += 6;
+    const w = doc.getTextWidth(f.label);
+    if (w > maxMetaLabelW) maxMetaLabelW = w;
+  });
+  const metaColonX = rightColX + maxMetaLabelW + 3;
+
+  metaFields.forEach((f) => {
+    const isBold = /travel\s*date/i.test(f.label);
+    doc.setFont("helvetica", isBold ? "bold" : "normal");
+    doc.text(f.label, rightColX, metaY);
+    doc.text(":", metaColonX, metaY);
+    doc.text(f.value, metaColonX + 3, metaY);
+    metaY += 6.2;
   });
 
   doc.setTextColor(0);
