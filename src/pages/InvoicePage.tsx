@@ -25,9 +25,9 @@ export default function InvoicePage() {
     name: "Manasik Travel Hub",
     phone: "+880 1711-999910",
     email: "manasiktravelhub.info@gmail.com",
-    address: "৫৯৫/১, মিল্ক ভিটা রোড, তিন রাস্তার মোড় সংলগ্ন, দেওলা, টাঙ্গাইল সদর, টাঙ্গাইল",
+    address: "Corporate Office: Manasik Travel Hub, 595/1, Milk Vita Road, Three-Way Intersection, Dewla, Tangail Sadar, Tangail",
   };
-  const companyAddressBn = "৫৯৫/১, মিল্কভিটা রোড, তিন রাস্তার মোড়, দেওলা, টাঙ্গাইল সদর, টাঙ্গাইল";
+  const companyAddressBn = "কর্পোরেট অফিস: মানাসিক ট্রাভেল হাব, ৫৯৫/১, মিল্ক ভিটা রোড, তিন রাস্তার মোড়, দেওলা, টাঙ্গাইল সদর, টাঙ্গাইল";
 
   const search = async () => {
     if (!trackingId.trim()) return;
