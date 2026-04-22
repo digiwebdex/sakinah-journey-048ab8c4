@@ -148,7 +148,7 @@ export async function addPdfHeader(
       const aspectRatio = imageProps.width / Math.max(imageProps.height, 1);
       const logoW = Math.min(72, 50 * aspectRatio);
       const logoH = logoW / Math.max(aspectRatio, 0.01);
-      doc.addImage(logoBase64, "PNG", MARGIN + 6, 16, logoW, logoH);
+      doc.addImage(logoBase64, "PNG", MARGIN, 10, logoW, logoH);
     } catch { /* skip */ }
   }
 
@@ -291,12 +291,17 @@ export function addPdfFooter(doc: jsPDF, cfg: PdfCompanyConfig, options?: { show
       doc.text(`Page ${i} of ${totalPages}`, pw - MARGIN - 4, barY + 22, { align: "right" });
     }
 
-    // Address line — full width, centered at bottom of footer bar
+    // Address line — full corporate address, centered at bottom of footer bar
     if (cfg.address) {
       doc.setFontSize(7);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(255);
-      doc.text(cfg.address, pw / 2, barY + barH - 3, { align: "center", maxWidth: pw - 20 });
+      const addressLines = doc.splitTextToSize(cfg.address, pw - 12);
+      const linesToShow = addressLines.slice(0, 2);
+      const startY = barY + barH - 3 - (linesToShow.length - 1) * 3;
+      linesToShow.forEach((line: string, idx: number) => {
+        doc.text(line, pw / 2, startY + idx * 3, { align: "center" });
+      });
     }
 
     doc.setTextColor(0);
